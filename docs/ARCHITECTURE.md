@@ -48,7 +48,7 @@ Canonical resources: Firm, Principal, Matter, Document, DocumentVersion, Intake,
 
 ### Pipeline for source-grounded AI (not implemented)
 
-Clio/tenant upload -> authorized ingestion -> virus scan -> Rust/Python parse -> document version and page mapping -> tenant/matter-scoped chunks -> embeddings + hybrid search -> passage ACL check -> Agent evidence bundle -> validated response with supporting passage references -> lawyer review. Revocation requires re-check on each retrieval and answer serve.
+Clio/tenant upload -> authorized ingestion -> virus scan -> Rust/Python parse -> document version and page mapping -> tenant/matter-scoped chunks -> embeddings + hybrid search (pgvector extension enabled; retrieval pending) -> passage ACL check -> Agent evidence bundle -> validated response with supporting passage references -> lawyer review. Revocation requires re-check on each retrieval and answer serve.
 
 ### Target running modes
 

@@ -11,16 +11,17 @@ Work proceeds in this order. The changes below harden the existing starter; they
 | 5 | Provider Integration | Go | Typed canonical matter response, UUID validation, trailing JSON rejection, input bound and server deadlines; mock/Clio capability distinctions tested | Real adapters, tenant-owned connection lookup, OAuth/vault/webhooks and provider conformance against a sandbox |
 | 6 | Document Processing | Rust | Detect input exceeding 1,000,000 bytes without accepting truncation; reject unknown fields; deterministic SHA-256 and UTF-8 byte-size tests | Sandboxed worker deployment, scanning, real document parsing and provenance |
 | 7 | Identity | Keycloak 26.8.2 | Native organizations enabled in realm import; existing PKCE, audience and server-side authorization boundary retained | Trusted organization-to-tenant provisioning and membership reconciliation; organization/role claims never automatically grant database access |
-| 8 | Persistence | PostgreSQL | Tenant directory covered by RLS; bounded pool acquisition and SQL statements; AI state changes atomically append metadata-only audit/outbox events; upgrade migrations and rollback-only isolation test | Outbox dispatcher, service-specific roles, retention and backup/restore validation |
+| 8 | Persistence | PostgreSQL + pgvector | PostgreSQL 18 / pgvector 0.8.7 enabled; tenant directory covered by RLS; bounded pool acquisition and SQL statements; AI state changes atomically append metadata-only audit/outbox events; upgrade migrations and rollback-only isolation test | Outbox dispatcher, service-specific roles, retention and backup/restore validation |
 | 9 | Observability | OpenTelemetry | Optional OTLP export and W3C context propagation across API → Supervisor → Python; static span names/status only; shutdown flushing | Go provider/Temporal/Rust instrumentation, dependency readiness, metrics and production telemetry storage |
 
 ## Upgrade an existing local database
 
-Fresh databases use `db/001_init.sql`. Existing PostgreSQL volumes do not rerun initialization scripts. Apply the following as the database administrator, from the repository root:
+The Docker stack now uses PostgreSQL 18 with pgvector 0.8.7 and a fresh `pgdata18` volume. PostgreSQL 16 data is deliberately not migrated. Seed tenant data/grants again after first start. Fresh databases use `db/001_init.sql`. Existing PostgreSQL volumes do not rerun initialization scripts. Apply the following as the database administrator, from the repository root:
 
 ```bash
 docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -v ON_ERROR_STOP=1 < db/002_tenant_directory_rls.sql
 docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -v ON_ERROR_STOP=1 < db/003_execution_outbox.sql
+docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -v ON_ERROR_STOP=1 < db/004_pgvector.sql
 ```
 
 The API needs the outbox INSERT permission before the new execution path is started. It cannot publish or mark outbox events delivered; that belongs to a future dispatcher. Audit/outbox payloads contain execution IDs, state and decision codes, not legal content or tokens.
@@ -44,6 +45,7 @@ python3 scripts/verify_structure.py
 (cd services/provider-router && go test ./...)
 (cd services/document-worker && cargo test)
 docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -v ON_ERROR_STOP=1 < db/tests/tenant_isolation.sql
+docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -v ON_ERROR_STOP=1 < db/tests/pgvector.sql
 ```
 
 The SQL test uses synthetic records and rolls them back. Temporal unit tests use its in-process test environment, without requiring a running Temporal cluster.

@@ -24,6 +24,7 @@ docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -v 
 docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -v ON_ERROR_STOP=1 < db/004_pgvector.sql
 # Migration 005 is forward-only: apply it once.
 docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -v ON_ERROR_STOP=1 < db/005_durable_executions.sql
+docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -v ON_ERROR_STOP=1 < db/006_execution_input_json.sql
 ```
 
 The API needs the outbox INSERT permission before the new execution path is started. The leased dispatcher now delivers execution start/cancel intents only; general event publication is still pending. Audit/outbox payloads contain execution IDs, state and decision codes, not legal content or tokens.

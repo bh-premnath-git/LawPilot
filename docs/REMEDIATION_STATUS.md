@@ -34,6 +34,6 @@ This is not completion of the full roadmap. Real provider write/reconciliation t
 
 The owner explicitly chose a fresh PostgreSQL 18 database without retaining PostgreSQL 16 data. That instruction takes precedence over the specification's proposed PG16 data-preservation work. Future upgrades and recovery of actual PostgreSQL 18 data still need the P0-06 migration/restore process.
 
-Migration `005` is now durable execution. Calendar migrations must use the next available number, not the illustrative `005_calendar_domain.sql` name in the review snapshot.
+Migrations `005` and `006` now cover durable execution and input representation. Calendar migrations must use the next available number, not the illustrative `005_calendar_domain.sql` name in the review snapshot.
 
 Next reviewable slices follow the specification: P0-02/P0-03 service identity and authoritative approvals, P0-05/P0-06 contract/migration governance, then trusted provider routing and the general events/calendar foundations. External account/model choices and pilot acceptance remain product-owner decisions; credentials must be configured through environment settings, never committed or requested in chat.

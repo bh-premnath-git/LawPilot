@@ -122,6 +122,11 @@ func (a *Activities) Run(ctx context.Context, ref Ref) (string, error) {
 	if !ok {
 		return "", permanent("UNSUPPORTED_CAPABILITY")
 	}
+	var compact bytes.Buffer
+	if err = json.Compact(&compact, e.Input); err != nil {
+		return "", permanent("INVALID_REQUEST")
+	}
+	e.Input = compact.Bytes()
 	if cap.RequiresMatter && e.MatterID == nil || len(e.Input) > cap.MaxInputBytes {
 		return "", permanent("INVALID_REQUEST")
 	}
@@ -129,7 +134,11 @@ func (a *Activities) Run(ctx context.Context, ref Ref) (string, error) {
 	if e.MatterID != nil {
 		task["matterId"] = *e.MatterID
 	}
-	body, err := json.Marshal(task)
+	var encoded bytes.Buffer
+	encoder := json.NewEncoder(&encoded)
+	encoder.SetEscapeHTML(false)
+	err = encoder.Encode(task)
+	body := encoded.Bytes()
 	if err != nil {
 		return "", permanent("INVALID_REQUEST")
 	}

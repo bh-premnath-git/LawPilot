@@ -43,18 +43,20 @@ Non-command lifecycle events remain pending in the global outbox. They are not f
 
 ## Data and trust boundaries
 
-Inputs/results remain in tenant-isolated PostgreSQL records. Only IDs and sanitized status/failure metadata enter outbox payloads and Temporal activity/workflow histories. The dispatcher DB role has no direct table access; narrowly scoped security-definer functions expose leased command metadata and stale execution references. The workflow role has separate, RLS-enforced permissions for loading authorized requests and persisting execution/audit/outbox changes.
+Inputs/results remain in tenant-isolated PostgreSQL records. Migration 006 changes the input column to JSON rather than JSONB to preserve future accepted numeric/UTF-8 representations (existing values keep their current representation); worker encoding does not expand HTML characters past the transport bound. Only IDs and sanitized status/failure metadata enter outbox payloads and Temporal activity/workflow histories. The dispatcher DB role has no direct table access; narrowly scoped security-definer functions expose leased command metadata and stale execution references. The workflow role has separate, RLS-enforced permissions for loading authorized requests and persisting execution/audit/outbox changes.
 
 The API no longer needs the shared internal HMAC key because it does not call internal AI endpoints. The Go worker still signs development transport requests to the Supervisor. Shared-HMAC replacement, workload authentication, authoritative approval and evidence verification are still P0-02 through P0-04. These local roles, static development passwords and the dev Temporal server are not production provisioning.
 
 ## Start and upgrade
 
-Fresh Compose databases run `001_init.sql` followed by `005_durable_executions.sql`. Existing PostgreSQL 18 installations must apply migration **005 once**, before starting the API/worker/dispatcher:
+Fresh Compose databases run `001_init.sql`, `005_durable_executions.sql` and `006_execution_input_json.sql`. Existing PostgreSQL 18 installations must apply migration **005 once** (if not already applied), then **006**, before starting the API/worker/dispatcher:
 
 ```bash
-# Stop the old synchronous API before migration so it cannot accept new legacy rows.
-docker compose --env-file .env stop platform-api
+# Stop acceptance/consumers before schema changes; keep Temporal history running.
+docker compose --env-file .env stop platform-api execution-worker outbox-dispatcher
+# Skip the next line if migration 005 is already installed.
 docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -v ON_ERROR_STOP=1 < db/005_durable_executions.sql
+docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -v ON_ERROR_STOP=1 < db/006_execution_input_json.sql
 docker compose --env-file .env up --build -d
 curl -fsS http://localhost:3000/v1/readyz
 ```

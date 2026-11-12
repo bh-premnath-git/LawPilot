@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Module, Controller, Get, Post, Param, Req, Body, HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Module, Controller, Get, Post, Param, Req, Body, HttpException } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { Request } from 'express';
 import { randomUUID, createHash } from 'node:crypto';
@@ -7,30 +7,10 @@ import { readFileSync } from 'node:fs';
 import { clientRequestSchema, agentResultSchema, findCapability, signInternal, CapabilityRegistry, CapabilityRequest } from '@lawpilot/contracts';
 import { AuthService } from './auth.service';
 import { DbService } from './db.service';
+import { AccessService } from './access.service';
 
 const REGISTRY: CapabilityRegistry = JSON.parse(readFileSync(process.env.CAPABILITY_REGISTRY_PATH || 'contracts/capabilities/registry.v1.json','utf8'));
 function invalid(status:number, message:string):never{throw new HttpException({error:message},status);}
-function uuid(x:string):boolean{return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(x);}
-
-@Injectable()
-class AccessService {
-  constructor(private db:DbService){}
-  async authorize(tenantId:string,principalId:string,capabilityId?:string,matterId?:string):Promise<void>{
-    if(!uuid(tenantId)||(matterId&&!uuid(matterId))) invalid(400,'Invalid resource identifier');
-    await this.db.withTenant(tenantId,async c=>{
-      const member=await c.query("SELECT 1 FROM memberships WHERE tenant_id=$1 AND principal_id=$2 AND status='active'",[tenantId,principalId]);
-      if(member.rowCount!==1) invalid(403,'Not a member of this tenant');
-      if(capabilityId){
-        const cap=await c.query('SELECT 1 FROM principal_capabilities WHERE tenant_id=$1 AND principal_id=$2 AND capability_id=$3',[tenantId,principalId,capabilityId]);
-        if(cap.rowCount!==1) invalid(403,'Capability not granted');
-      }
-      if(matterId){
-        const access=await c.query("SELECT 1 FROM matter_grants WHERE tenant_id=$1 AND principal_id=$2 AND matter_id=$3 AND permission='matter.read'",[tenantId,principalId,matterId]);
-        if(access.rowCount!==1) invalid(403,'Matter access denied');
-      }
-    });
-  }
-}
 
 @Controller('v1')
 class ApiController {
@@ -80,6 +60,8 @@ class ApiController {
       if(!resp.ok) throw new Error(`Supervisor failed: ${resp.status}`);
       const result=agentResultSchema.parse(await resp.json());
       if(result.executionId!==id) throw new Error('Wrong executionId in AI result');
+      // Grants may have been revoked while the worker was running. Recheck before storing/serving output.
+      await this.access.authorize(tenantId,principal,cap.id,input.matterId);
       await this.db.withTenant(tenantId,async c=>{
         await c.query("UPDATE ai_executions SET status='completed',result=$1,completed_at=now() WHERE tenant_id=$2 AND id=$3",[JSON.stringify(result),tenantId,id]);
         await c.query("INSERT INTO audit_events(tenant_id,actor_id,action,resource_id,decision_code) VALUES($1,$2,'ai.result',$3,$4)",[tenantId,principal,id,result.status]);
@@ -87,6 +69,7 @@ class ApiController {
       return {executionId:id,status:'completed',result};
     }catch(e){
       await this.db.withTenant(tenantId,async c=>c.query("UPDATE ai_executions SET status='failed',completed_at=now() WHERE tenant_id=$1 AND id=$2",[tenantId,id]));
+      if(e instanceof HttpException && e.getStatus()===403) throw e;
       invalid(503,'AI service unavailable or invalid result');
     }
   }

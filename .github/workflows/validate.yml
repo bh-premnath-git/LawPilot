@@ -51,7 +51,7 @@ jobs:
           curl -fsSL https://github.com/bufbuild/buf/releases/download/v1.75.0/buf-Linux-x86_64 -o work/buf
           chmod +x work/buf
           work/buf lint
-          git fetch origin main
+          git fetch origin main:refs/remotes/origin/main
           work/buf breaking --against '.git#ref=origin/main,subdir=contracts/proto'
       - name: Python capabilities
         working-directory: services/ai-capabilities

@@ -126,13 +126,16 @@ func commandMatters(ctx context.Context, tx pgx.Tx, tenant, calendar, who string
 	}
 	var draft *pb.EntryDraft
 	id := ""
+	change := pb.ChangeScope_CHANGE_SCOPE_OCCURRENCE
 	if c := command.GetCreate(); c != nil {
 		draft = c.Draft
 	} else if c := command.GetUpdate(); c != nil {
 		draft = c.Draft
 		id = c.EntryId
+		change = c.Scope
 	} else if c := command.GetCancel(); c != nil {
 		id = c.EntryId
+		change = c.Scope
 	} else {
 		return bad("COMMAND_REQUIRED")
 	}
@@ -146,7 +149,34 @@ func commandMatters(ctx context.Context, tx pgx.Tx, tenant, calendar, who string
 		if err != nil {
 			return err
 		}
-		return matterAccess(ctx, tx, tenant, who, e.MatterId)
+		if err = matterAccess(ctx, tx, tenant, who, e.MatterId); err != nil {
+			return err
+		}
+		if e.SeriesId != "" && change != pb.ChangeScope_CHANGE_SCOPE_OCCURRENCE {
+			rows, err := tx.Query(ctx, "SELECT DISTINCT matter_id::text FROM calendar_entries WHERE tenant_id=$1 AND series_id=$2 AND status='active' AND matter_id IS NOT NULL AND ($3=3 OR occurrence_index >= $4)", tenant, e.SeriesId, int32(change), e.OccurrenceIndex)
+			if err != nil {
+				return err
+			}
+			matters := []string{}
+			for rows.Next() {
+				var id string
+				if err = rows.Scan(&id); err != nil {
+					rows.Close()
+					return err
+				}
+				matters = append(matters, id)
+			}
+			rows.Close()
+			if rows.Err() != nil {
+				return rows.Err()
+			}
+			for _, id := range matters {
+				if err = matterAccess(ctx, tx, tenant, who, id); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
 	}
 	return nil
 }
@@ -251,7 +281,7 @@ func (s *Service) GetProposal(ctx context.Context, r *pb.GetProposalRequest) (*p
 	var reply *pb.GetProposalResponse
 	who := actor(ctx)
 	err = s.tx(ctx, tenant, r.CalendarId, false, func(tx pgx.Tx) error {
-		if _, _, err := authorize(ctx, tx, tenant, r.CalendarId, who, "write"); err != nil {
+		if _, _, err := authorize(ctx, tx, tenant, r.CalendarId, who, "read"); err != nil {
 			return err
 		}
 		var err error
@@ -259,7 +289,11 @@ func (s *Service) GetProposal(ctx context.Context, r *pb.GetProposalRequest) (*p
 		if err != nil {
 			return err
 		}
-		if who != reply.ProposedBy {
+		if who == reply.ProposedBy {
+			if _, _, err = authorize(ctx, tx, tenant, r.CalendarId, who, "write"); err != nil {
+				return err
+			}
+		} else {
 			if _, _, err = authorize(ctx, tx, tenant, r.CalendarId, who, "approve"); err != nil {
 				return status.Error(codes.NotFound, "NOT_FOUND")
 			}

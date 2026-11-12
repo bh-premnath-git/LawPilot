@@ -5,7 +5,12 @@ cd "$(dirname "$0")/.."
 # Go generators: protobuf v1.36.6, grpc v1.5.1; Python grpcio-tools 1.76.0.
 export PATH="${RPC_GO_BIN:-$PWD/work/bin}:$PATH"
 python_bin="${RPC_PYTHON:-python3}"
-mapfile -t protos < <(rg --files contracts/proto -g '*.proto' | sort)
+if command -v rg >/dev/null 2>&1; then
+ mapfile -t protos < <(rg --files contracts/proto -g '*.proto' | sort)
+else
+ mapfile -t protos < <(find contracts/proto -type f -name '*.proto' | sort)
+fi
+[[ ${#protos[@]} -gt 0 ]] || { echo 'No protobuf sources found' >&2; exit 1; }
 node_modules/.bin/grpc_tools_node_protoc -Icontracts/proto -Inode_modules/grpc-tools/bin \
  --plugin=protoc-gen-ts_proto=node_modules/.bin/protoc-gen-ts_proto \
  --ts_proto_out=packages/rpc/src/generated \

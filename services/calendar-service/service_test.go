@@ -303,3 +303,49 @@ func TestReminderReauthorizesOwnerBeforeFiring(t *testing.T) {
 		t.Fatal("revoked grant retained reminder", err)
 	}
 }
+
+func TestSeriesApprovalRequiresEveryAffectedMatterAndNoWriteGrant(t *testing.T) {
+	f := fixtureFor(t, false)
+	draft := draftAt(10)
+	draft.Recurrence = &pb.RecurrenceRule{Frequency: pb.Frequency_FREQUENCY_DAILY, Interval: 1, Count: 2}
+	created := f.create(t, f.alice, draft)
+	// A single occurrence may acquire a separate matter scope.
+	changed := draftAt(11)
+	changed.MatterId = f.matter
+	_, err := f.s.MutateEntry(f.ctx(f.alice), &pb.MutateEntryRequest{Scope: f.scope(), CalendarId: f.calendar.Id, IdempotencyKey: uuid.NewString(), Command: &pb.CalendarCommand{Action: &pb.CalendarCommand_Update{Update: &pb.UpdateEntry{EntryId: created.EntryIds[1], ExpectedRevision: 1, Scope: pb.ChangeScope_CHANGE_SCOPE_OCCURRENCE, Draft: changed}}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	proposal, err := f.s.ProposeEntry(f.ctx(f.alice), &pb.ProposeEntryRequest{Scope: f.scope(), CalendarId: f.calendar.Id, IdempotencyKey: uuid.NewString(), Command: &pb.CalendarCommand{Action: &pb.CalendarCommand_Cancel{Cancel: &pb.CancelEntry{EntryId: created.EntryIds[0], ExpectedRevision: 1, ExpectedSeriesRevision: 2, Scope: pb.ChangeScope_CHANGE_SCOPE_SERIES}}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// An approver can inspect/decide without being granted entry mutation authority.
+	ctx := context.Background()
+	if _, err = f.admin.Exec(ctx, "DELETE FROM principal_capabilities WHERE tenant_id=$1 AND principal_id=$2 AND capability_id='calendar.write'", f.tenant, f.bob); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = f.admin.Exec(ctx, "DELETE FROM calendar_grants WHERE tenant_id=$1 AND principal_id=$2 AND permission='write'", f.tenant, f.bob); err != nil {
+		t.Fatal(err)
+	}
+	stored, err := f.s.GetProposal(f.ctx(f.bob), &pb.GetProposalRequest{Scope: f.scope(), CalendarId: f.calendar.Id, ProposalId: proposal.Result.ProposalId})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = f.admin.Exec(ctx, "DELETE FROM matter_grants WHERE tenant_id=$1 AND principal_id=$2", f.tenant, f.bob); err != nil {
+		t.Fatal(err)
+	}
+	decision := &pb.DecideProposalRequest{Scope: f.scope(), CalendarId: f.calendar.Id, ProposalId: stored.ProposalId, ExpectedSha256: stored.Sha256, Decision: "approve", IdempotencyKey: uuid.NewString()}
+	if _, err = f.s.DecideProposal(f.ctx(f.bob), decision); status.Code(err) != codes.PermissionDenied {
+		t.Fatal("reviewer bypassed other occurrence matter scope", err)
+	}
+	if _, err = f.s.GetProposal(f.ctx(f.bob), &pb.GetProposalRequest{Scope: f.scope(), CalendarId: f.calendar.Id, ProposalId: stored.ProposalId}); status.Code(err) != codes.PermissionDenied {
+		t.Fatal("preview disclosed unauthorized series scope", err)
+	}
+	if _, err = f.admin.Exec(ctx, "INSERT INTO matter_grants(tenant_id,matter_id,principal_id,permission)VALUES($1,$2,$3,'matter.read')", f.tenant, f.matter, f.bob); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = f.s.DecideProposal(f.ctx(f.bob), decision); err != nil {
+		t.Fatal(err)
+	}
+}

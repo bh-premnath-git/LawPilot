@@ -36,8 +36,6 @@ Prerequisites: Git, Docker Engine/Desktop with Compose v2, and OpenSSL. Node.js 
 ```bash
 git clone https://github.com/bh-premnath-git/LawPilot.git
 cd LawPilot
-# For the authentication fix while its PR is open:
-git switch fix/keycloak-26.8.2-auth
 cp .env.example .env
 openssl rand -hex 32
 ```

@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { PoolClient } from 'pg';
 
 export async function recordExecutionEvent(client: PoolClient, tenantId: string, principalId: string,
-  executionId: string, state: 'accepted' | 'completed' | 'failed', decisionCode: string): Promise<void> {
+  executionId: string, state: 'accepted' | 'completed' | 'failed' | 'cancelled', decisionCode: string): Promise<void> {
   const event={specversion:'1.0',id:randomUUID(),source:'platform-api',type:`lawpilot.ai.${state}.v1`,
     time:new Date().toISOString(),tenantId,schemaVersion:'1.0',aggregateId:executionId,
     data:{executionId,state,decisionCode}};

@@ -146,7 +146,7 @@ func TestWorkerReauthorizesAndDoesNotRerunCommittedResult(t *testing.T) {
 		json.NewEncoder(w).Encode(map[string]any{"executionId": f.Ref.ExecutionID, "agentId": cap.AgentID, "agentVersion": cap.AgentVersion, "status": "abstained", "output": map[string]any{}, "evidence": []any{}, "proposedActions": []any{}, "requiresAttorneyReview": true})
 	}))
 	defer server.Close()
-	a := &Activities{Store: &Store{Pool: f.Work}, Registry: map[string]Capability{cap.ID: cap}, SupervisorURL: server.URL, Secret: "test-secret-at-least-32-characters", HTTP: server.Client()}
+	a := &Activities{Store: &Store{Pool: f.Work}, Registry: map[string]Capability{cap.ID: cap}, SupervisorURL: server.URL, Secret: "test-secret-at-least-32-characters", HTTP: server.Client(), AllowLegacyHTTP: true}
 	state, err := a.Run(ctx, f.Ref)
 	if err != nil || state != "completed" {
 		t.Fatalf("state=%s err=%v", state, err)
@@ -190,7 +190,7 @@ func TestRevocationWhileAgentRunsPreventsResultCommit(t *testing.T) {
 		json.NewEncoder(w).Encode(map[string]any{"executionId": f.Ref.ExecutionID, "agentId": cap.AgentID, "agentVersion": cap.AgentVersion, "status": "abstained", "output": map[string]any{"private": "should-not-be-stored"}, "evidence": []any{}, "proposedActions": []any{}, "requiresAttorneyReview": true})
 	}))
 	defer server.Close()
-	a := &Activities{Store: &Store{Pool: f.Work}, Registry: map[string]Capability{cap.ID: cap}, SupervisorURL: server.URL, Secret: "test-secret-at-least-32-characters", HTTP: server.Client()}
+	a := &Activities{Store: &Store{Pool: f.Work}, Registry: map[string]Capability{cap.ID: cap}, SupervisorURL: server.URL, Secret: "test-secret-at-least-32-characters", HTTP: server.Client(), AllowLegacyHTTP: true}
 	if _, err := a.Run(ctx, f.Ref); err == nil {
 		t.Fatal("revoked response was committed")
 	}
@@ -238,7 +238,7 @@ func TestAcceptedInputBoundaryIsNotExpandedForHTML(t *testing.T) {
 		json.NewEncoder(w).Encode(map[string]any{"executionId": f.Ref.ExecutionID, "agentId": cap.AgentID, "agentVersion": cap.AgentVersion, "status": "abstained", "output": map[string]any{}, "evidence": []any{}, "proposedActions": []any{}, "requiresAttorneyReview": true})
 	}))
 	defer server.Close()
-	a := &Activities{Store: &Store{Pool: f.Work}, Registry: map[string]Capability{cap.ID: cap}, SupervisorURL: server.URL, Secret: "test-secret-at-least-32-characters", HTTP: server.Client()}
+	a := &Activities{Store: &Store{Pool: f.Work}, Registry: map[string]Capability{cap.ID: cap}, SupervisorURL: server.URL, Secret: "test-secret-at-least-32-characters", HTTP: server.Client(), AllowLegacyHTTP: true}
 	state, err := a.Run(ctx, f.Ref)
 	if err != nil || state != "completed" {
 		t.Fatalf("boundary input rejected: %s %v", state, err)

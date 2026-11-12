@@ -8,7 +8,9 @@
     "dev": "tsx watch src/main.ts"
   },
   "dependencies": {
+    "@grpc/grpc-js": "^1.14.7",
     "@lawpilot/contracts": "0.1.0",
-    "@lawpilot/telemetry": "0.1.0"
+    "@lawpilot/telemetry": "0.1.0",
+    "@lawpilot/rpc": "0.1.0"
   }
 }

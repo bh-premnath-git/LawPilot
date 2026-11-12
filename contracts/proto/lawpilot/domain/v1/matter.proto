@@ -1,5 +1,6 @@
 syntax = "proto3";
 package lawpilot.domain.v1;
+option go_package = "github.com/bh-premnath-git/LawPilot/contracts/gen/go/lawpilot/domain/v1;domainv1";
 import "lawpilot/common/v1/common.proto";
 message Matter {
  string id = 1;

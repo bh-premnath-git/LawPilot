@@ -5,7 +5,7 @@ Work proceeds in this order. The changes below harden the existing starter; they
 | Order | Layer | Technology | Changes in this pass | Remaining integration |
 |---|---|---|---|---|
 | 1 | API Gateway | NestJS / TypeScript | Permission checks and database actions share a tenant transaction; UUID tenant context is normalized; JSON body limit is 32 KiB; responses carry server-generated request IDs and no-store headers; AI command acceptance returns 202; owner polling/cancel/requeue and database readiness | Rate limits, production identity and authoritative approvals |
-| 2 | AI Orchestration | TypeScript | Registry version, uniqueness and limits validated at startup; result identity/version and mandatory review enforced; external actions rejected; completed matter results need evidence references; byte-safe streamed request handling and HTTP deadlines | Verified passage resolution, model/provider budgets and workload identity |
+| 2 | AI Orchestration | TypeScript | Registry version, uniqueness and limits validated at startup; result identity/version and mandatory review enforced; external actions rejected; completed matter results need evidence references; generated mTLS gRPC with caller scopes and bounded deadlines | Verified passage resolution, model/provider budgets and production workload lifecycle |
 | 3 | AI Capabilities | Python | Typed UUID identity fields, nonempty actor/trace IDs, validated registry, streaming body limit, malformed-signature rejection and consistent UTF-8 input sizing | Real model calls and per-capability evidence/template services; current outputs remain mocks/abstentions |
 | 4 | Business Workflows | Go + Temporal | Approval waits expire (24-hour default, 30-day maximum); signals bind tenant, draft, version and SHA-256; stale/wrong-scope signals ignored; state query added; durable mock AI activities and stable-ID Temporal execution now wired | Trusted approval ingress, authoritative approver verification and external-write reconciliation |
 | 5 | Provider Integration | Go | Typed canonical matter response, UUID validation, trailing JSON rejection, input bound and server deadlines; mock/Clio capability distinctions tested | Real adapters, tenant-owned connection lookup, OAuth/vault/webhooks and provider conformance against a sandbox |
@@ -13,6 +13,8 @@ Work proceeds in this order. The changes below harden the existing starter; they
 | 7 | Identity | Keycloak 26.8.2 | Native organizations enabled in realm import; existing PKCE, audience and server-side authorization boundary retained | Trusted organization-to-tenant provisioning and membership reconciliation; organization/role claims never automatically grant database access |
 | 8 | Persistence | PostgreSQL + pgvector | PostgreSQL 18 / pgvector 0.8.7 enabled; tenant directory covered by RLS; bounded pool acquisition and SQL statements; AI state changes atomically append metadata-only audit/outbox events; upgrade migrations, scoped worker/dispatcher roles and leased command delivery | General event publication/inbox, production role provisioning, retention and backup/restore validation |
 | 9 | Observability | OpenTelemetry | Optional OTLP export for API and Supervisor → Python traces; durable queue boundary propagation pending; static span names/status only; shutdown flushing | Go provider/Temporal/Rust instrumentation, dependency readiness, metrics and production telemetry storage |
+
+Native calendar and service communication updates: [CALENDAR_GRPC.md](CALENDAR_GRPC.md). Calendar uses its own scoped Go service and delegated JWT authentication.
 
 ## Upgrade an existing local database
 
@@ -25,6 +27,7 @@ docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -v 
 # Migration 005 is forward-only: apply it once.
 docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -v ON_ERROR_STOP=1 < db/005_durable_executions.sql
 docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -v ON_ERROR_STOP=1 < db/006_execution_input_json.sql
+docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -v ON_ERROR_STOP=1 < db/007_calendar_domain.sql
 ```
 
 The API needs the outbox INSERT permission before the new execution path is started. The leased dispatcher now delivers execution start/cancel intents only; general event publication is still pending. Audit/outbox payloads contain execution IDs, state and decision codes, not legal content or tokens.

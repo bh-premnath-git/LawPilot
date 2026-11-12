@@ -1,0 +1,7 @@
+version: v2
+modules:
+  - path: contracts/proto
+lint:
+  use: [MINIMAL]
+breaking:
+  use: [WIRE_JSON]

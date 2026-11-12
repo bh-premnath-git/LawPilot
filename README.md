@@ -7,9 +7,10 @@
 | Component | State | What exists |
 |---|---|---|
 | NestJS platform API | Durable mock execution API | Keycloak identity/grants, atomic 202 acceptance, owner-only polling/cancel/requeue and database readiness |
-| TypeScript Root Supervisor | Runnable starter | Signed internal API, versioned capability discovery and bounded delegation to Python |
+| TypeScript Root Supervisor | Runnable starter | mTLS gRPC, versioned capability discovery and bounded delegation to Python |
 | Python AI capability service | Runnable **safe mock** | Four registered capabilities, schema-checked requests, explicit abstention for unsupported evidence |
 | Go provider router | Runnable starter | Capability discovery, mock legal provider and explicit non-implemented Clio adapter |
+| Go native calendar | Runnable native domain | Tenant/matter ACLs, typed time/recurrence, revisions, approval proposals, free/busy and Temporal in-app reminder state; external sync pending |
 | PostgreSQL + pgvector | PostgreSQL 18 / pgvector 0.8.7 | Canonical records, permissions, audit/outbox, tenant RLS and vector similarity primitives |
 | Keycloak | Dev infrastructure | Importable demo realm, OIDC/JWKS boundary; no production users provisioned |
 | Go Temporal worker + dispatcher | Runnable local mock path | Leased/fenced command delivery, persistent Temporal workflows, bounded activity retries and recovery; authoritative approvals pending |
@@ -34,6 +35,8 @@
 
 See [layer status and upgrade steps](docs/LAYER_STATUS.md) for the fixes, tests and remaining work at each boundary. These responsibilities describe the target architecture; the implementation table above identifies current starter functionality.
 
+See [calendar and gRPC setup, contracts, endpoints and limitations](docs/CALENDAR_GRPC.md). Apply migration 007 to an existing PostgreSQL 18 database before starting the new calendar service.
+
 ## Architecture rules
 
 1. **Only trusted domain/integration services mutate provider records.** The Supervisor proposes, never writes to Clio.
@@ -56,9 +59,10 @@ cp .env.example .env
 openssl rand -hex 32
 ```
 
-Paste the generated value into `INTERNAL_HMAC_KEY` in `.env`, then start:
+Paste the generated value into `INTERNAL_HMAC_KEY` in `.env` for the development provider mock. Generate workload certificates and set `LOCAL_UID` / `LOCAL_GID` in `.env` to the outputs of `id -u` / `id -g`, then start:
 
 ```bash
+bash scripts/generate_dev_tls.sh
 docker compose --env-file .env up --build -d
 docker compose --env-file .env ps
 curl -fsS http://localhost:3000/v1/healthz
@@ -98,9 +102,10 @@ The complete template is [`.env.example`](.env.example). The following values ma
 | `KEYCLOAK_JWKS_URL` | `http://localhost:8080/realms/lawpilot-dev/protocol/openid-connect/certs` | `http://keycloak:8080/realms/lawpilot-dev/protocol/openid-connect/certs` |
 | `KEYCLOAK_AUDIENCE` | `lawpilot-api` | `lawpilot-api` |
 | `DATABASE_URL` | `postgresql://lawpilot_app:local-dev-app-only@localhost:5432/lawpilot` | `postgresql://lawpilot_app:local-dev-app-only@postgres:5432/lawpilot` |
-| `SUPERVISOR_URL` (Go execution worker) | `http://localhost:3001` | `http://root-supervisor:3001` |
-| `AI_URL` (supervisor process) | `http://localhost:8000` | `http://ai-capabilities:8000` |
-| `INTERNAL_HMAC_KEY` | Your generated secret, at least 32 characters | Same secret across Go execution worker, supervisor, AI worker and provider router; API does not need it |
+| `SUPERVISOR_GRPC_ADDRESS` (Go worker) | `localhost:50052` | `root-supervisor:50052` |
+| `AI_GRPC_ADDRESS` (supervisor) | `localhost:50053` | `ai-capabilities:50053` |
+| `CALENDAR_GRPC_ADDRESS` (API/worker) | `localhost:50051` | `calendar-service:50051` (internal, unpublished ports) |
+| `INTERNAL_HMAC_KEY` | Your generated secret, at least 32 characters | Development provider-router only; default AI/calendar paths use per-workload mTLS |
 
 `NODE_ENV=development` is the local setting. `API_PORT=3000` and `SUPERVISOR_PORT=3001` are the default service ports.
 
@@ -187,7 +192,7 @@ When finished polling, clear the shell token with `unset LAWPILOT_ACCESS_TOKEN`.
 | `401` | Access token rather than ID/refresh token; expiry, issuer, audience, signing keys, and machine clock |
 | `403` | Active membership for the token's `sub`, capability grant, and `matter.read` grant when a matter is supplied |
 | `400` or `422` | Request schema, UUIDs, supported capability ID, and required matter ID |
-| Execution stays queued/running or fails | Inspect the status response, delivery attempts and error code; check outbox-dispatcher/execution-worker/Temporal logs and worker HMAC configuration |
+| Execution stays queued/running or fails | Inspect the status response, delivery attempts and error code; check outbox-dispatcher/execution-worker/Temporal logs and worker gRPC/mTLS configuration |
 | `dead_letter` delivery | Fix Temporal connectivity, then use the owner-authorized dispatch/retry endpoint; IDs remain stable |
 | Keycloak changes are missing | Startup import only creates a missing realm; it does not update an existing realm |
 | Database tables are missing after a failed first start | Inspect PostgreSQL initialization logs and ensure `db/001_init.sql` is readable by the container user; an existing database volume does not rerun initialization scripts |

@@ -3,7 +3,9 @@ WORKDIR /workspace
 COPY services/ai-capabilities/requirements.txt /workspace/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 COPY services/ai-capabilities/app /workspace/app
+COPY contracts/gen/python /workspace/contracts/gen/python
 COPY contracts/capabilities /workspace/contracts/capabilities
+ENV RPC_PYTHON_PATH=/workspace/contracts/gen/python
 ENV CAPABILITY_REGISTRY_PATH=/workspace/contracts/capabilities/registry.v1.json
 EXPOSE 8000
-CMD ["uvicorn","app.main:app","--host","0.0.0.0","--port","8000"]
+CMD ["python","-m","app.grpc_server"]

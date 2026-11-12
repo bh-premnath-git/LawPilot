@@ -7,7 +7,7 @@
 - Matter access: explicit current grant in database; no automatic blanket lawyer access. Use Keycloak Authz Services if adopted as PDP, but dynamic matter grants remain enforced in domain layer.
 - RLS: application role must not be superuser/BYPASSRLS; never let app use migration owner credentials.
 - Sessions: browser uses Authorization Code+PKCE and HttpOnly Secure cookies via BFF; CSRF controls required.
-- Internal APIs: HMAC is LOCAL SCAFFOLD ONLY; production replace with workload identity and mTLS / verified JWT service tokens and replay defenses.
+- AI/calendar RPCs require per-workload mTLS and caller allowlists; calendar user RPCs also verify delegated Keycloak JWTs and current SQL grants. Development provider mock retains HMAC. Production certificate issuance/rotation and Temporal security remain pending.
 - Agent execution context: immutable, bounded token/time/step budget, tools allowlisted per capability, no direct Clio credentials.
 - Prompt injection: all documents, emails and retrieved text untrusted; never treat as system instruction.
 - Source-grounded Q&A: no answer without verified citations to authorized versioned passages, explicit abstention on insufficient evidence.
@@ -22,4 +22,4 @@
 
 The API accepts a command only after tenant membership/capability/matter checks, atomically with a metadata-only dispatch intent. Status/cancel/requeue require the original principal and current grants. Worker activities reauthorize both before inference and result persistence; cancellation/terminal-state guards prevent late overwrites. Raw request/results remain in RLS-protected execution rows, never workflow histories or outbox metadata. Dispatcher roles can execute narrow metadata/lease functions but cannot SELECT private inputs.
 
-Worker-to-Supervisor transport still uses development HMAC, and authoritative approval/evidence resolution are not implemented. Consequently real provider writes, confidential-data processing and production deployment remain outside the implemented scope. See [remediation tracking](REMEDIATION_STATUS.md) for P0-02/P0-03/P0-04 gates.
+Worker-to-Supervisor-to-Python transport uses mTLS gRPC; authoritative AI/legal approval and evidence resolution are not implemented. Consequently real provider writes, confidential-data processing and production deployment remain outside the implemented scope. See [remediation tracking](REMEDIATION_STATUS.md) for P0-02/P0-03/P0-04 gates.

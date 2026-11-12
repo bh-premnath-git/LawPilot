@@ -8,7 +8,7 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     services:
       postgres:
         image: pgvector/pgvector:0.8.7-pg18-trixie
@@ -40,6 +40,19 @@ jobs:
           npm run build
           npm test
           python3 scripts/verify_structure.py
+      - name: Protobuf governance and generated client drift
+        run: |
+          python -m pip install grpcio-tools==1.76.0
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.6
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
+          RPC_GO_BIN="$(go env GOPATH)/bin" npm run generate:rpc
+          git diff --exit-code -- contracts/gen packages/rpc/src/generated
+          mkdir -p work
+          curl -fsSL https://github.com/bufbuild/buf/releases/download/v1.75.0/buf-Linux-x86_64 -o work/buf
+          chmod +x work/buf
+          work/buf lint
+          git fetch origin main:refs/remotes/origin/main
+          work/buf breaking --against '.git#ref=origin/main,subdir=contracts/proto'
       - name: Python capabilities
         working-directory: services/ai-capabilities
         run: |
@@ -69,6 +82,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f db/004_pgvector.sql
           psql -v ON_ERROR_STOP=1 -f db/005_durable_executions.sql
           psql -v ON_ERROR_STOP=1 -f db/006_execution_input_json.sql
+          psql -v ON_ERROR_STOP=1 -f db/007_calendar_domain.sql
           psql -v ON_ERROR_STOP=1 -f db/tests/pgvector.sql
           psql -v ON_ERROR_STOP=1 -f db/tests/tenant_isolation.sql
 
@@ -81,6 +95,12 @@ jobs:
         run: |
           npm run test -w @lawpilot/platform-api
           (cd services/workflow-service && go test -count=1 ./executions)
+      - name: Native calendar database integration
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:local-ci-postgres-only@localhost:5432/lawpilot
+          TEST_CALENDAR_DATABASE_URL: postgresql://lawpilot_calendar:local-dev-calendar-only@localhost:5432/lawpilot
+        working-directory: services/calendar-service
+        run: go test -count=1 ./...
       - name: Build non-root execution image
         run: |
           docker build -f services/workflow-service/Dockerfile -t lawpilot-execution-worker:ci .
@@ -98,10 +118,25 @@ jobs:
           tar -xzf work/temporal.tar.gz -C work temporal
           (cd services/workflow-service && go build -o ../../work/execution-worker ./cmd/worker && go build -o ../../work/outbox-dispatcher ./cmd/dispatcher)
           node scripts/test_durable_recovery.cjs
+      - name: Calendar and cross-language gRPC integration
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:local-ci-postgres-only@localhost:5432/lawpilot
+          TEST_APP_DATABASE_URL: postgresql://lawpilot_app:local-dev-app-only@localhost:5432/lawpilot
+          TEST_CALENDAR_DATABASE_URL: postgresql://lawpilot_calendar:local-dev-calendar-only@localhost:5432/lawpilot
+          TEST_WORKFLOW_DATABASE_URL: postgresql://lawpilot_workflow:local-dev-workflow-only@localhost:5432/lawpilot
+          TEST_DISPATCHER_DATABASE_URL: postgresql://lawpilot_dispatcher:local-dev-dispatcher-only@localhost:5432/lawpilot
+          TEMPORAL_BIN: work/temporal
+        run: |
+          (cd services/calendar-service && go build -o ../../work/calendar-service ./cmd/server)
+          node scripts/test_calendar_grpc.cjs
+          docker build -f services/calendar-service/Dockerfile -t lawpilot-calendar:ci .
+          docker run --rm --entrypoint sh lawpilot-calendar:ci -c 'test "$(id -u)" = 10001'
       - name: Upload recovery test diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: durable-recovery-logs
-          path: work/recovery-*/*.log
+          path: |
+            work/recovery-*/*.log
+            work/calendar-grpc-*/*.log
           if-no-files-found: ignore

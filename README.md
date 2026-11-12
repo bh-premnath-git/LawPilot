@@ -14,9 +14,25 @@
 | Keycloak | Dev infrastructure | Importable demo realm, OIDC/JWKS boundary; no production users provisioned |
 | Go Temporal worker | Integration scaffold | Example approval workflow with explicit lawyer signal; separate startup |
 | Rust document worker | Source scaffold | SHA-256/metadata processor; **no legal PDF extraction** |
-| OpenTelemetry | Local collector skeleton | Collector and trace conventions; full SDK instrumentation still required |
+| OpenTelemetry | AI request-path instrumentation | OTLP export and W3C traces across API, Supervisor and Python; Go/Temporal/Rust instrumentation pending |
 | Clio OAuth + webhooks | **NOT IMPLEMENTED** | Exact API boundaries and handshake/security checklist, no credentials or pretend success |
 | RAG, legal drafting, real LLM | **NOT IMPLEMENTED** | Capability contracts + safe mock only; no invented citations or drafts |
+
+## Backend layers and implementation order
+
+| Layer | Technology | Responsibility |
+|---|---|---|
+| API Gateway | NestJS / TypeScript | Authentication, request validation and tenant context |
+| AI Orchestration | TypeScript | Root Supervisor, agent registry and delegation |
+| AI Capabilities | Python | Specialist agents with structured input/output |
+| Business Workflows | Go + Temporal | Durable execution, retries and approval lifecycles |
+| Provider Integration | Go | Canonical interfaces, capability registry and adapters |
+| Document Processing | Rust | Isolated document-processing workers |
+| Identity | Keycloak | OIDC, organizations and authorization integration |
+| Persistence | PostgreSQL | Tenant-owned records, permissions, workflow and audit data |
+| Observability | OpenTelemetry | Cross-service tracing and operational telemetry |
+
+See [layer status and upgrade steps](docs/LAYER_STATUS.md) for the fixes, tests and remaining work at each boundary. These responsibilities describe the target architecture; the implementation table above identifies current starter functionality.
 
 ## Architecture rules
 
@@ -148,6 +164,14 @@ The AI execution endpoint is a synchronous demonstration path. It checks permiss
 
 Keycloak data persists in `keycloakdata`; PostgreSQL data persists in `pgdata`. `docker compose --env-file .env down` preserves both volumes. Apply changes to an existing realm through the admin console or an explicit migration. Bootstrap admin environment values are for initial creation; changing them does not reset an existing administrator's password. Removing volumes deletes local users and application data.
 
+### Upgrading an existing local installation
+
+Apply [the database migrations and Keycloak organization setting](docs/LAYER_STATUS.md#upgrade-an-existing-local-database) before starting the updated services. Existing volumes retain their previous schema and realm settings.
+
+### Request tracing
+
+Compose configures `OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318` for the API, supervisor and Python worker. On your host, use `http://localhost:4318` with a running collector; unset it to disable export. These services propagate W3C trace context and export static operation names and HTTP response status without request bodies, legal text or tokens. Audit events are stored separately. Go, Temporal and Rust instrumentation remains future work.
+
 ## Validate without Docker
 
 ```bash
@@ -160,6 +184,7 @@ npm ci && npm run build && npm test
 
 ## Document map
 
+- [Layer status](docs/LAYER_STATUS.md): ordered fixes, migrations, verification and remaining integrations
 - [Architecture](docs/ARCHITECTURE.md): ownership, request flow, service isolation
 - [Implementation roadmap](docs/ROADMAP.md): milestones and release gates
 - [Security and threat model](docs/SECURITY.md): tenancy, Clio, AI, audit

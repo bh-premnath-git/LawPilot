@@ -3,3 +3,6 @@ uvicorn>=0.30,<1
 pydantic>=2.9,<3
 pytest>=8,<10
 httpx>=0.27,<1
+
+opentelemetry-sdk>=1.38,<2
+opentelemetry-exporter-otlp-proto-http>=1.38,<2

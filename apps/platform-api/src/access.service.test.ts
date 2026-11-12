@@ -31,3 +31,16 @@ test('malformed tenant and matter IDs fail before database access', async () => 
   await assert.rejects(access.authorize('invalid', 'user-1'), { status: 400 });
   await assert.rejects(access.authorize(tenant, 'user-1', undefined, 'invalid'), { status: 400 });
 });
+
+test('authorized action runs in the checked transaction and is skipped on denial', async () => {
+  let actionCalled = false;
+  const client = { query: async () => ({ rowCount: 1 }) };
+  const db = { withTenant: async (_id: string, fn: Function) => fn(client) } as unknown as DbService;
+  const value = await new AccessService(db).withAccess(tenant, 'user-1', undefined, undefined, async c => {
+    assert.equal(c, client); actionCalled = true; return 'authorized';
+  });
+  assert.equal(value, 'authorized'); assert.equal(actionCalled, true);
+  client.query = async () => ({ rowCount: 0 });
+  await assert.rejects(new AccessService(db).withAccess(tenant, 'user-1', undefined, undefined,
+    async () => assert.fail('unauthorized action executed')), { status: 403 });
+});

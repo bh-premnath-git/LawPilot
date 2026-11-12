@@ -32,6 +32,7 @@ services:
   root-supervisor:
     build: { context: ., dockerfile: services/root-supervisor/Dockerfile }
     environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
       SUPERVISOR_PORT: "3001"
       AI_URL: http://ai-capabilities:8000
       INTERNAL_HMAC_KEY: ${INTERNAL_HMAC_KEY:?copy .env.example to .env and set a long secret}
@@ -41,6 +42,7 @@ services:
   ai-capabilities:
     build: { context: ., dockerfile: services/ai-capabilities/Dockerfile }
     environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
       INTERNAL_HMAC_KEY: ${INTERNAL_HMAC_KEY:?copy .env.example to .env and set a long secret}
     ports: ["127.0.0.1:8000:8000"]
 
@@ -53,6 +55,7 @@ services:
   platform-api:
     build: { context: ., dockerfile: apps/platform-api/Dockerfile }
     environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
       API_PORT: "3000"
       DATABASE_URL: postgresql://lawpilot_app:local-dev-app-only@postgres:5432/lawpilot
       KEYCLOAK_ISSUER: http://localhost:8080/realms/lawpilot-dev

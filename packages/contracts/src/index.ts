@@ -49,3 +49,31 @@ export function verifyInternal(body: string, timestampHeader: string|undefined, 
   const received = Buffer.from(signature, 'hex');
   return expected.length === received.length && timingSafeEqual(expected, received);
 }
+
+export const capabilityDefinitionSchema = z.object({
+  id: capabilityRequestSchema.shape.capabilityId,
+  agentId: z.string().min(1), agentVersion: z.string().regex(/^\d+\.\d+\.\d+$/),
+  requiresMatter: z.boolean(), requiresAttorneyReview: z.boolean(),
+  maxInputBytes: z.number().int().positive().max(32768),
+}).strict();
+export const capabilityRegistrySchema = z.object({
+  registryVersion: z.literal('1.0'),
+  capabilities: z.array(capabilityDefinitionSchema).min(1),
+}).strict().superRefine((registry, ctx) => {
+  const ids = new Set<string>();
+  for (const capability of registry.capabilities) {
+    if (ids.has(capability.id)) ctx.addIssue({code: 'custom', message: 'Duplicate capability ID'});
+    ids.add(capability.id);
+  }
+});
+
+export function validateAgentResult(raw: unknown, task: CapabilityRequest, capability: CapabilityDefinition): AgentResult {
+  const result = agentResultSchema.parse(raw);
+  if (result.executionId !== task.executionId || result.agentId !== capability.agentId || result.agentVersion !== capability.agentVersion) {
+    throw new Error('Agent result identity mismatch');
+  }
+  if (capability.requiresAttorneyReview && !result.requiresAttorneyReview) throw new Error('Attorney review cannot be bypassed');
+  if (capability.requiresMatter && result.status === 'completed' && !result.evidence.length) throw new Error('Completed matter results require evidence');
+  if (result.proposedActions.length) throw new Error('External actions are disabled in the starter');
+  return result;
+}

@@ -12,3 +12,5 @@ target/
 *.pem
 *.key
 *.token
+
+work/

@@ -17,16 +17,17 @@ services:
       retries: 15
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.4.0
+    image: quay.io/keycloak/keycloak:26.8.2
     command: ["start-dev", "--import-realm"]
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:-admin}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-local-dev-keycloak-only}
       KC_HOSTNAME: http://localhost:8080
-      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT: "true"
     ports: ["127.0.0.1:8080:8080"]
     volumes:
       - ./infra/keycloak:/opt/keycloak/data/import:ro
+      - keycloakdata:/opt/keycloak/data
 
   root-supervisor:
     build: { context: ., dockerfile: services/root-supervisor/Dockerfile }
@@ -74,3 +75,4 @@ services:
 
 volumes:
   pgdata:
+  keycloakdata:

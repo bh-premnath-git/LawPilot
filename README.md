@@ -44,12 +44,18 @@ python3 scripts/verify_structure.py
 
 ### Authentication and demo access
 
+Copy `.env.example` to `.env` for the local settings used in validation. For a host-run API, load `DATABASE_URL`, `KEYCLOAK_ISSUER`, `KEYCLOAK_JWKS_URL`, `KEYCLOAK_AUDIENCE`, `SUPERVISOR_URL`, and your generated `INTERNAL_HMAC_KEY` into its process environment. NestJS does not automatically load `.env`. Docker Compose sets the API container values in `compose.yaml`, including internal database/JWKS hostnames; `--env-file` supplies Compose interpolation values.
+
+The dev Keycloak image is pinned to `quay.io/keycloak/keycloak:26.8.2` (see [official downloads](https://www.keycloak.org/downloads)). Its local database persists in the `keycloakdata` volume. Realm import creates a missing realm only; editing the import file does not update an existing realm. Apply client changes through the admin console or an explicit realm migration.
+
 The dev Keycloak service is at `http://localhost:8080` (admin login from `.env`). Realm: `lawpilot-dev`. **No test users are automatically granted access**, and all tenant APIs deny by default. To use protected endpoints:
 
-1. Create a Keycloak user in the dev realm, grant access to the `lawpilot-api` audience (configured by the realm's audience mapper or via proper client scope), and obtain an OIDC access token through the **Authorization Code + PKCE** flow. Never obtain production browser tokens using password grant.
+1. Create a Keycloak user in the dev realm and obtain an OIDC access token using the `lawpilot-web` public client through the **Authorization Code + PKCE (S256)** flow. Its configured audience mapper includes `lawpilot-api` in access tokens; audience identifies the API, not a permission grant. Never obtain production browser tokens using password grant.
 2. Insert a matching tenant membership and explicit capability/matter grants using `scripts/seed_local_tenant.sql`, after replacing its example placeholders with real values.
 3. Call `GET /v1/tenants/{tenantId}/matters/{matterId}` or `POST /v1/tenants/{tenantId}/ai/execute` with `Authorization: Bearer <token>`.
 4. The AI execution endpoint is a **synchronous demonstration path**; use the Temporal command/outbox flow for production durability and asynchronous processing.
+
+The API requires signed RS256 Keycloak access tokens (`typ=Bearer`) with subject, expiration, issued-at, the exact configured issuer, and the `lawpilot-api` audience. ID and refresh tokens are rejected. Membership, capability grants and matter grants remain server-side database decisions; Keycloak realm roles do not bypass them. Missing issuer/audience configuration fails startup. In production both issuer and JWKS URLs must use HTTPS.
 
 **Known local setup note:** the browser issuer URL is `localhost`, while containerized services reach Keycloak through the internal `keycloak` hostname for JWKS. A real deployment must pin and verify the issuer, audience and network DNS configuration rather than disabling validation.
 

@@ -5,10 +5,11 @@
   "workspaces": [
     "packages/contracts",
     "apps/platform-api",
-    "services/root-supervisor"
+    "services/root-supervisor",
+    "packages/telemetry"
   ],
   "scripts": {
-    "build": "npm run build -w @lawpilot/contracts && npm run build -w @lawpilot/platform-api && npm run build -w @lawpilot/root-supervisor",
+    "build": "npm run build -w @lawpilot/telemetry && npm run build -w @lawpilot/contracts && npm run build -w @lawpilot/platform-api && npm run build -w @lawpilot/root-supervisor",
     "test": "npm run test -w @lawpilot/contracts && npm run test -w @lawpilot/platform-api"
   },
   "engines": {

@@ -54,3 +54,24 @@ def test_signature_rejects_body_tamper():
 
 def test_matter_required():
     assert signed_post(task_for('matter.qa.v1',matter=False)).status_code==422
+
+def test_invalid_identity_and_extra_fields_rejected():
+    for change in ({'tenantId':'not-a-uuid'}, {'matterId':''}, {'principalId':''}, {'traceId':''}, {'unexpected':True}):
+        task=task_for('matter.qa.v1');task.update(change)
+        assert signed_post(task).status_code==422
+
+def test_oversized_body_refused():
+    task=task_for('intake.summarize.v1',matter=False)
+    task['input']={'answers':{'text':'x'*33000}}
+    assert signed_post(task).status_code==413
+
+def test_non_ascii_signature_refused_without_server_error():
+    assert not check_signature(b'{}', str(int(time.time()*1000)), 'é'*64)
+
+def test_duplicate_registry_ids_fail_validation():
+    from app.main import Registry, REGISTRY
+    import pytest
+    data=REGISTRY.model_dump()
+    data['capabilities'].append(data['capabilities'][0])
+    with pytest.raises(ValueError, match='Duplicate capability ID'):
+        Registry.model_validate(data)

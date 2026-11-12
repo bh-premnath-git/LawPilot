@@ -10,17 +10,19 @@
   },
   "dependencies": {
     "@lawpilot/contracts": "0.1.0",
+    "@lawpilot/telemetry": "0.1.0",
     "@nestjs/common": "^11.1.0",
     "@nestjs/core": "^11.1.0",
     "@nestjs/platform-express": "^11.1.0",
+    "express": "^5.2.1",
+    "jose": "^6.0.0",
+    "pg": "^8.16.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "pg": "^8.16.0",
-    "jose": "^6.0.0",
     "zod": "^4.0.0"
   },
   "devDependencies": {
-    "@types/pg": "^8.15.0",
-    "@types/express": "^5.0.0"
+    "@types/express": "^5.0.0",
+    "@types/pg": "^8.15.0"
   }
 }

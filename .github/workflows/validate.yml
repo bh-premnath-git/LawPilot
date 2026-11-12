@@ -1,0 +1,69 @@
+name: Validate backend layers
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: lawpilot
+          POSTGRES_PASSWORD: local-ci-postgres-only
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d lawpilot"
+          --health-interval 5s --health-timeout 3s --health-retries 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: services/ai-capabilities/requirements.txt
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache-dependency-path: services/workflow-service/go.sum
+      - name: API and orchestration
+        run: |
+          npm ci
+          npm run build
+          npm test
+          python3 scripts/verify_structure.py
+      - name: Python capabilities
+        working-directory: services/ai-capabilities
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pytest -q
+      - name: Business workflows
+        working-directory: services/workflow-service
+        run: go test ./...
+      - name: Provider integration
+        working-directory: services/provider-router
+        run: go test ./...
+      - name: Document processing
+        working-directory: services/document-worker
+        run: |
+          rustup toolchain install 1.90.0 --profile minimal
+          cargo +1.90.0 test --locked
+      - name: Persistence migrations and tenant isolation
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: local-ci-postgres-only
+          PGDATABASE: lawpilot
+        run: |
+          psql -v ON_ERROR_STOP=1 -f db/001_init.sql
+          psql -v ON_ERROR_STOP=1 -f db/002_tenant_directory_rls.sql
+          psql -v ON_ERROR_STOP=1 -f db/003_execution_outbox.sql
+          psql -v ON_ERROR_STOP=1 -f db/tests/tenant_isolation.sql

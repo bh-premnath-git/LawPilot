@@ -1,5 +1,9 @@
 # Concrete backend build order / definition of done
 
+## Current layer sequence
+
+Use the owner-selected order: API Gateway → AI Orchestration → AI Capabilities → Business Workflows → Provider Integration → Document Processing → Identity → Persistence → Observability. The current fixes and remaining work are tracked in [LAYER_STATUS.md](LAYER_STATUS.md). The sprint groups below describe dependency and product acceptance requirements, rather than overriding that layer sequence.
+
 ## Before code freeze
 
 **Decision gate:** owner chooses lawyer-facing AI versus client-facing release, practice area, original document-chasing features versus four AI MVP features, and whether Clio Grow is needed.

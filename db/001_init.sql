@@ -160,7 +160,7 @@ GRANT SELECT ON tenants,memberships,principal_capabilities,matters,matter_grants
  external_mappings,document_assets,document_passages,template_versions,approval_requests,workflow_instances,
  ai_executions,audit_events,outbox_events TO lawpilot_app;
 GRANT INSERT,UPDATE ON ai_executions TO lawpilot_app;
-GRANT INSERT ON audit_events TO lawpilot_app;
+GRANT INSERT ON audit_events,outbox_events TO lawpilot_app;
 
 -- Uniform firm isolation. Matter ACL is additionally required in application access queries.
 DO $$ DECLARE t text; BEGIN
@@ -174,3 +174,10 @@ DO $$ DECLARE t text; BEGIN
     EXECUTE format('CREATE POLICY tenant_guard ON %I USING (tenant_id::text = current_setting(''app.tenant_id'',true)) WITH CHECK (tenant_id::text = current_setting(''app.tenant_id'',true))',t);
   END LOOP;
 END $$;
+
+-- Tenant directory records are private too; membership discovery needs a trusted service.
+ALTER TABLE tenants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tenants FORCE ROW LEVEL SECURITY;
+CREATE POLICY tenant_directory_guard ON tenants
+ USING (id::text = current_setting('app.tenant_id',true))
+ WITH CHECK (id::text = current_setting('app.tenant_id',true));

@@ -1,5 +1,14 @@
 {
-  "name":"@lawpilot/root-supervisor","version":"0.1.0","private":true,
-  "scripts":{"build":"tsc -p tsconfig.json","start":"node dist/main.js","dev":"tsx watch src/main.ts"},
-  "dependencies":{"@lawpilot/contracts":"0.1.0"}
+  "name": "@lawpilot/root-supervisor",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "dev": "tsx watch src/main.ts"
+  },
+  "dependencies": {
+    "@lawpilot/contracts": "0.1.0",
+    "@lawpilot/telemetry": "0.1.0"
+  }
 }

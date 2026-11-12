@@ -43,7 +43,7 @@ Non-command lifecycle events remain pending in the global outbox. They are not f
 
 ## Data and trust boundaries
 
-Inputs/results remain in tenant-isolated PostgreSQL records. Only IDs and sanitized status/failure metadata enter outbox payloads and Temporal activity/workflow histories. The dispatcher DB role has no direct table access; narrowly scoped security-definer functions expose leased command metadata and stale execution references. The workflow role has separate, RLS-enforced permissions for loading authorized requests and persisting execution/audit/outbox changes.
+Inputs/results remain in tenant-isolated PostgreSQL records. The input column uses JSON rather than JSONB to preserve the accepted numeric/UTF-8 representation; worker encoding does not expand HTML characters past the transport bound. Only IDs and sanitized status/failure metadata enter outbox payloads and Temporal activity/workflow histories. The dispatcher DB role has no direct table access; narrowly scoped security-definer functions expose leased command metadata and stale execution references. The workflow role has separate, RLS-enforced permissions for loading authorized requests and persisting execution/audit/outbox changes.
 
 The API no longer needs the shared internal HMAC key because it does not call internal AI endpoints. The Go worker still signs development transport requests to the Supervisor. Shared-HMAC replacement, workload authentication, authoritative approval and evidence verification are still P0-02 through P0-04. These local roles, static development passwords and the dev Temporal server are not production provisioning.
 

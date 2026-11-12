@@ -11,7 +11,7 @@ END $$;
 ALTER TABLE ai_executions DROP CONSTRAINT ai_executions_status_check;
 ALTER TABLE ai_executions ADD CONSTRAINT ai_executions_status_check CHECK(status IN
  ('accepted','queued','running','awaiting_review','completed','rejected','cancelled','failed'));
-ALTER TABLE ai_executions ADD COLUMN request_input jsonb;
+ALTER TABLE ai_executions ADD COLUMN request_input json; -- Preserve the accepted JSON representation; no payload indexes.
 ALTER TABLE ai_executions ADD COLUMN workflow_id text UNIQUE;
 ALTER TABLE ai_executions ADD COLUMN error_code text;
 ALTER TABLE ai_executions ADD COLUMN updated_at timestamptz NOT NULL DEFAULT now();

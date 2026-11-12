@@ -1,9 +1,11 @@
 package executions
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -217,5 +219,28 @@ func TestDeadLetterIsVisibleAndFenced(t *testing.T) {
 	}
 	if state != "dead_letter" || code != "TEMPORAL_UNAVAILABLE" {
 		t.Fatalf("state=%s code=%s", state, code)
+	}
+}
+
+func TestAcceptedInputBoundaryIsNotExpandedForHTML(t *testing.T) {
+	f := newFixture(t)
+	ctx := context.Background()
+	_, err := f.Admin.Exec(ctx, "UPDATE ai_executions SET request_input=json_build_object('value',repeat('<',8180)) WHERE id=$1", f.Ref.ExecutionID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cap := Capability{ID: "intake.summarize.v1", AgentID: "intake-agent", AgentVersion: "0.1.0", RequiresAttorneyReview: true, MaxInputBytes: 8192}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, err := io.ReadAll(r.Body)
+		if err != nil || len(body) > 32768 || bytes.Contains(body, []byte(`\u003c`)) {
+			t.Error("accepted input was expanded past transport limit")
+		}
+		json.NewEncoder(w).Encode(map[string]any{"executionId": f.Ref.ExecutionID, "agentId": cap.AgentID, "agentVersion": cap.AgentVersion, "status": "abstained", "output": map[string]any{}, "evidence": []any{}, "proposedActions": []any{}, "requiresAttorneyReview": true})
+	}))
+	defer server.Close()
+	a := &Activities{Store: &Store{Pool: f.Work}, Registry: map[string]Capability{cap.ID: cap}, SupervisorURL: server.URL, Secret: "test-secret-at-least-32-characters", HTTP: server.Client()}
+	state, err := a.Run(ctx, f.Ref)
+	if err != nil || state != "completed" {
+		t.Fatalf("boundary input rejected: %s %v", state, err)
 	}
 }

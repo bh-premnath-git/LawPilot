@@ -50,6 +50,11 @@ func main() {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
+			if os.Getenv("ENABLE_CALENDAR_REMINDERS") == "true" {
+				if err = d.TickReminders(ctx); err != nil {
+					log.Println("calendar reminder dispatch cycle failed")
+				}
+			}
 			if err = d.Tick(ctx); err != nil {
 				log.Println("dispatch cycle failed; leases will be retried")
 			}

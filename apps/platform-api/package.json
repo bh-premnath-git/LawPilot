@@ -9,6 +9,7 @@
     "test": "tsx --test src/*.test.ts"
   },
   "dependencies": {
+    "@grpc/grpc-js": "^1.14.7",
     "@lawpilot/contracts": "0.1.0",
     "@lawpilot/telemetry": "0.1.0",
     "@nestjs/common": "^11.1.0",
@@ -19,7 +20,8 @@
     "pg": "^8.16.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "zod": "^4.0.0"
+    "zod": "^4.0.0",
+    "@lawpilot/rpc": "0.1.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",

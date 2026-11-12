@@ -5,6 +5,8 @@ import os
 import time
 from uuid import uuid4
 
+os.environ['ENABLE_LEGACY_INTERNAL_HTTP']='true'
+os.environ['APP_ENV']='development'
 os.environ['INTERNAL_HMAC_KEY'] = 'unit-test-secret-value-at-least-32-characters'
 from fastapi.testclient import TestClient
 from app.main import app, check_signature, safe_mock, Task

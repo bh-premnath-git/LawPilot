@@ -6,6 +6,7 @@ import { Request, Response, json } from 'express';
 import { randomUUID } from 'node:crypto';
 import { AuthService } from './auth.service';
 import { DbService } from './db.service';
+import {CalendarController,CalendarClient} from './calendar/calendar.controller';
 import { ExecutionsService } from './executions.service';
 import { AccessService } from './access.service';
 
@@ -61,16 +62,17 @@ class TelemetryLifecycle implements OnApplicationShutdown {
   async onApplicationShutdown(): Promise<void> { await shutdownTelemetry(); }
 }
 
-@Module({controllers:[ApiController],providers:[AuthService,DbService,AccessService,ExecutionsService,TelemetryLifecycle]})
+@Module({controllers:[ApiController,CalendarController],providers:[AuthService,DbService,AccessService,ExecutionsService,CalendarClient,TelemetryLifecycle]})
 class AppModule{}
 async function bootstrap(){
   if(!process.env.KEYCLOAK_ISSUER||!process.env.KEYCLOAK_AUDIENCE||!process.env.DATABASE_URL){throw new Error('Missing required auth/DB env');}
   const app=await NestFactory.create(AppModule,{cors:false,bodyParser:false});
   app.use((req: any,res: any,next: () => void)=>withHttpSpan('platform.request',req,res,next));
-  app.use((_req: unknown, res: any, next: () => void) => {
+  app.use((req: any, res: any, next: () => void) => {
     res.setHeader('Cache-Control','no-store');
     res.setHeader('X-Content-Type-Options','nosniff');
-    res.setHeader('X-Request-ID',randomUUID());
+    const requestId=randomUUID();res.setHeader('X-Request-ID',requestId);
+    Object.defineProperty(req,'lawpilotRequestId',{value:requestId,writable:false});
     next();
   });
   app.use(json({limit: '32kb', strict: true}));

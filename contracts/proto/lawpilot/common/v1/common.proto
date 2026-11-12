@@ -1,5 +1,6 @@
 syntax = "proto3";
 package lawpilot.common.v1;
+option go_package = "github.com/bh-premnath-git/LawPilot/contracts/gen/go/lawpilot/common/v1;commonv1";
 
 // Server-generated; service callers MUST authenticate their identity independently.
 message ExecutionContext {

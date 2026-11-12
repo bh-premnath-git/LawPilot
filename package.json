@@ -6,18 +6,22 @@
     "packages/contracts",
     "apps/platform-api",
     "services/root-supervisor",
-    "packages/telemetry"
+    "packages/telemetry",
+    "packages/rpc"
   ],
   "scripts": {
-    "build": "npm run build -w @lawpilot/telemetry && npm run build -w @lawpilot/contracts && npm run build -w @lawpilot/platform-api && npm run build -w @lawpilot/root-supervisor",
-    "test": "npm run test -w @lawpilot/contracts && npm run test -w @lawpilot/platform-api"
+    "build": "npm run build -w @lawpilot/rpc && npm run build -w @lawpilot/telemetry && npm run build -w @lawpilot/contracts && npm run build -w @lawpilot/platform-api && npm run build -w @lawpilot/root-supervisor",
+    "test": "npm run test -w @lawpilot/contracts && npm run test -w @lawpilot/platform-api",
+    "generate:rpc": "bash scripts/generate_rpc.sh"
   },
   "engines": {
     "node": ">=22"
   },
   "devDependencies": {
-    "typescript": "^5.9.0",
     "@types/node": "^22.0.0",
-    "tsx": "^4.20.0"
+    "grpc-tools": "^1.13.0",
+    "ts-proto": "^2.11.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
   }
 }

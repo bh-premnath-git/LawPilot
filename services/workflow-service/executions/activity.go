@@ -16,6 +16,7 @@ import (
 	"strconv"
 	"time"
 
+	rpcpb "github.com/bh-premnath-git/LawPilot/contracts/gen/go/lawpilot/rpc/v1"
 	"go.temporal.io/sdk/temporal"
 )
 
@@ -99,11 +100,13 @@ func ValidateResult(raw []byte, e Execution, cap Capability) (Result, error) {
 }
 
 type Activities struct {
-	Store         *Store
-	Registry      map[string]Capability
-	SupervisorURL string
-	Secret        string
-	HTTP          *http.Client
+	RPC             rpcpb.SupervisorServiceClient
+	AllowLegacyHTTP bool
+	Store           *Store
+	Registry        map[string]Capability
+	SupervisorURL   string
+	Secret          string
+	HTTP            *http.Client
 }
 
 func permanent(code string) error { return temporal.NewNonRetryableApplicationError(code, code, nil) }
@@ -130,46 +133,56 @@ func (a *Activities) Run(ctx context.Context, ref Ref) (string, error) {
 	if cap.RequiresMatter && e.MatterID == nil || len(e.Input) > cap.MaxInputBytes {
 		return "", permanent("INVALID_REQUEST")
 	}
-	task := map[string]any{"executionId": e.ExecutionID, "tenantId": e.TenantID, "principalId": e.PrincipalID, "capabilityId": e.CapabilityID, "input": json.RawMessage(e.Input), "traceId": e.ExecutionID}
-	if e.MatterID != nil {
-		task["matterId"] = *e.MatterID
-	}
-	var encoded bytes.Buffer
-	encoder := json.NewEncoder(&encoded)
-	encoder.SetEscapeHTML(false)
-	err = encoder.Encode(task)
-	body := encoded.Bytes()
-	if err != nil {
-		return "", permanent("INVALID_REQUEST")
-	}
-	req, err := http.NewRequestWithContext(ctx, "POST", a.SupervisorURL+"/internal/execute", bytes.NewReader(body))
-	if err != nil {
-		return "", permanent("INVALID_CONFIGURATION")
-	}
-	ts := strconv.FormatInt(time.Now().UnixMilli(), 10)
-	mac := hmac.New(sha256.New, []byte(a.Secret))
-	mac.Write([]byte(ts + "."))
-	mac.Write(body)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Lawpilot-Timestamp", ts)
-	req.Header.Set("X-Lawpilot-Signature", hex.EncodeToString(mac.Sum(nil)))
-	resp, err := a.HTTP.Do(req)
-	if err != nil {
-		return "", errors.New("SUPERVISOR_UNAVAILABLE")
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode == 429 || resp.StatusCode >= 500 {
-		return "", errors.New("SUPERVISOR_UNAVAILABLE")
-	}
-	if resp.StatusCode != 200 {
-		return "", permanent("SUPERVISOR_REJECTED")
-	}
-	raw, err := io.ReadAll(io.LimitReader(resp.Body, 1_048_577))
-	if err != nil {
-		return "", errors.New("SUPERVISOR_UNAVAILABLE")
-	}
-	if len(raw) > 1_048_576 {
-		return "", permanent("INVALID_RESULT")
+	var raw []byte
+	if a.RPC != nil {
+		raw, err = a.invokeRPC(ctx, e)
+		if err != nil {
+			return "", err
+		}
+	} else if a.AllowLegacyHTTP {
+		task := map[string]any{"executionId": e.ExecutionID, "tenantId": e.TenantID, "principalId": e.PrincipalID, "capabilityId": e.CapabilityID, "input": json.RawMessage(e.Input), "traceId": e.ExecutionID}
+		if e.MatterID != nil {
+			task["matterId"] = *e.MatterID
+		}
+		var encoded bytes.Buffer
+		encoder := json.NewEncoder(&encoded)
+		encoder.SetEscapeHTML(false)
+		err = encoder.Encode(task)
+		body := encoded.Bytes()
+		if err != nil {
+			return "", permanent("INVALID_REQUEST")
+		}
+		req, err := http.NewRequestWithContext(ctx, "POST", a.SupervisorURL+"/internal/execute", bytes.NewReader(body))
+		if err != nil {
+			return "", permanent("INVALID_CONFIGURATION")
+		}
+		ts := strconv.FormatInt(time.Now().UnixMilli(), 10)
+		mac := hmac.New(sha256.New, []byte(a.Secret))
+		mac.Write([]byte(ts + "."))
+		mac.Write(body)
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("X-Lawpilot-Timestamp", ts)
+		req.Header.Set("X-Lawpilot-Signature", hex.EncodeToString(mac.Sum(nil)))
+		resp, err := a.HTTP.Do(req)
+		if err != nil {
+			return "", errors.New("SUPERVISOR_UNAVAILABLE")
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode == 429 || resp.StatusCode >= 500 {
+			return "", errors.New("SUPERVISOR_UNAVAILABLE")
+		}
+		if resp.StatusCode != 200 {
+			return "", permanent("SUPERVISOR_REJECTED")
+		}
+		raw, err = io.ReadAll(io.LimitReader(resp.Body, 1_048_577))
+		if err != nil {
+			return "", errors.New("SUPERVISOR_UNAVAILABLE")
+		}
+		if len(raw) > 1_048_576 {
+			return "", permanent("INVALID_RESULT")
+		}
+	} else {
+		return "", permanent("GRPC_CONFIGURATION_REQUIRED")
 	}
 	result, err := ValidateResult(raw, e, cap)
 	if err != nil {

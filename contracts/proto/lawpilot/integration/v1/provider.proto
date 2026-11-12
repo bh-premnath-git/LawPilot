@@ -1,5 +1,6 @@
 syntax = "proto3";
 package lawpilot.integration.v1;
+option go_package = "github.com/bh-premnath-git/LawPilot/contracts/gen/go/lawpilot/integration/v1;integrationv1";
 import "lawpilot/common/v1/common.proto";
 
 message ProviderManifest {

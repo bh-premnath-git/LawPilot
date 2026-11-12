@@ -25,7 +25,7 @@ async function stop(child,signal='SIGTERM'){
 async function until(action,timeout=60000){const end=Date.now()+timeout;let last;while(Date.now()<end){try{const result=await action();if(result)return result;}catch(e){last=e;}await sleep(200);}throw last||Error('integration timeout');}
 async function port(){const s=http.createServer();await new Promise(r=>s.listen(0,'127.0.0.1',r));const p=s.address().port;await new Promise(r=>s.close(r));return p;}
 function startAPI(){api=launch(process.execPath,['apps/platform-api/dist/main.js'],'api',{API_PORT:String(apiPort),DATABASE_URL:process.env.TEST_APP_DATABASE_URL,KEYCLOAK_ISSUER:issuer,KEYCLOAK_AUDIENCE:'lawpilot-api',KEYCLOAK_JWKS_URL:issuer+'/certs'});}
-function startWorker(){worker=launch(workerBin,[],'worker',{WORKFLOW_DATABASE_URL:process.env.TEST_WORKFLOW_DATABASE_URL,TEMPORAL_ADDRESS:`127.0.0.1:${temporalPort}`,TEMPORAL_TASK_QUEUE:'test-'+tenant,SUPERVISOR_URL:`http://127.0.0.1:${supervisorPort}`});}
+function startWorker(){worker=launch(workerBin,[],'worker',{APP_ENV:'development',ENABLE_LEGACY_INTERNAL_HTTP:'true',SUPERVISOR_GRPC_ADDRESS:'',CALENDAR_GRPC_ADDRESS:'',ENABLE_CALENDAR_REMINDERS:'false',WORKFLOW_DATABASE_URL:process.env.TEST_WORKFLOW_DATABASE_URL,TEMPORAL_ADDRESS:`127.0.0.1:${temporalPort}`,TEMPORAL_TASK_QUEUE:'test-'+tenant,SUPERVISOR_URL:`http://127.0.0.1:${supervisorPort}`});}
 function startDispatcher(){dispatcher=launch(dispatcherBin,[],'dispatcher',{DISPATCHER_DATABASE_URL:process.env.TEST_DISPATCHER_DATABASE_URL,WORKFLOW_DATABASE_URL:process.env.TEST_WORKFLOW_DATABASE_URL,TEMPORAL_ADDRESS:`127.0.0.1:${temporalPort}`,TEMPORAL_TASK_QUEUE:'test-'+tenant});}
 async function startTemporal(){temporal=launch(temporalBin,['server','start-dev','--ip','127.0.0.1','--port',String(temporalPort),'--ui-port',String(await port()),'--db-filename',path.join(scratch,'temporal.db')],'temporal');await until(async()=>{await exec(temporalBin,['operator','cluster','health','--address',`127.0.0.1:${temporalPort}`],{timeout:3000});return true;});}
 async function ready(){await until(async()=>{const r=await fetch(`http://127.0.0.1:${apiPort}/v1/readyz`);return r.ok;});}
@@ -33,7 +33,10 @@ async function request(method,url,body,credential=token){return fetch(`http://12
 async function accept(key){const r=await request('POST',`/v1/tenants/${tenant}/executions`,{capabilityId:'matter.qa.v1',matterId:matter,idempotencyKey:key,input:{question:'PRIVATE_LEGAL_TEST_SENTINEL'}});assert.equal(r.status,202,await r.clone().text());const value=await r.json();assert.equal(r.headers.get('location'),value.statusUrl);return value;}
 async function state(value,wanted,timeout=60000){return until(async()=>{const r=await request('GET',value.statusUrl);assert.equal(r.status,200);const body=await r.json();return body.status===wanted?body:false;},timeout);}
 async function delivery(value){return until(async()=>{const row=(await pool.query("SELECT publish_state FROM outbox_events WHERE tenant_id=$1 AND aggregate_id=$2 AND event_type='lawpilot.ai.accepted.v1'",[tenant,value.executionId])).rows[0];return row.publish_state==='delivered';});}
+let integrationLock;
 (async()=>{
+ integrationLock=await pool.connect();
+ await integrationLock.query("SELECT pg_advisory_lock(604182701)");
  for(const variable of ['TEST_DATABASE_URL','TEST_APP_DATABASE_URL','TEST_WORKFLOW_DATABASE_URL','TEST_DISPATCHER_DATABASE_URL'])assert(process.env[variable],variable+' required');
  const {generateKeyPair,exportJWK,SignJWT}=await import('jose');const {publicKey,privateKey}=await generateKeyPair('RS256');
  const key={...await exportJWK(publicKey),kid:'recovery-test',alg:'RS256',use:'sig'};
@@ -86,5 +89,5 @@ async function delivery(value){return until(async()=>{const row=(await pool.quer
  if(blockedResponse)blockedResponse();for(const child of children.reverse())await stop(child);
  for(const server of [supervisor,jwksServer])if(server){server.closeAllConnections();server.close();}
  for(const table of ['outbox_events','audit_events','ai_executions','principal_capabilities','matter_grants','matters','memberships'])await pool.query(`DELETE FROM ${table} WHERE tenant_id=$1`,[tenant]);
- await pool.query('DELETE FROM tenants WHERE id=$1',[tenant]);await pool.end();
+ await pool.query('DELETE FROM tenants WHERE id=$1',[tenant]);if(integrationLock){await integrationLock.query("SELECT pg_advisory_unlock(604182701)");integrationLock.release();}await pool.end();
 });

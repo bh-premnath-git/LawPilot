@@ -45,7 +45,7 @@ Non-command lifecycle events remain pending in the global outbox. They are not f
 
 Inputs/results remain in tenant-isolated PostgreSQL records. Migration 006 changes the input column to JSON rather than JSONB to preserve future accepted numeric/UTF-8 representations (existing values keep their current representation); worker encoding does not expand HTML characters past the transport bound. Only IDs and sanitized status/failure metadata enter outbox payloads and Temporal activity/workflow histories. The dispatcher DB role has no direct table access; narrowly scoped security-definer functions expose leased command metadata and stale execution references. The workflow role has separate, RLS-enforced permissions for loading authorized requests and persisting execution/audit/outbox changes.
 
-The API no longer needs the shared internal HMAC key because it does not call internal AI endpoints. The Go worker still signs development transport requests to the Supervisor. Shared-HMAC replacement, workload authentication, authoritative approval and evidence verification are still P0-02 through P0-04. These local roles, static development passwords and the dev Temporal server are not production provisioning.
+The API no longer needs the shared internal HMAC key because it does not call internal AI endpoints. The default Go → Supervisor → Python path now uses mTLS gRPC with caller allowlists. See [calendar/gRPC setup](CALENDAR_GRPC.md). Production identity lifecycle, authoritative approval and evidence verification remain acceptance work. These local roles, static development passwords and the dev Temporal server are not production provisioning.
 
 ## Start and upgrade
 
@@ -77,7 +77,7 @@ TEMPORAL_TASK_QUEUE=lawpilot-executions-v1
 
 The earlier approval sample can keep a separate worker with `TEMPORAL_TASK_QUEUE=lawpilot-approval-v1`; existing approval histories are not migrated or signalled by this change.
 
-The worker additionally needs the shared development `INTERNAL_HMAC_KEY`, `SUPERVISOR_URL` and a capability registry. The dispatcher uses its own DB URL plus the workflow-role URL for the narrowly scoped stale-state reconciler. Keycloak user creation and synthetic SQL membership/grant seeding remain as documented in the main README.
+The worker additionally needs `SUPERVISOR_GRPC_ADDRESS`, its own `execution-worker` certificate/key, the public CA and a capability registry; calendar reminder registration also uses `CALENDAR_GRPC_ADDRESS`. Shared HMAC HTTP is restricted to an explicitly enabled development compatibility fixture. The dispatcher uses its own DB URL plus the workflow-role URL for the narrowly scoped stale-state reconciler. Keycloak user creation and synthetic SQL membership/grant seeding remain as documented in the main README.
 
 ## Recovery verification
 

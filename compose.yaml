@@ -12,6 +12,7 @@ services:
       - ./db/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
       - ./db/005_durable_executions.sql:/docker-entrypoint-initdb.d/005_durable_executions.sql:ro
       - ./db/006_execution_input_json.sql:/docker-entrypoint-initdb.d/006_execution_input_json.sql:ro
+      - ./db/007_calendar_domain.sql:/docker-entrypoint-initdb.d/007_calendar_domain.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d lawpilot"]
       interval: 5s
@@ -32,14 +33,22 @@ services:
       retries: 30
 
   execution-worker:
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    volumes:
+      - ./work/tls/ca.pem:/run/lawpilot/tls/ca.pem:ro
+      - ./work/tls/execution-worker.pem:/run/lawpilot/tls/service.pem:ro
+      - ./work/tls/execution-worker.key:/run/lawpilot/tls/service.key:ro
     build: { context: ., dockerfile: services/workflow-service/Dockerfile }
     environment:
       WORKFLOW_DATABASE_URL: postgresql://lawpilot_workflow:local-dev-workflow-only@postgres:5432/lawpilot
       TEMPORAL_ADDRESS: temporal:7233
       TEMPORAL_NAMESPACE: default
       TEMPORAL_TASK_QUEUE: lawpilot-executions-v1
-      SUPERVISOR_URL: http://root-supervisor:3001
-      INTERNAL_HMAC_KEY: ${INTERNAL_HMAC_KEY:?set a long development secret}
+      SUPERVISOR_GRPC_ADDRESS: root-supervisor:50052
+      CALENDAR_GRPC_ADDRESS: calendar-service:50051
+      GRPC_CA_FILE: /run/lawpilot/tls/ca.pem
+      GRPC_CLIENT_CERT_FILE: /run/lawpilot/tls/service.pem
+      GRPC_CLIENT_KEY_FILE: /run/lawpilot/tls/service.key
     depends_on:
       postgres: {condition: service_healthy}
       temporal: {condition: service_healthy}
@@ -53,6 +62,7 @@ services:
       DISPATCHER_DATABASE_URL: postgresql://lawpilot_dispatcher:local-dev-dispatcher-only@postgres:5432/lawpilot
       WORKFLOW_DATABASE_URL: postgresql://lawpilot_workflow:local-dev-workflow-only@postgres:5432/lawpilot
       TEMPORAL_ADDRESS: temporal:7233
+      ENABLE_CALENDAR_REMINDERS: "true"
       TEMPORAL_NAMESPACE: default
       TEMPORAL_TASK_QUEUE: lawpilot-executions-v1
     depends_on:
@@ -74,20 +84,36 @@ services:
       - keycloakdata:/opt/keycloak/data
 
   root-supervisor:
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    volumes:
+      - ./work/tls/ca.pem:/run/lawpilot/tls/ca.pem:ro
+      - ./work/tls/root-supervisor.pem:/run/lawpilot/tls/service.pem:ro
+      - ./work/tls/root-supervisor.key:/run/lawpilot/tls/service.key:ro
     build: { context: ., dockerfile: services/root-supervisor/Dockerfile }
     environment:
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
       SUPERVISOR_PORT: "3001"
-      AI_URL: http://ai-capabilities:8000
-      INTERNAL_HMAC_KEY: ${INTERNAL_HMAC_KEY:?copy .env.example to .env and set a long secret}
+      AI_GRPC_ADDRESS: ai-capabilities:50053
+      GRPC_CA_FILE: /run/lawpilot/tls/ca.pem
+      GRPC_SERVER_CERT_FILE: /run/lawpilot/tls/service.pem
+      GRPC_SERVER_KEY_FILE: /run/lawpilot/tls/service.key
+      GRPC_CLIENT_CERT_FILE: /run/lawpilot/tls/service.pem
+      GRPC_CLIENT_KEY_FILE: /run/lawpilot/tls/service.key
     depends_on: [ai-capabilities]
     ports: ["127.0.0.1:3001:3001"]
 
   ai-capabilities:
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    volumes:
+      - ./work/tls/ca.pem:/run/lawpilot/tls/ca.pem:ro
+      - ./work/tls/ai-capabilities.pem:/run/lawpilot/tls/service.pem:ro
+      - ./work/tls/ai-capabilities.key:/run/lawpilot/tls/service.key:ro
     build: { context: ., dockerfile: services/ai-capabilities/Dockerfile }
     environment:
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
-      INTERNAL_HMAC_KEY: ${INTERNAL_HMAC_KEY:?copy .env.example to .env and set a long secret}
+      GRPC_CA_FILE: /run/lawpilot/tls/ca.pem
+      GRPC_SERVER_CERT_FILE: /run/lawpilot/tls/service.pem
+      GRPC_SERVER_KEY_FILE: /run/lawpilot/tls/service.key
     ports: ["127.0.0.1:8000:8000"]
 
   provider-router:
@@ -97,10 +123,19 @@ services:
     ports: ["127.0.0.1:8082:8082"]
 
   platform-api:
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    volumes:
+      - ./work/tls/ca.pem:/run/lawpilot/tls/ca.pem:ro
+      - ./work/tls/api-gateway.pem:/run/lawpilot/tls/service.pem:ro
+      - ./work/tls/api-gateway.key:/run/lawpilot/tls/service.key:ro
     build: { context: ., dockerfile: apps/platform-api/Dockerfile }
     environment:
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
       API_PORT: "3000"
+      CALENDAR_GRPC_ADDRESS: calendar-service:50051
+      GRPC_CA_FILE: /run/lawpilot/tls/ca.pem
+      GRPC_CLIENT_CERT_FILE: /run/lawpilot/tls/service.pem
+      GRPC_CLIENT_KEY_FILE: /run/lawpilot/tls/service.key
       DATABASE_URL: postgresql://lawpilot_app:local-dev-app-only@postgres:5432/lawpilot
       KEYCLOAK_ISSUER: http://localhost:8080/realms/lawpilot-dev
       KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/lawpilot-dev/protocol/openid-connect/certs
@@ -109,6 +144,27 @@ services:
       postgres: {condition: service_healthy}
       keycloak: {condition: service_started}
     ports: ["127.0.0.1:3000:3000"]
+
+  calendar-service:
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    volumes:
+      - ./work/tls/ca.pem:/run/lawpilot/tls/ca.pem:ro
+      - ./work/tls/calendar-service.pem:/run/lawpilot/tls/service.pem:ro
+      - ./work/tls/calendar-service.key:/run/lawpilot/tls/service.key:ro
+    build: { context: ., dockerfile: services/calendar-service/Dockerfile }
+    environment:
+      APP_ENV: development
+      CALENDAR_DATABASE_URL: postgresql://lawpilot_calendar:local-dev-calendar-only@postgres:5432/lawpilot
+      KEYCLOAK_ISSUER: http://localhost:8080/realms/lawpilot-dev
+      KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/lawpilot-dev/protocol/openid-connect/certs
+      KEYCLOAK_AUDIENCE: lawpilot-api
+      GRPC_CA_FILE: /run/lawpilot/tls/ca.pem
+      GRPC_SERVER_CERT_FILE: /run/lawpilot/tls/service.pem
+      GRPC_SERVER_KEY_FILE: /run/lawpilot/tls/service.key
+    depends_on:
+      postgres: {condition: service_healthy}
+      keycloak: {condition: service_started}
+    restart: unless-stopped
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.134.0

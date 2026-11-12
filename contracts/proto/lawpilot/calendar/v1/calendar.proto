@@ -1,0 +1,82 @@
+syntax = "proto3";
+package lawpilot.calendar.v1;
+option go_package = "github.com/bh-premnath-git/LawPilot/contracts/gen/go/lawpilot/calendar/v1;calendarv1";
+import "google/protobuf/timestamp.proto";
+
+// Principal identity is derived from a verified delegated token, never this message.
+message RequestScope { string tenant_id = 1; string request_id = 2; }
+message CivilDate { int32 year = 1; int32 month = 2; int32 day = 3; }
+message TimedInterval { google.protobuf.Timestamp start = 1; google.protobuf.Timestamp end = 2; string time_zone = 3; }
+message AllDayInterval { CivilDate start_date = 1; CivilDate end_date_exclusive = 2; string time_zone = 3; }
+enum EntryKind { ENTRY_KIND_UNSPECIFIED = 0; ENTRY_KIND_APPOINTMENT = 1; ENTRY_KIND_CONSULTATION = 2; ENTRY_KIND_HEARING = 3; ENTRY_KIND_TASK_BLOCK = 4; ENTRY_KIND_DEADLINE_CANDIDATE = 5; ENTRY_KIND_VERIFIED_DEADLINE = 6; }
+enum Visibility { VISIBILITY_UNSPECIFIED = 0; VISIBILITY_PRIVATE = 1; VISIBILITY_INTERNAL = 2; VISIBILITY_SHARED = 3; }
+enum Frequency { FREQUENCY_UNSPECIFIED = 0; FREQUENCY_DAILY = 1; FREQUENCY_WEEKLY = 2; }
+enum ChangeScope { CHANGE_SCOPE_UNSPECIFIED = 0; CHANGE_SCOPE_OCCURRENCE = 1; CHANGE_SCOPE_THIS_AND_FOLLOWING = 2; CHANGE_SCOPE_SERIES = 3; }
+message RecurrenceRule { Frequency frequency = 1; int32 interval = 2; int32 count = 3; }
+message ReminderSpec { int32 minutes_before = 1; }
+message EntryDraft {
+ string title = 1; string description = 2; EntryKind kind = 3; Visibility visibility = 4; string matter_id = 5;
+ oneof schedule { TimedInterval timed = 6; AllDayInterval all_day = 7; }
+ RecurrenceRule recurrence = 8; repeated string participant_principal_ids = 9; repeated ReminderSpec reminders = 10;
+}
+message Calendar {
+ string id = 1; string name = 2; string default_time_zone = 3; bool approval_required = 4; int64 revision = 5; string authority = 6;
+}
+message CalendarEntry {
+ string id = 1; string calendar_id = 2; string series_id = 3; int32 occurrence_index = 4; int64 revision = 5; int64 series_revision = 6;
+ string title = 7; string description = 8; EntryKind kind = 9; Visibility visibility = 10; string matter_id = 11;
+ oneof schedule { TimedInterval timed = 12; AllDayInterval all_day = 13; }
+ string status = 14; repeated string participant_principal_ids = 15; string created_by = 16; RecurrenceRule recurrence = 17;
+}
+message CreateEntry { EntryDraft draft = 1; }
+message UpdateEntry { string entry_id = 1; int64 expected_revision = 2; int64 expected_series_revision = 3; ChangeScope scope = 4; EntryDraft draft = 5; }
+message CancelEntry { string entry_id = 1; int64 expected_revision = 2; int64 expected_series_revision = 3; ChangeScope scope = 4; }
+message CalendarCommand { oneof action { CreateEntry create = 1; UpdateEntry update = 2; CancelEntry cancel = 3; } }
+message MutationResult { repeated string entry_ids = 1; repeated int64 revisions = 2; string series_id = 3; int64 series_revision = 4; string proposal_id = 5; string status = 6; int32 affected_count = 7; repeated string affected_entry_ids = 8; }
+message ListCalendarsRequest { RequestScope scope = 1; }
+message ListCalendarsResponse { repeated Calendar calendars = 1; }
+message CreateCalendarRequest { RequestScope scope = 1; string name = 2; string default_time_zone = 3; optional bool approval_required = 4; string idempotency_key = 5; }
+message CreateCalendarResponse { Calendar calendar = 1; }
+message GrantCalendarRequest { RequestScope scope = 1; string calendar_id = 2; string principal_id = 3; repeated string permissions = 4; int64 expected_revision = 5; string idempotency_key = 6; }
+message GrantCalendarResponse { Calendar calendar = 1; }
+message ListEntriesRequest { RequestScope scope = 1; string calendar_id = 2; google.protobuf.Timestamp from = 3; google.protobuf.Timestamp to = 4; string matter_id = 5; int32 page_size = 6; string page_token = 7; }
+message ListEntriesResponse { repeated CalendarEntry entries = 1; string next_page_token = 2; string coverage = 3; google.protobuf.Timestamp as_of = 4; }
+message GetEntryRequest { RequestScope scope = 1; string calendar_id = 2; string entry_id = 3; }
+message GetEntryResponse { CalendarEntry entry = 1; }
+message MutateEntryRequest { RequestScope scope = 1; string calendar_id = 2; CalendarCommand command = 3; string idempotency_key = 4; }
+message MutateEntryResponse { MutationResult result = 1; }
+message ProposeEntryRequest { RequestScope scope = 1; string calendar_id = 2; CalendarCommand command = 3; string idempotency_key = 4; }
+message ProposeEntryResponse { MutationResult result = 1; }
+message DecideProposalRequest { RequestScope scope = 1; string calendar_id = 2; string proposal_id = 3; string decision = 4; string expected_sha256 = 5; string idempotency_key = 6; }
+message DecideProposalResponse { MutationResult result = 1; }
+message GetProposalRequest { RequestScope scope = 1; string calendar_id = 2; string proposal_id = 3; }
+message GetProposalResponse { string proposal_id = 1; CalendarCommand command = 2; string sha256 = 3; string status = 4; string proposed_by = 5; int32 affected_count = 6; repeated string affected_entry_ids = 7; }
+message AvailabilityRequest { RequestScope scope = 1; string calendar_id = 2; google.protobuf.Timestamp from = 3; google.protobuf.Timestamp to = 4; }
+// Busy intervals intentionally omit event IDs, titles and attendees, including private entries.
+message BusyInterval { google.protobuf.Timestamp start = 1; google.protobuf.Timestamp end = 2; }
+message AvailabilityResponse { repeated BusyInterval busy = 1; string coverage = 2; repeated string warnings = 3; }
+message SyncStatusRequest { RequestScope scope = 1; string calendar_id = 2; }
+message SyncStatusResponse { string authority = 1; string state = 2; string coverage = 3; repeated string warnings = 4; }
+message Reminder { string id = 1; string entry_id = 2; int64 entry_revision = 3; google.protobuf.Timestamp due_at = 4; string status = 5; }
+message ListRemindersRequest { RequestScope scope = 1; string calendar_id = 2; string entry_id = 3; }
+message ListRemindersResponse { repeated Reminder reminders = 1; }
+// Internal worker methods accept references only. The service resolves stored scope,
+// verifies the workload certificate and reauthorizes the stored requesting principal.
+message ReminderWorkRequest { string tenant_id = 1; string reminder_id = 2; }
+message ReminderWorkResponse { string status = 1; google.protobuf.Timestamp due_at = 2; }
+service CalendarService {
+ rpc ListCalendars(ListCalendarsRequest) returns (ListCalendarsResponse);
+ rpc CreateCalendar(CreateCalendarRequest) returns (CreateCalendarResponse);
+ rpc GrantCalendar(GrantCalendarRequest) returns (GrantCalendarResponse);
+ rpc ListEntries(ListEntriesRequest) returns (ListEntriesResponse);
+ rpc GetEntry(GetEntryRequest) returns (GetEntryResponse);
+ rpc MutateEntry(MutateEntryRequest) returns (MutateEntryResponse);
+ rpc ProposeEntry(ProposeEntryRequest) returns (ProposeEntryResponse);
+ rpc GetProposal(GetProposalRequest) returns (GetProposalResponse);
+ rpc DecideProposal(DecideProposalRequest) returns (DecideProposalResponse);
+ rpc Availability(AvailabilityRequest) returns (AvailabilityResponse);
+ rpc SyncStatus(SyncStatusRequest) returns (SyncStatusResponse);
+ rpc ListReminders(ListRemindersRequest) returns (ListRemindersResponse);
+ rpc LoadReminderWork(ReminderWorkRequest) returns (ReminderWorkResponse);
+ rpc DeliverReminder(ReminderWorkRequest) returns (ReminderWorkResponse);
+}

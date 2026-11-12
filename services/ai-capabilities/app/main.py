@@ -138,6 +138,8 @@ def health():
 
 @app.post('/internal/execute', response_model=Result, response_model_exclude_none=True)
 async def execute(request: Request):
+    if os.environ.get('ENABLE_LEGACY_INTERNAL_HTTP') != 'true' or os.environ.get('APP_ENV') != 'development':
+        raise HTTPException(410, 'use_authenticated_grpc')
     raw = bytearray()
     async for chunk in request.stream():
         if len(raw) + len(chunk) > 32_768:

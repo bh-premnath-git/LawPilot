@@ -1,5 +1,6 @@
 syntax = "proto3";
 package lawpilot.agent.v1;
+option go_package = "github.com/bh-premnath-git/LawPilot/contracts/gen/go/lawpilot/agent/v1;agentv1";
 import "lawpilot/common/v1/common.proto";
 message AgentTask {
  lawpilot.common.v1.ExecutionContext context = 1;

@@ -11,7 +11,7 @@ jobs:
     timeout-minutes: 20
     services:
       postgres:
-        image: postgres:16-alpine
+        image: pgvector/pgvector:0.8.7-pg18-trixie
         env:
           POSTGRES_DB: lawpilot
           POSTGRES_PASSWORD: local-ci-postgres-only
@@ -66,4 +66,6 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f db/001_init.sql
           psql -v ON_ERROR_STOP=1 -f db/002_tenant_directory_rls.sql
           psql -v ON_ERROR_STOP=1 -f db/003_execution_outbox.sql
+          psql -v ON_ERROR_STOP=1 -f db/004_pgvector.sql
+          psql -v ON_ERROR_STOP=1 -f db/tests/pgvector.sql
           psql -v ON_ERROR_STOP=1 -f db/tests/tenant_isolation.sql

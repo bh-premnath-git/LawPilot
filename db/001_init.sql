@@ -1,5 +1,6 @@
 -- LOCAL DEVELOPMENT SQL. Provision roles/secrets through a secrets manager in production.
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS vector;
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='lawpilot_app') THEN
     CREATE ROLE lawpilot_app LOGIN PASSWORD 'local-dev-app-only' NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION;

@@ -10,7 +10,7 @@ Keycloak, canonical domain/matter ACL, RLS, API, Root Supervisor, mock AI and pr
 Complete OAuth, encrypted credential reference, regional API pinning, contacts/matters/documents, webhook verification, provider conformance tests, Temporal workflow activities and reliable outbox. Validate with Clio sandbox.
 
 ## Milestone 3 — Secure evidence pipeline
-Secure uploads/downloads, scanning, parsing with provenance, text chunks, version metadata, matter-scoped retrieval (pgvector optional), verified citations, access revocation.
+Secure uploads/downloads, scanning, parsing with provenance, text chunks, version metadata, matter-scoped retrieval using pgvector (extension enabled; retrieval implementation pending), verified citations, access revocation.
 
 ## Milestone 4 — Four product capabilities
 1. Intake summary and routing recommendations; 2. document summary; 3. draft from approved template; 4. lawyer-facing cited Q&A. Each has schema validated agent result, lawyer review and audit.

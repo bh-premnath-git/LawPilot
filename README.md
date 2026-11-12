@@ -10,7 +10,7 @@
 | TypeScript Root Supervisor | Runnable starter | Signed internal API, versioned capability discovery and bounded delegation to Python |
 | Python AI capability service | Runnable **safe mock** | Four registered capabilities, schema-checked requests, explicit abstention for unsupported evidence |
 | Go provider router | Runnable starter | Capability discovery, mock legal provider and explicit non-implemented Clio adapter |
-| PostgreSQL | Migration provided | Canonical matters, grants, provider mappings, AI execution, audit, outbox, tenant RLS |
+| PostgreSQL + pgvector | PostgreSQL 18 / pgvector 0.8.7 | Canonical records, permissions, audit/outbox, tenant RLS and vector similarity primitives |
 | Keycloak | Dev infrastructure | Importable demo realm, OIDC/JWKS boundary; no production users provisioned |
 | Go Temporal worker | Integration scaffold | Example approval workflow with explicit lawyer signal; separate startup |
 | Rust document worker | Source scaffold | SHA-256/metadata processor; **no legal PDF extraction** |
@@ -69,6 +69,23 @@ python3 scripts/verify_structure.py
 ```
 
 Keycloak may take longer to initialize on the first start. Inspect its logs with `docker compose --env-file .env logs --tail=100 keycloak`. A healthy API does not mean a user has permission to access tenant data.
+
+### PostgreSQL and pgvector
+
+Docker and CI use `pgvector/pgvector:0.8.7-pg18-trixie`: the latest supported stable PostgreSQL major (18) with pgvector 0.8.7. The baseline is PostgreSQL 18.6; PostgreSQL 19 is still a release candidate. The pgvector release fixes an IVFFlat buffer-overflow vulnerability. Image tags may receive PostgreSQL 18 minor updates; the SQL smoke test checks the supported baseline and extension version.
+
+Fresh initialization enables `pgcrypto` and `vector`. PostgreSQL 18 stores its cluster under `/var/lib/postgresql/18/docker`, so Compose mounts the new `pgdata18` volume at `/var/lib/postgresql`.
+
+This change deliberately starts a **fresh database**. Existing PostgreSQL 16 data is not migrated. Start the updated stack normally, then seed synthetic tenant membership and grants again. Keycloak retains its separate `keycloakdata` volume. The old PostgreSQL 16 volume can be removed after its container has been replaced; do not use `docker compose down -v` if you want to keep Keycloak users.
+
+Check the installed versions and vector operations:
+
+```bash
+docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -c "SELECT version(); SELECT extversion FROM pg_extension WHERE extname='vector';"
+docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -v ON_ERROR_STOP=1 < db/tests/pgvector.sql
+```
+
+pgvector is enabled as infrastructure. Embedding generation, matter-scoped retrieval and verified citation/RAG workflows are still pending; no model-specific vector columns are created by this change.
 
 ### Local environment variables
 
@@ -162,11 +179,11 @@ The AI execution endpoint is a synchronous demonstration path. It checks permiss
 | Keycloak changes are missing | Startup import only creates a missing realm; it does not update an existing realm |
 | Database tables are missing after a failed first start | Inspect PostgreSQL initialization logs and ensure `db/001_init.sql` is readable by the container user; an existing database volume does not rerun initialization scripts |
 
-Keycloak data persists in `keycloakdata`; PostgreSQL data persists in `pgdata`. `docker compose --env-file .env down` preserves both volumes. Apply changes to an existing realm through the admin console or an explicit migration. Bootstrap admin environment values are for initial creation; changing them does not reset an existing administrator's password. Removing volumes deletes local users and application data.
+Keycloak data persists in `keycloakdata`; PostgreSQL 18 data persists in `pgdata18`. `docker compose --env-file .env down` preserves both volumes. Apply changes to an existing realm through the admin console or an explicit migration. Bootstrap admin environment values are for initial creation; changing them does not reset an existing administrator's password. Removing volumes deletes local users and application data.
 
 ### Upgrading an existing local installation
 
-Apply [the database migrations and Keycloak organization setting](docs/LAYER_STATUS.md#upgrade-an-existing-local-database) before starting the updated services. Existing volumes retain their previous schema and realm settings.
+The PostgreSQL 18 change uses a fresh `pgdata18` volume; PostgreSQL 16 data is not migrated. For an existing PostgreSQL 18 database, apply [the database migrations](docs/LAYER_STATUS.md#upgrade-an-existing-local-database). Existing Keycloak realms still require the organization setting described there.
 
 ### Request tracing
 

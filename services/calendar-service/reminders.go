@@ -88,7 +88,7 @@ func (s *Service) reminderWork(ctx context.Context, r *pb.ReminderWorkRequest, d
 			reason = "ACCESS_REVOKED"
 		} else if e.Status != "active" || e.Revision != revision {
 			reason = "ENTRY_CHANGED"
-		} else if !when.Start.After(s.now()) {
+		} else if !when.Start.Add(time.Minute).After(s.now()) {
 			reason = "EVENT_PASSED"
 		}
 		if reason != "" {

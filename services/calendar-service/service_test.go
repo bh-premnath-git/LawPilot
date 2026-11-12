@@ -450,3 +450,29 @@ func TestDatabasePolicyCannotBeBypassedByEntryFlag(t *testing.T) {
 		t.Fatal("entry downgraded exclusive constraint independently")
 	}
 }
+
+func TestAtStartReminderAllowsTimerJitterButSuppressesStaleDelivery(t *testing.T) {
+	f := fixtureFor(t, false)
+	for _, day := range []int{20, 21} {
+		draft := draftAt(day)
+		draft.Reminders = []*pb.ReminderSpec{{MinutesBefore: 0}}
+		created := f.create(t, f.alice, draft)
+		items, err := f.s.ListReminders(f.ctx(f.alice), &pb.ListRemindersRequest{Scope: f.scope(), CalendarId: f.calendar.Id, EntryId: created.EntryIds[0]})
+		if err != nil || len(items.GetReminders()) != 1 {
+			t.Fatal(err)
+		}
+		reminder := items.Reminders[0]
+		at := reminder.DueAt.AsTime().Add(time.Second)
+		expected := "due"
+		if day == 21 {
+			at = at.Add(time.Minute)
+			expected = "cancelled"
+		}
+		f.s.Now = func() time.Time { return at }
+		result, err := f.s.DeliverReminder(context.Background(), &pb.ReminderWorkRequest{TenantId: f.tenant, ReminderId: reminder.Id})
+		if err != nil || result.GetStatus() != expected {
+			t.Fatal("unexpected at-start reminder policy", result, err)
+		}
+		f.s.Now = func() time.Time { return time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC) }
+	}
+}

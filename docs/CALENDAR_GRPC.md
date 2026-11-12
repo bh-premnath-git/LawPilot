@@ -109,7 +109,7 @@ An all-day schedule uses `type: "all_day"`, civil `startDate`, `endDateExclusive
 
 Private entries are creator-only. Internal entries require staff calendar/matter access. Client views contain only shared appointments/consultations in which that client participates, with staff notes, other participants, and creator identity removed. Overlap blocking applies only to calendars explicitly marked `exclusive`, with transaction serialization and a database exclusion constraint; adjacent events are allowed. Shared calendars allow concurrent appointments. `deadline_candidate` is unverified and does not reserve busy time; `verified_deadline` is rejected. No service calculates or asserts legal deadline authority.
 
-Reminders belong to the requesting actor and entry revision. Temporal timers produce an idempotent in-app `due` state/event after reauthorization; they do not send messages. Changes/cancellations invalidate old scheduled/due reminders. Offsets are 0–40320 minutes, at most three per entry. No user notification inbox/UI is claimed.
+Reminders belong to the requesting actor and entry revision. Temporal timers produce an idempotent in-app `due` state/event after reauthorization; they do not send messages. Changes/cancellations invalidate old scheduled/due reminders. Offsets are 0–40320 minutes, at most three per entry. At-start reminders allow up to one minute of timer/delivery jitter; deliveries at least one minute after event start are suppressed as stale. No user notification inbox/UI is claimed.
 
 ## Contract generation and verification
 

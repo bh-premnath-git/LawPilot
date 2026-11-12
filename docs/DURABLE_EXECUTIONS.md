@@ -52,8 +52,8 @@ The API no longer needs the shared internal HMAC key because it does not call in
 Fresh Compose databases run `001_init.sql`, `005_durable_executions.sql` and `006_execution_input_json.sql`. Existing PostgreSQL 18 installations must apply migration **005 once** (if not already applied), then **006**, before starting the API/worker/dispatcher:
 
 ```bash
-# Stop the old synchronous API before migration so it cannot accept new legacy rows.
-docker compose --env-file .env stop platform-api
+# Stop acceptance/consumers before schema changes; keep Temporal history running.
+docker compose --env-file .env stop platform-api execution-worker outbox-dispatcher
 # Skip the next line if migration 005 is already installed.
 docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -v ON_ERROR_STOP=1 < db/005_durable_executions.sql
 docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -v ON_ERROR_STOP=1 < db/006_execution_input_json.sql

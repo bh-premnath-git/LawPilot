@@ -100,7 +100,7 @@ func capability(ctx context.Context, tx pgx.Tx, tenant, who, cap string) (bool, 
 }
 func calendarRecord(ctx context.Context, tx pgx.Tx, tenant, id string) (*pb.Calendar, error) {
 	value := new(pb.Calendar)
-	err := tx.QueryRow(ctx, "SELECT id::text,name,default_time_zone,approval_required,revision,authority FROM calendars WHERE tenant_id=$1 AND id=$2", tenant, id).Scan(&value.Id, &value.Name, &value.DefaultTimeZone, &value.ApprovalRequired, &value.Revision, &value.Authority)
+	err := tx.QueryRow(ctx, "SELECT id::text,name,default_time_zone,approval_required,revision,authority,overlap_policy FROM calendars WHERE tenant_id=$1 AND id=$2", tenant, id).Scan(&value.Id, &value.Name, &value.DefaultTimeZone, &value.ApprovalRequired, &value.Revision, &value.Authority, &value.OverlapPolicy)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, status.Error(codes.NotFound, "NOT_FOUND")
 	}

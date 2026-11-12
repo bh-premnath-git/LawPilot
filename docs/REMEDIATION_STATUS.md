@@ -39,3 +39,5 @@ Migrations `005` and `006` now cover durable execution and input representation.
 Next reviewable slices follow the specification: P0-02/P0-03 service identity and authoritative approvals, P0-05/P0-06 contract/migration governance, then trusted provider routing and the general events/calendar foundations. External account/model choices and pilot acceptance remain product-owner decisions; credentials must be configured through environment settings, never committed or requested in chat.
 
 Calendar/gRPC implementation details, local environment and explicit limits: [CALENDAR_GRPC.md](CALENDAR_GRPC.md). Migration 007 adds this native domain. Calendar proposal approval is scoped to native scheduling; it does not complete P0-03 authoritative AI/legal artifact approval.
+
+Calendar overlap policy is explicit: new shared firm calendars allow overlaps; exclusive single-resource calendars enforce calendar-wide conflicts. Migration 008 preserves existing exclusive behavior, with a manager-only policy transition API. Attendee/resource conflicts across calendars and external reservation semantics remain pending.

@@ -268,6 +268,7 @@ export interface Calendar {
   approvalRequired: boolean;
   revision: number;
   authority: string;
+  overlapPolicy: string;
 }
 
 export interface CalendarEntry {
@@ -340,9 +341,22 @@ export interface CreateCalendarRequest {
   defaultTimeZone: string;
   approvalRequired?: boolean | undefined;
   idempotencyKey: string;
+  overlapPolicy: string;
 }
 
 export interface CreateCalendarResponse {
+  calendar: Calendar | undefined;
+}
+
+export interface SetOverlapPolicyRequest {
+  scope: RequestScope | undefined;
+  calendarId: string;
+  overlapPolicy: string;
+  expectedRevision: number;
+  idempotencyKey: string;
+}
+
+export interface SetOverlapPolicyResponse {
   calendar: Calendar | undefined;
 }
 
@@ -454,6 +468,7 @@ export interface AvailabilityResponse {
   busy: BusyInterval[];
   coverage: string;
   warnings: string[];
+  overlapPolicy: string;
 }
 
 export interface SyncStatusRequest {
@@ -1272,7 +1287,15 @@ export const EntryDraft: MessageFns<EntryDraft> = {
 };
 
 function createBaseCalendar(): Calendar {
-  return { id: "", name: "", defaultTimeZone: "", approvalRequired: false, revision: 0, authority: "" };
+  return {
+    id: "",
+    name: "",
+    defaultTimeZone: "",
+    approvalRequired: false,
+    revision: 0,
+    authority: "",
+    overlapPolicy: "",
+  };
 }
 
 export const Calendar: MessageFns<Calendar> = {
@@ -1294,6 +1317,9 @@ export const Calendar: MessageFns<Calendar> = {
     }
     if (message.authority !== "") {
       writer.uint32(50).string(message.authority);
+    }
+    if (message.overlapPolicy !== "") {
+      writer.uint32(58).string(message.overlapPolicy);
     }
     return writer;
   },
@@ -1353,6 +1379,14 @@ export const Calendar: MessageFns<Calendar> = {
           message.authority = reader.string();
           continue;
         }
+        case 7: {
+          if (tag !== 58) {
+            break;
+          }
+
+          message.overlapPolicy = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1378,6 +1412,11 @@ export const Calendar: MessageFns<Calendar> = {
         : false,
       revision: isSet(object.revision) ? globalThis.Number(object.revision) : 0,
       authority: isSet(object.authority) ? globalThis.String(object.authority) : "",
+      overlapPolicy: isSet(object.overlapPolicy)
+        ? globalThis.String(object.overlapPolicy)
+        : isSet(object.overlap_policy)
+        ? globalThis.String(object.overlap_policy)
+        : "",
     };
   },
 
@@ -1401,6 +1440,9 @@ export const Calendar: MessageFns<Calendar> = {
     if (message.authority !== undefined) {
       obj.authority = message.authority;
     }
+    if (message.overlapPolicy !== undefined) {
+      obj.overlapPolicy = message.overlapPolicy;
+    }
     return obj;
   },
 
@@ -1415,6 +1457,7 @@ export const Calendar: MessageFns<Calendar> = {
     message.approvalRequired = object.approvalRequired ?? false;
     message.revision = object.revision ?? 0;
     message.authority = object.authority ?? "";
+    message.overlapPolicy = object.overlapPolicy ?? "";
     return message;
   },
 };
@@ -2549,7 +2592,14 @@ export const ListCalendarsResponse: MessageFns<ListCalendarsResponse> = {
 };
 
 function createBaseCreateCalendarRequest(): CreateCalendarRequest {
-  return { scope: undefined, name: "", defaultTimeZone: "", approvalRequired: undefined, idempotencyKey: "" };
+  return {
+    scope: undefined,
+    name: "",
+    defaultTimeZone: "",
+    approvalRequired: undefined,
+    idempotencyKey: "",
+    overlapPolicy: "",
+  };
 }
 
 export const CreateCalendarRequest: MessageFns<CreateCalendarRequest> = {
@@ -2568,6 +2618,9 @@ export const CreateCalendarRequest: MessageFns<CreateCalendarRequest> = {
     }
     if (message.idempotencyKey !== "") {
       writer.uint32(42).string(message.idempotencyKey);
+    }
+    if (message.overlapPolicy !== "") {
+      writer.uint32(50).string(message.overlapPolicy);
     }
     return writer;
   },
@@ -2619,6 +2672,14 @@ export const CreateCalendarRequest: MessageFns<CreateCalendarRequest> = {
           message.idempotencyKey = reader.string();
           continue;
         }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.overlapPolicy = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -2647,6 +2708,11 @@ export const CreateCalendarRequest: MessageFns<CreateCalendarRequest> = {
         : isSet(object.idempotency_key)
         ? globalThis.String(object.idempotency_key)
         : "",
+      overlapPolicy: isSet(object.overlapPolicy)
+        ? globalThis.String(object.overlapPolicy)
+        : isSet(object.overlap_policy)
+        ? globalThis.String(object.overlap_policy)
+        : "",
     };
   },
 
@@ -2667,6 +2733,9 @@ export const CreateCalendarRequest: MessageFns<CreateCalendarRequest> = {
     if (message.idempotencyKey !== undefined) {
       obj.idempotencyKey = message.idempotencyKey;
     }
+    if (message.overlapPolicy !== undefined) {
+      obj.overlapPolicy = message.overlapPolicy;
+    }
     return obj;
   },
 
@@ -2682,6 +2751,7 @@ export const CreateCalendarRequest: MessageFns<CreateCalendarRequest> = {
     message.defaultTimeZone = object.defaultTimeZone ?? "";
     message.approvalRequired = object.approvalRequired ?? undefined;
     message.idempotencyKey = object.idempotencyKey ?? "";
+    message.overlapPolicy = object.overlapPolicy ?? "";
     return message;
   },
 };
@@ -2739,6 +2809,208 @@ export const CreateCalendarResponse: MessageFns<CreateCalendarResponse> = {
   },
   fromPartial(object: DeepPartial<CreateCalendarResponse>): CreateCalendarResponse {
     const message = createBaseCreateCalendarResponse();
+    message.calendar = (object.calendar !== undefined && object.calendar !== null)
+      ? Calendar.fromPartial(object.calendar)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseSetOverlapPolicyRequest(): SetOverlapPolicyRequest {
+  return { scope: undefined, calendarId: "", overlapPolicy: "", expectedRevision: 0, idempotencyKey: "" };
+}
+
+export const SetOverlapPolicyRequest: MessageFns<SetOverlapPolicyRequest> = {
+  encode(message: SetOverlapPolicyRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.scope !== undefined) {
+      RequestScope.encode(message.scope, writer.uint32(10).fork()).join();
+    }
+    if (message.calendarId !== "") {
+      writer.uint32(18).string(message.calendarId);
+    }
+    if (message.overlapPolicy !== "") {
+      writer.uint32(26).string(message.overlapPolicy);
+    }
+    if (message.expectedRevision !== 0) {
+      writer.uint32(32).int64(message.expectedRevision);
+    }
+    if (message.idempotencyKey !== "") {
+      writer.uint32(42).string(message.idempotencyKey);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): SetOverlapPolicyRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseSetOverlapPolicyRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.scope = RequestScope.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.calendarId = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.overlapPolicy = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 32) {
+            break;
+          }
+
+          message.expectedRevision = longToNumber(reader.int64());
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.idempotencyKey = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): SetOverlapPolicyRequest {
+    return {
+      scope: isSet(object.scope) ? RequestScope.fromJSON(object.scope) : undefined,
+      calendarId: isSet(object.calendarId)
+        ? globalThis.String(object.calendarId)
+        : isSet(object.calendar_id)
+        ? globalThis.String(object.calendar_id)
+        : "",
+      overlapPolicy: isSet(object.overlapPolicy)
+        ? globalThis.String(object.overlapPolicy)
+        : isSet(object.overlap_policy)
+        ? globalThis.String(object.overlap_policy)
+        : "",
+      expectedRevision: isSet(object.expectedRevision)
+        ? globalThis.Number(object.expectedRevision)
+        : isSet(object.expected_revision)
+        ? globalThis.Number(object.expected_revision)
+        : 0,
+      idempotencyKey: isSet(object.idempotencyKey)
+        ? globalThis.String(object.idempotencyKey)
+        : isSet(object.idempotency_key)
+        ? globalThis.String(object.idempotency_key)
+        : "",
+    };
+  },
+
+  toJSON(message: SetOverlapPolicyRequest): unknown {
+    const obj: any = {};
+    if (message.scope !== undefined) {
+      obj.scope = RequestScope.toJSON(message.scope);
+    }
+    if (message.calendarId !== undefined) {
+      obj.calendarId = message.calendarId;
+    }
+    if (message.overlapPolicy !== undefined) {
+      obj.overlapPolicy = message.overlapPolicy;
+    }
+    if (message.expectedRevision !== undefined) {
+      obj.expectedRevision = Math.round(message.expectedRevision);
+    }
+    if (message.idempotencyKey !== undefined) {
+      obj.idempotencyKey = message.idempotencyKey;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<SetOverlapPolicyRequest>): SetOverlapPolicyRequest {
+    return SetOverlapPolicyRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<SetOverlapPolicyRequest>): SetOverlapPolicyRequest {
+    const message = createBaseSetOverlapPolicyRequest();
+    message.scope = (object.scope !== undefined && object.scope !== null)
+      ? RequestScope.fromPartial(object.scope)
+      : undefined;
+    message.calendarId = object.calendarId ?? "";
+    message.overlapPolicy = object.overlapPolicy ?? "";
+    message.expectedRevision = object.expectedRevision ?? 0;
+    message.idempotencyKey = object.idempotencyKey ?? "";
+    return message;
+  },
+};
+
+function createBaseSetOverlapPolicyResponse(): SetOverlapPolicyResponse {
+  return { calendar: undefined };
+}
+
+export const SetOverlapPolicyResponse: MessageFns<SetOverlapPolicyResponse> = {
+  encode(message: SetOverlapPolicyResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.calendar !== undefined) {
+      Calendar.encode(message.calendar, writer.uint32(10).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): SetOverlapPolicyResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseSetOverlapPolicyResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.calendar = Calendar.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): SetOverlapPolicyResponse {
+    return { calendar: isSet(object.calendar) ? Calendar.fromJSON(object.calendar) : undefined };
+  },
+
+  toJSON(message: SetOverlapPolicyResponse): unknown {
+    const obj: any = {};
+    if (message.calendar !== undefined) {
+      obj.calendar = Calendar.toJSON(message.calendar);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<SetOverlapPolicyResponse>): SetOverlapPolicyResponse {
+    return SetOverlapPolicyResponse.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<SetOverlapPolicyResponse>): SetOverlapPolicyResponse {
+    const message = createBaseSetOverlapPolicyResponse();
     message.calendar = (object.calendar !== undefined && object.calendar !== null)
       ? Calendar.fromPartial(object.calendar)
       : undefined;
@@ -4480,7 +4752,7 @@ export const BusyInterval: MessageFns<BusyInterval> = {
 };
 
 function createBaseAvailabilityResponse(): AvailabilityResponse {
-  return { busy: [], coverage: "", warnings: [] };
+  return { busy: [], coverage: "", warnings: [], overlapPolicy: "" };
 }
 
 export const AvailabilityResponse: MessageFns<AvailabilityResponse> = {
@@ -4493,6 +4765,9 @@ export const AvailabilityResponse: MessageFns<AvailabilityResponse> = {
     }
     for (const v of message.warnings) {
       writer.uint32(26).string(v!);
+    }
+    if (message.overlapPolicy !== "") {
+      writer.uint32(34).string(message.overlapPolicy);
     }
     return writer;
   },
@@ -4528,6 +4803,14 @@ export const AvailabilityResponse: MessageFns<AvailabilityResponse> = {
           message.warnings.push(reader.string());
           continue;
         }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.overlapPolicy = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -4542,6 +4825,11 @@ export const AvailabilityResponse: MessageFns<AvailabilityResponse> = {
       busy: globalThis.Array.isArray(object?.busy) ? object.busy.map((e: any) => BusyInterval.fromJSON(e)) : [],
       coverage: isSet(object.coverage) ? globalThis.String(object.coverage) : "",
       warnings: globalThis.Array.isArray(object?.warnings) ? object.warnings.map((e: any) => globalThis.String(e)) : [],
+      overlapPolicy: isSet(object.overlapPolicy)
+        ? globalThis.String(object.overlapPolicy)
+        : isSet(object.overlap_policy)
+        ? globalThis.String(object.overlap_policy)
+        : "",
     };
   },
 
@@ -4556,6 +4844,9 @@ export const AvailabilityResponse: MessageFns<AvailabilityResponse> = {
     if (message.warnings?.length) {
       obj.warnings = message.warnings;
     }
+    if (message.overlapPolicy !== undefined) {
+      obj.overlapPolicy = message.overlapPolicy;
+    }
     return obj;
   },
 
@@ -4567,6 +4858,7 @@ export const AvailabilityResponse: MessageFns<AvailabilityResponse> = {
     message.busy = object.busy?.map((e) => BusyInterval.fromPartial(e)) || [];
     message.coverage = object.coverage ?? "";
     message.warnings = object.warnings?.map((e) => e) || [];
+    message.overlapPolicy = object.overlapPolicy ?? "";
     return message;
   },
 };
@@ -5248,6 +5540,17 @@ export const CalendarServiceService = {
       Buffer.from(CreateCalendarResponse.encode(value).finish()),
     responseDeserialize: (value: Buffer): CreateCalendarResponse => CreateCalendarResponse.decode(value),
   },
+  setOverlapPolicy: {
+    path: "/lawpilot.calendar.v1.CalendarService/SetOverlapPolicy",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: SetOverlapPolicyRequest): Buffer =>
+      Buffer.from(SetOverlapPolicyRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): SetOverlapPolicyRequest => SetOverlapPolicyRequest.decode(value),
+    responseSerialize: (value: SetOverlapPolicyResponse): Buffer =>
+      Buffer.from(SetOverlapPolicyResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): SetOverlapPolicyResponse => SetOverlapPolicyResponse.decode(value),
+  },
   grantCalendar: {
     path: "/lawpilot.calendar.v1.CalendarService/GrantCalendar",
     requestStream: false,
@@ -5369,6 +5672,7 @@ export const CalendarServiceService = {
 export interface CalendarServiceServer extends UntypedServiceImplementation {
   listCalendars: handleUnaryCall<ListCalendarsRequest, ListCalendarsResponse>;
   createCalendar: handleUnaryCall<CreateCalendarRequest, CreateCalendarResponse>;
+  setOverlapPolicy: handleUnaryCall<SetOverlapPolicyRequest, SetOverlapPolicyResponse>;
   grantCalendar: handleUnaryCall<GrantCalendarRequest, GrantCalendarResponse>;
   listEntries: handleUnaryCall<ListEntriesRequest, ListEntriesResponse>;
   getEntry: handleUnaryCall<GetEntryRequest, GetEntryResponse>;
@@ -5413,6 +5717,21 @@ export interface CalendarServiceClient extends Client {
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: CreateCalendarResponse) => void,
+  ): ClientUnaryCall;
+  setOverlapPolicy(
+    request: SetOverlapPolicyRequest,
+    callback: (error: ServiceError | null, response: SetOverlapPolicyResponse) => void,
+  ): ClientUnaryCall;
+  setOverlapPolicy(
+    request: SetOverlapPolicyRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: SetOverlapPolicyResponse) => void,
+  ): ClientUnaryCall;
+  setOverlapPolicy(
+    request: SetOverlapPolicyRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: SetOverlapPolicyResponse) => void,
   ): ClientUnaryCall;
   grantCalendar(
     request: GrantCalendarRequest,

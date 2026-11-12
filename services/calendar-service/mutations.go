@@ -48,8 +48,15 @@ func (s *Service) CreateCalendar(ctx context.Context, r *pb.CreateCalendarReques
 		if r.ApprovalRequired != nil {
 			approval = *r.ApprovalRequired
 		}
+		policy := r.OverlapPolicy
+		if policy == "" {
+			policy = "shared"
+		}
+		if policy != "shared" && policy != "exclusive" {
+			return bad("INVALID_OVERLAP_POLICY")
+		}
 		id := uuid.NewString()
-		if _, err = tx.Exec(ctx, "INSERT INTO calendars(id,tenant_id,name,default_time_zone,approval_required,created_by)VALUES($1,$2,$3,$4,$5,$6)", id, tenant, r.Name, r.DefaultTimeZone, approval, who); err != nil {
+		if _, err = tx.Exec(ctx, "INSERT INTO calendars(id,tenant_id,name,default_time_zone,approval_required,created_by,overlap_policy)VALUES($1,$2,$3,$4,$5,$6,$7)", id, tenant, r.Name, r.DefaultTimeZone, approval, who, policy); err != nil {
 			return err
 		}
 		for _, permission := range []string{"read", "write", "approve", "manage"} {
@@ -364,4 +371,49 @@ func previewIDs(command *pb.CalendarCommand, result *pb.MutationResult) []string
 		return []string{}
 	}
 	return result.EntryIds
+}
+
+// SetOverlapPolicy is an explicit, audited calendar-wide policy change. Attendees
+// are not resources; their conflicts require a separate cross-calendar domain.
+func (s *Service) SetOverlapPolicy(ctx context.Context, r *pb.SetOverlapPolicyRequest) (*pb.SetOverlapPolicyResponse, error) {
+	tenant, err := scope(r.Scope)
+	if err != nil {
+		return nil, err
+	}
+	who := actor(ctx)
+	reply := new(pb.SetOverlapPolicyResponse)
+	err = s.tx(ctx, tenant, r.CalendarId, true, func(tx pgx.Tx) error {
+		calendar, _, err := authorize(ctx, tx, tenant, r.CalendarId, who, "manage")
+		if err != nil {
+			return err
+		}
+		if r.OverlapPolicy != "shared" && r.OverlapPolicy != "exclusive" {
+			return bad("INVALID_OVERLAP_POLICY")
+		}
+		hash := fingerprint("set-overlap-policy", r)
+		hit, err := cached(ctx, tx, tenant, who, r.IdempotencyKey, hash, reply)
+		if err != nil || hit {
+			return err
+		}
+		if r.ExpectedRevision != calendar.Revision {
+			return status.Error(codes.Aborted, "STALE_REVISION")
+		}
+		// Deferred FK binds every entry to this calendar's policy; the exclusion
+		// constraint atomically rejects enabling exclusivity over overlapping data.
+		if _, err = tx.Exec(ctx, "UPDATE calendar_entries SET overlap_policy=$3 WHERE tenant_id=$1 AND calendar_id=$2", tenant, r.CalendarId, r.OverlapPolicy); err != nil {
+			return err
+		}
+		if _, err = tx.Exec(ctx, "UPDATE calendars SET overlap_policy=$3,revision=revision+1 WHERE tenant_id=$1 AND id=$2", tenant, r.CalendarId, r.OverlapPolicy); err != nil {
+			return err
+		}
+		reply.Calendar, err = calendarRecord(ctx, tx, tenant, r.CalendarId)
+		if err != nil {
+			return err
+		}
+		if err = event(ctx, tx, tenant, who, r.CalendarId, "calendar.overlap_policy.changed.v1", reply.Calendar.Revision, r.OverlapPolicy); err != nil {
+			return err
+		}
+		return save(ctx, tx, tenant, who, r.IdempotencyKey, hash, reply)
+	})
+	return reply, err
 }

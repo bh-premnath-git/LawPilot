@@ -20,7 +20,7 @@ message EntryDraft {
  RecurrenceRule recurrence = 8; repeated string participant_principal_ids = 9; repeated ReminderSpec reminders = 10;
 }
 message Calendar {
- string id = 1; string name = 2; string default_time_zone = 3; bool approval_required = 4; int64 revision = 5; string authority = 6;
+ string id = 1; string name = 2; string default_time_zone = 3; bool approval_required = 4; int64 revision = 5; string authority = 6; string overlap_policy = 7;
 }
 message CalendarEntry {
  string id = 1; string calendar_id = 2; string series_id = 3; int32 occurrence_index = 4; int64 revision = 5; int64 series_revision = 6;
@@ -35,8 +35,10 @@ message CalendarCommand { oneof action { CreateEntry create = 1; UpdateEntry upd
 message MutationResult { repeated string entry_ids = 1; repeated int64 revisions = 2; string series_id = 3; int64 series_revision = 4; string proposal_id = 5; string status = 6; int32 affected_count = 7; repeated string affected_entry_ids = 8; }
 message ListCalendarsRequest { RequestScope scope = 1; }
 message ListCalendarsResponse { repeated Calendar calendars = 1; }
-message CreateCalendarRequest { RequestScope scope = 1; string name = 2; string default_time_zone = 3; optional bool approval_required = 4; string idempotency_key = 5; }
+message CreateCalendarRequest { RequestScope scope = 1; string name = 2; string default_time_zone = 3; optional bool approval_required = 4; string idempotency_key = 5; string overlap_policy = 6; }
 message CreateCalendarResponse { Calendar calendar = 1; }
+message SetOverlapPolicyRequest { RequestScope scope = 1; string calendar_id = 2; string overlap_policy = 3; int64 expected_revision = 4; string idempotency_key = 5; }
+message SetOverlapPolicyResponse { Calendar calendar = 1; }
 message GrantCalendarRequest { RequestScope scope = 1; string calendar_id = 2; string principal_id = 3; repeated string permissions = 4; int64 expected_revision = 5; string idempotency_key = 6; }
 message GrantCalendarResponse { Calendar calendar = 1; }
 message ListEntriesRequest { RequestScope scope = 1; string calendar_id = 2; google.protobuf.Timestamp from = 3; google.protobuf.Timestamp to = 4; string matter_id = 5; int32 page_size = 6; string page_token = 7; }
@@ -54,7 +56,7 @@ message GetProposalResponse { string proposal_id = 1; CalendarCommand command = 
 message AvailabilityRequest { RequestScope scope = 1; string calendar_id = 2; google.protobuf.Timestamp from = 3; google.protobuf.Timestamp to = 4; }
 // Busy intervals intentionally omit event IDs, titles and attendees, including private entries.
 message BusyInterval { google.protobuf.Timestamp start = 1; google.protobuf.Timestamp end = 2; }
-message AvailabilityResponse { repeated BusyInterval busy = 1; string coverage = 2; repeated string warnings = 3; }
+message AvailabilityResponse { repeated BusyInterval busy = 1; string coverage = 2; repeated string warnings = 3; string overlap_policy = 4; }
 message SyncStatusRequest { RequestScope scope = 1; string calendar_id = 2; }
 message SyncStatusResponse { string authority = 1; string state = 2; string coverage = 3; repeated string warnings = 4; }
 message Reminder { string id = 1; string entry_id = 2; int64 entry_revision = 3; google.protobuf.Timestamp due_at = 4; string status = 5; }
@@ -67,6 +69,7 @@ message ReminderWorkResponse { string status = 1; google.protobuf.Timestamp due_
 service CalendarService {
  rpc ListCalendars(ListCalendarsRequest) returns (ListCalendarsResponse);
  rpc CreateCalendar(CreateCalendarRequest) returns (CreateCalendarResponse);
+ rpc SetOverlapPolicy(SetOverlapPolicyRequest) returns (SetOverlapPolicyResponse);
  rpc GrantCalendar(GrantCalendarRequest) returns (GrantCalendarResponse);
  rpc ListEntries(ListEntriesRequest) returns (ListEntriesResponse);
  rpc GetEntry(GetEntryRequest) returns (GetEntryResponse);

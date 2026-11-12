@@ -37,14 +37,14 @@ func (s *Service) ListCalendars(ctx context.Context, r *pb.ListCalendarsRequest)
 		if !staff && !client {
 			return status.Error(codes.PermissionDenied, "PERMISSION_DENIED")
 		}
-		rows, err := tx.Query(ctx, "SELECT c.id::text,c.name,c.default_time_zone,c.approval_required,c.revision,c.authority FROM calendars c WHERE c.tenant_id=$1 AND EXISTS(SELECT 1 FROM calendar_grants g WHERE g.tenant_id=c.tenant_id AND g.calendar_id=c.id AND g.principal_id=$2 AND g.permission='read') ORDER BY c.id LIMIT 500", tenant, who)
+		rows, err := tx.Query(ctx, "SELECT c.id::text,c.name,c.default_time_zone,c.approval_required,c.revision,c.authority,c.overlap_policy FROM calendars c WHERE c.tenant_id=$1 AND EXISTS(SELECT 1 FROM calendar_grants g WHERE g.tenant_id=c.tenant_id AND g.calendar_id=c.id AND g.principal_id=$2 AND g.permission='read') ORDER BY c.id LIMIT 500", tenant, who)
 		if err != nil {
 			return err
 		}
 		defer rows.Close()
 		for rows.Next() {
 			value := new(pb.Calendar)
-			if err = rows.Scan(&value.Id, &value.Name, &value.DefaultTimeZone, &value.ApprovalRequired, &value.Revision, &value.Authority); err != nil {
+			if err = rows.Scan(&value.Id, &value.Name, &value.DefaultTimeZone, &value.ApprovalRequired, &value.Revision, &value.Authority, &value.OverlapPolicy); err != nil {
 				return err
 			}
 			reply.Calendars = append(reply.Calendars, value)
@@ -179,13 +179,14 @@ func (s *Service) Availability(ctx context.Context, r *pb.AvailabilityRequest) (
 	if err != nil {
 		return nil, err
 	}
-	reply := &pb.AvailabilityResponse{Coverage: "native_only", Warnings: []string{"External calendars are not connected; external availability is unknown."}}
+	reply := &pb.AvailabilityResponse{Coverage: "native_only", Warnings: []string{"External calendars are not connected; external availability is unknown.", "Intervals describe calendar occupancy only; attendee and cross-calendar resource availability are not checked."}}
 	who := actor(ctx)
 	err = s.tx(ctx, tenant, r.CalendarId, false, func(tx pgx.Tx) error {
-		_, client, err := authorize(ctx, tx, tenant, r.CalendarId, who, "read")
+		calendar, client, err := authorize(ctx, tx, tenant, r.CalendarId, who, "read")
 		if err != nil {
 			return err
 		}
+		reply.OverlapPolicy = calendar.OverlapPolicy
 		allowed, err := capability(ctx, tx, tenant, who, "calendar.availability")
 		if err != nil {
 			return err

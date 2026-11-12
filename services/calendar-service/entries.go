@@ -120,7 +120,7 @@ func conflict(ctx context.Context, tx pgx.Tx, tenant, calendar string, when inte
 		return nil
 	}
 	var exists bool
-	err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM calendar_entries WHERE tenant_id=$1 AND calendar_id=$2 AND status='active' AND kind<>5 AND start_at<$4 AND end_at>$3 AND NOT(id::text=ANY($5::text[])))`, tenant, calendar, when.Start, when.End, excluded).Scan(&exists)
+	err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM calendar_entries WHERE tenant_id=$1 AND calendar_id=$2 AND overlap_policy='exclusive' AND status='active' AND kind<>5 AND start_at<$4 AND end_at>$3 AND NOT(id::text=ANY($5::text[])))`, tenant, calendar, when.Start, when.End, excluded).Scan(&exists)
 	if err != nil {
 		return err
 	}
@@ -180,6 +180,11 @@ func (s *Service) command(ctx context.Context, tx pgx.Tx, tenant, calendar, orig
 	if command == nil {
 		return nil, bad("COMMAND_REQUIRED")
 	}
+	calendarInfo, err := calendarRecord(ctx, tx, tenant, calendar)
+	if err != nil {
+		return nil, err
+	}
+	exclusive := calendarInfo.OverlapPolicy == "exclusive"
 	result := &pb.MutationResult{Status: "applied"}
 	if create := command.GetCreate(); create != nil {
 		draft := create.Draft
@@ -210,7 +215,7 @@ func (s *Service) command(ctx context.Context, tx pgx.Tx, tenant, calendar, orig
 			if err = conflict(ctx, tx, tenant, calendar, when, draft.Kind, []string{}); err != nil {
 				return nil, err
 			}
-			if draft.Kind != pb.EntryKind_ENTRY_KIND_DEADLINE_CANDIDATE {
+			if exclusive && draft.Kind != pb.EntryKind_ENTRY_KIND_DEADLINE_CANDIDATE {
 				for _, previous := range ranges {
 					if when.Start.Before(previous.End) && when.End.After(previous.Start) {
 						return nil, status.Error(codes.AlreadyExists, "RECURRENCE_CONFLICT")
@@ -224,8 +229,8 @@ func (s *Service) command(ctx context.Context, tx pgx.Tx, tenant, calendar, orig
 			if dry {
 				continue
 			}
-			_, err = tx.Exec(ctx, `INSERT INTO calendar_entries(id,tenant_id,calendar_id,series_id,occurrence_index,title,description,kind,visibility,matter_id,start_at,end_at,time_zone,all_day,start_date,end_date,participants,created_by)
-    VALUES($1,$2,$3,NULLIF($4,'')::uuid,$5,$6,$7,$8,$9,NULLIF($10,'')::uuid,$11,$12,$13,$14,$15,$16,$17,$18)`, id, tenant, calendar, series, i, draft.Title, draft.Description, draft.Kind, draft.Visibility, draft.MatterId, when.Start, when.End, when.Zone, when.AllDay, when.StartDate, when.EndDate, draft.ParticipantPrincipalIds, originator)
+			_, err = tx.Exec(ctx, `INSERT INTO calendar_entries(id,tenant_id,calendar_id,series_id,occurrence_index,title,description,kind,visibility,matter_id,start_at,end_at,time_zone,all_day,start_date,end_date,participants,created_by,overlap_policy)
+    VALUES($1,$2,$3,NULLIF($4,'')::uuid,$5,$6,$7,$8,$9,NULLIF($10,'')::uuid,$11,$12,$13,$14,$15,$16,$17,$18,$19)`, id, tenant, calendar, series, i, draft.Title, draft.Description, draft.Kind, draft.Visibility, draft.MatterId, when.Start, when.End, when.Zone, when.AllDay, when.StartDate, when.EndDate, draft.ParticipantPrincipalIds, originator, calendarInfo.OverlapPolicy)
 			if err != nil {
 				return nil, err
 			}
@@ -331,7 +336,7 @@ func (s *Service) command(ctx context.Context, tx pgx.Tx, tenant, calendar, orig
 			if err = conflict(ctx, tx, tenant, calendar, when, draft.Kind, ids); err != nil {
 				return nil, err
 			}
-			if draft.Kind != pb.EntryKind_ENTRY_KIND_DEADLINE_CANDIDATE {
+			if exclusive && draft.Kind != pb.EntryKind_ENTRY_KIND_DEADLINE_CANDIDATE {
 				for _, r := range ranges {
 					if when.Start.Before(r.End) && when.End.After(r.Start) {
 						return nil, status.Error(codes.AlreadyExists, "RECURRENCE_CONFLICT")

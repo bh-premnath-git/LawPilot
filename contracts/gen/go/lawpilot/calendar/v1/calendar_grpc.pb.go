@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	CalendarService_ListCalendars_FullMethodName    = "/lawpilot.calendar.v1.CalendarService/ListCalendars"
 	CalendarService_CreateCalendar_FullMethodName   = "/lawpilot.calendar.v1.CalendarService/CreateCalendar"
+	CalendarService_SetOverlapPolicy_FullMethodName = "/lawpilot.calendar.v1.CalendarService/SetOverlapPolicy"
 	CalendarService_GrantCalendar_FullMethodName    = "/lawpilot.calendar.v1.CalendarService/GrantCalendar"
 	CalendarService_ListEntries_FullMethodName      = "/lawpilot.calendar.v1.CalendarService/ListEntries"
 	CalendarService_GetEntry_FullMethodName         = "/lawpilot.calendar.v1.CalendarService/GetEntry"
@@ -41,6 +42,7 @@ const (
 type CalendarServiceClient interface {
 	ListCalendars(ctx context.Context, in *ListCalendarsRequest, opts ...grpc.CallOption) (*ListCalendarsResponse, error)
 	CreateCalendar(ctx context.Context, in *CreateCalendarRequest, opts ...grpc.CallOption) (*CreateCalendarResponse, error)
+	SetOverlapPolicy(ctx context.Context, in *SetOverlapPolicyRequest, opts ...grpc.CallOption) (*SetOverlapPolicyResponse, error)
 	GrantCalendar(ctx context.Context, in *GrantCalendarRequest, opts ...grpc.CallOption) (*GrantCalendarResponse, error)
 	ListEntries(ctx context.Context, in *ListEntriesRequest, opts ...grpc.CallOption) (*ListEntriesResponse, error)
 	GetEntry(ctx context.Context, in *GetEntryRequest, opts ...grpc.CallOption) (*GetEntryResponse, error)
@@ -77,6 +79,16 @@ func (c *calendarServiceClient) CreateCalendar(ctx context.Context, in *CreateCa
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CreateCalendarResponse)
 	err := c.cc.Invoke(ctx, CalendarService_CreateCalendar_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *calendarServiceClient) SetOverlapPolicy(ctx context.Context, in *SetOverlapPolicyRequest, opts ...grpc.CallOption) (*SetOverlapPolicyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetOverlapPolicyResponse)
+	err := c.cc.Invoke(ctx, CalendarService_SetOverlapPolicy_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -209,6 +221,7 @@ func (c *calendarServiceClient) DeliverReminder(ctx context.Context, in *Reminde
 type CalendarServiceServer interface {
 	ListCalendars(context.Context, *ListCalendarsRequest) (*ListCalendarsResponse, error)
 	CreateCalendar(context.Context, *CreateCalendarRequest) (*CreateCalendarResponse, error)
+	SetOverlapPolicy(context.Context, *SetOverlapPolicyRequest) (*SetOverlapPolicyResponse, error)
 	GrantCalendar(context.Context, *GrantCalendarRequest) (*GrantCalendarResponse, error)
 	ListEntries(context.Context, *ListEntriesRequest) (*ListEntriesResponse, error)
 	GetEntry(context.Context, *GetEntryRequest) (*GetEntryResponse, error)
@@ -236,6 +249,9 @@ func (UnimplementedCalendarServiceServer) ListCalendars(context.Context, *ListCa
 }
 func (UnimplementedCalendarServiceServer) CreateCalendar(context.Context, *CreateCalendarRequest) (*CreateCalendarResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCalendar not implemented")
+}
+func (UnimplementedCalendarServiceServer) SetOverlapPolicy(context.Context, *SetOverlapPolicyRequest) (*SetOverlapPolicyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetOverlapPolicy not implemented")
 }
 func (UnimplementedCalendarServiceServer) GrantCalendar(context.Context, *GrantCalendarRequest) (*GrantCalendarResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GrantCalendar not implemented")
@@ -326,6 +342,24 @@ func _CalendarService_CreateCalendar_Handler(srv interface{}, ctx context.Contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CalendarServiceServer).CreateCalendar(ctx, req.(*CreateCalendarRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CalendarService_SetOverlapPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetOverlapPolicyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CalendarServiceServer).SetOverlapPolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CalendarService_SetOverlapPolicy_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CalendarServiceServer).SetOverlapPolicy(ctx, req.(*SetOverlapPolicyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -560,6 +594,10 @@ var CalendarService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateCalendar",
 			Handler:    _CalendarService_CreateCalendar_Handler,
+		},
+		{
+			MethodName: "SetOverlapPolicy",
+			Handler:    _CalendarService_SetOverlapPolicy_Handler,
 		},
 		{
 			MethodName: "GrantCalendar",

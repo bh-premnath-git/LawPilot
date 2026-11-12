@@ -10,7 +10,7 @@
 | TypeScript Root Supervisor | Runnable starter | mTLS gRPC, versioned capability discovery and bounded delegation to Python |
 | Python AI capability service | Runnable **safe mock** | Four registered capabilities, schema-checked requests, explicit abstention for unsupported evidence |
 | Go provider router | Runnable starter | Capability discovery, mock legal provider and explicit non-implemented Clio adapter |
-| Go native calendar | Runnable native domain | Tenant/matter ACLs, typed time/recurrence, revisions, approval proposals, free/busy and Temporal in-app reminder state; external sync pending |
+| Go native calendar | Runnable native domain | Tenant/matter ACLs, typed time/recurrence, explicit shared/exclusive overlap policy, revisions, approval proposals, calendar occupancy and Temporal in-app reminder state; external sync pending |
 | PostgreSQL + pgvector | PostgreSQL 18 / pgvector 0.8.7 | Canonical records, permissions, audit/outbox, tenant RLS and vector similarity primitives |
 | Keycloak | Dev infrastructure | Importable demo realm, OIDC/JWKS boundary; no production users provisioned |
 | Go Temporal worker + dispatcher | Runnable local mock path | Leased/fenced command delivery, persistent Temporal workflows, bounded activity retries and recovery; authoritative approvals pending |
@@ -35,7 +35,7 @@
 
 See [layer status and upgrade steps](docs/LAYER_STATUS.md) for the fixes, tests and remaining work at each boundary. These responsibilities describe the target architecture; the implementation table above identifies current starter functionality.
 
-See [calendar and gRPC setup, contracts, endpoints and limitations](docs/CALENDAR_GRPC.md). Apply migration 007 to an existing PostgreSQL 18 database before starting the new calendar service.
+See [calendar and gRPC setup, contracts, endpoints and limitations](docs/CALENDAR_GRPC.md). Apply missing migrations 007 and 008 to an existing PostgreSQL 18 database before starting the new calendar service.
 
 ## Architecture rules
 

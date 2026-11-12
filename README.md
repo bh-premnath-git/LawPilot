@@ -31,33 +31,124 @@
 
 ## Local start (Docker required)
 
+Prerequisites: Git, Docker Engine/Desktop with Compose v2, and OpenSSL. Node.js 22+ is required only when running or testing the TypeScript services on your host.
+
 ```bash
+git clone https://github.com/bh-premnath-git/LawPilot.git
+cd LawPilot
+# For the authentication fix while its PR is open:
+git switch fix/keycloak-26.8.2-auth
 cp .env.example .env
-# Change the LOCAL internal HMAC key. Do not use any of these sample passwords in production.
+openssl rand -hex 32
+```
+
+Paste the generated value into `INTERNAL_HMAC_KEY` in `.env`, then start:
+
+```bash
 docker compose --env-file .env up --build -d
-curl http://localhost:3000/v1/healthz
-curl http://localhost:3001/healthz
-curl http://localhost:8000/healthz
-curl http://localhost:8082/healthz
+docker compose --env-file .env ps
+curl -fsS http://localhost:3000/v1/healthz
+curl -fsS http://localhost:3001/healthz
+curl -fsS http://localhost:8000/healthz
+curl -fsS http://localhost:8082/healthz
 python3 scripts/verify_structure.py
 ```
 
-### Authentication and demo access
+Keycloak may take longer to initialize on the first start. Inspect its logs with `docker compose --env-file .env logs --tail=100 keycloak`. A healthy API does not mean a user has permission to access tenant data.
 
-Copy `.env.example` to `.env` for the local settings used in validation. For a host-run API, load `DATABASE_URL`, `KEYCLOAK_ISSUER`, `KEYCLOAK_JWKS_URL`, `KEYCLOAK_AUDIENCE`, `SUPERVISOR_URL`, and your generated `INTERNAL_HMAC_KEY` into its process environment. NestJS does not automatically load `.env`. Docker Compose sets the API container values in `compose.yaml`, including internal database/JWKS hostnames; `--env-file` supplies Compose interpolation values.
+### Local environment variables
 
-The dev Keycloak image is pinned to `quay.io/keycloak/keycloak:26.8.2` (see [official downloads](https://www.keycloak.org/downloads)). Its local database persists in the `keycloakdata` volume. Realm import creates a missing realm only; editing the import file does not update an existing realm. Apply client changes through the admin console or an explicit realm migration.
+The complete template is [`.env.example`](.env.example). The following values match the local development topology:
 
-The dev Keycloak service is at `http://localhost:8080` (admin login from `.env`). Realm: `lawpilot-dev`. **No test users are automatically granted access**, and all tenant APIs deny by default. To use protected endpoints:
+| Variable | API running on your host | API running in Compose |
+|---|---|---|
+| `KEYCLOAK_ISSUER` | `http://localhost:8080/realms/lawpilot-dev` | Same browser-visible issuer |
+| `KEYCLOAK_JWKS_URL` | `http://localhost:8080/realms/lawpilot-dev/protocol/openid-connect/certs` | `http://keycloak:8080/realms/lawpilot-dev/protocol/openid-connect/certs` |
+| `KEYCLOAK_AUDIENCE` | `lawpilot-api` | `lawpilot-api` |
+| `DATABASE_URL` | `postgresql://lawpilot_app:local-dev-app-only@localhost:5432/lawpilot` | `postgresql://lawpilot_app:local-dev-app-only@postgres:5432/lawpilot` |
+| `SUPERVISOR_URL` | `http://localhost:3001` | `http://root-supervisor:3001` |
+| `AI_URL` (supervisor process) | `http://localhost:8000` | `http://ai-capabilities:8000` |
+| `INTERNAL_HMAC_KEY` | Your generated secret, at least 32 characters | Same secret across API, supervisor, AI worker and provider router |
 
-1. Create a Keycloak user in the dev realm and obtain an OIDC access token using the `lawpilot-web` public client through the **Authorization Code + PKCE (S256)** flow. Its configured audience mapper includes `lawpilot-api` in access tokens; audience identifies the API, not a permission grant. Never obtain production browser tokens using password grant.
-2. Insert a matching tenant membership and explicit capability/matter grants using `scripts/seed_local_tenant.sql`, after replacing its example placeholders with real values.
-3. Call `GET /v1/tenants/{tenantId}/matters/{matterId}` or `POST /v1/tenants/{tenantId}/ai/execute` with `Authorization: Bearer <token>`.
-4. The AI execution endpoint is a **synchronous demonstration path**; use the Temporal command/outbox flow for production durability and asynchronous processing.
+`NODE_ENV=development` is the local setting. `API_PORT=3000` and `SUPERVISOR_PORT=3001` are the default service ports.
 
-The API requires signed RS256 Keycloak access tokens (`typ=Bearer`) with subject, expiration, issued-at, the exact configured issuer, and the `lawpilot-api` audience. ID and refresh tokens are rejected. Membership, capability grants and matter grants remain server-side database decisions; Keycloak realm roles do not bypass them. Missing issuer/audience configuration fails startup. In production both issuer and JWKS URLs must use HTTPS.
+For a host-run API, load the variables into its process environment; NestJS does not automatically load `.env`. Compose sets container URLs in [compose.yaml](compose.yaml); `--env-file .env` supplies interpolation values. The template's `*_DOCKER` variables document the container addresses and are not automatically substituted for the corresponding host variables.
 
-**Known local setup note:** the browser issuer URL is `localhost`, while containerized services reach Keycloak through the internal `keycloak` hostname for JWKS. A real deployment must pin and verify the issuer, audience and network DNS configuration rather than disabling validation.
+### Keycloak 26.8.2 setup
+
+The image is pinned to `quay.io/keycloak/keycloak:26.8.2`, from the [official Keycloak distribution](https://www.keycloak.org/downloads).
+
+1. Open `http://localhost:8080` and sign in to the administration console. The local defaults are username `admin` and password `local-dev-keycloak-only`, configurable through `KEYCLOAK_ADMIN_USERNAME` and `KEYCLOAK_ADMIN_PASSWORD` before the first start.
+2. Select the imported `lawpilot-dev` realm, then create a user under **Users**. Set a password under that user's **Credentials** tab. Use synthetic test data.
+3. Copy the user's ID. This must match the access token's `sub` claim and the `principal_id` used in the SQL grants below.
+4. Use an OAuth/OIDC client tool that supports a local callback and **Authorization Code + PKCE (S256)** to obtain an access token with these settings:
+
+| Setting | Value |
+|---|---|
+| Client ID | `lawpilot-web` (public client; no client secret) |
+| Authorization endpoint | `http://localhost:8080/realms/lawpilot-dev/protocol/openid-connect/auth` |
+| Token endpoint | `http://localhost:8080/realms/lawpilot-dev/protocol/openid-connect/token` |
+| Scope | `openid` |
+| PKCE method | `S256` |
+| Redirect URI | A callback served by your tool under `http://localhost:3000/*` or `http://localhost:3003/*` |
+
+The callback URI sent during authorization and code exchange must match exactly. This repository has no browser frontend or implemented login callback; your OAuth tool must handle the callback. External tool callback URLs require an explicit client redirect configuration in Keycloak.
+
+The `lawpilot-web` audience mapper includes `lawpilot-api` in access tokens. Password/direct-access grants are disabled. Use the **access token**, not the ID token or refresh token. The API verifies RS256 signatures, exact issuer/audience, `sub`, `exp`, `iat`, and `typ=Bearer`. Missing issuer/audience fails startup; production issuer and JWKS URLs must use HTTPS.
+
+The browser-visible issuer remains `localhost` even though Compose fetches signing keys through `keycloak`. Do not change the issuer to the container hostname or disable validation to resolve a mismatch.
+
+### Grant tenant and matter access
+
+Keycloak authenticates the user. LawPilot authorizes requests using database membership, capability grants and matter grants. Keycloak realm roles, including `firm_admin`, do not bypass these checks. **No users are automatically granted access.**
+
+Replace every `REPLACE_WITH_ACTUAL_KEYCLOAK_SUB` in a local copy of [scripts/seed_local_tenant.sql](scripts/seed_local_tenant.sql) with your user's ID, then apply that copy using the database administrator:
+
+```bash
+# Save your edited copy outside the repository, for example /tmp/lawpilot-seed.sql.
+docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -v ON_ERROR_STOP=1 < /tmp/lawpilot-seed.sql
+```
+
+The seed creates synthetic firm `11111111-1111-4111-8111-111111111111`, matter `22222222-2222-4222-8222-222222222222`, active membership, all four capability grants, and `matter.read`. It does not create a Keycloak user.
+
+### Call protected endpoints
+
+In Bash, enter the access token without adding it to shell history:
+
+```bash
+read -r -s -p 'Access token: ' LAWPILOT_ACCESS_TOKEN
+printf '\n'
+export LAWPILOT_ACCESS_TOKEN
+
+curl -fsS \
+  -H "Authorization: Bearer $LAWPILOT_ACCESS_TOKEN" \
+  http://localhost:3000/v1/tenants/11111111-1111-4111-8111-111111111111/matters/22222222-2222-4222-8222-222222222222
+
+curl -fsS \
+  -H "Authorization: Bearer $LAWPILOT_ACCESS_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"capabilityId":"intake.summarize.v1","idempotencyKey":"local-intake-test-001","input":{"answers":{"issue":"Synthetic intake example"}}}' \
+  http://localhost:3000/v1/tenants/11111111-1111-4111-8111-111111111111/ai/execute
+
+unset LAWPILOT_ACCESS_TOKEN
+```
+
+The matter request returns the synthetic matter. Intake returns a mock field count, not an AI legal summary. Other capabilities abstain because evidence/templates are not wired. Reusing the same idempotency key and body returns the existing execution; use a new key for a new request. Reusing a key for a different body returns `409`.
+
+The AI execution endpoint is a synchronous demonstration path. It checks permissions before dispatch and again after the worker returns; a revoked grant blocks result delivery. Production durability and asynchronous processing require the Temporal command/outbox integration.
+
+### Troubleshooting and persistence
+
+| Symptom | What to check |
+|---|---|
+| `401` | Access token rather than ID/refresh token; expiry, issuer, audience, signing keys, and machine clock |
+| `403` | Active membership for the token's `sub`, capability grant, and `matter.read` grant when a matter is supplied |
+| `400` or `422` | Request schema, UUIDs, supported capability ID, and required matter ID |
+| `503` from AI execution | Supervisor/AI logs, matching HMAC secrets, downstream reachability and response validation |
+| Keycloak changes are missing | Startup import only creates a missing realm; it does not update an existing realm |
+| Database tables are missing after a failed first start | Inspect PostgreSQL initialization logs and ensure `db/001_init.sql` is readable by the container user; an existing database volume does not rerun initialization scripts |
+
+Keycloak data persists in `keycloakdata`; PostgreSQL data persists in `pgdata`. `docker compose --env-file .env down` preserves both volumes. Apply changes to an existing realm through the admin console or an explicit migration. Bootstrap admin environment values are for initial creation; changing them does not reset an existing administrator's password. Removing volumes deletes local users and application data.
 
 ## Validate without Docker
 
@@ -66,7 +157,7 @@ python3 scripts/verify_structure.py
 cd services/ai-capabilities && python3 -m pip install -r requirements.txt && python3 -m pytest -q
 cd ../provider-router && go test ./...
 # From project root, with npm registry access:
-npm install && npm run build && npm test
+npm ci && npm run build && npm test
 ```
 
 ## Document map

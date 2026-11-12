@@ -68,6 +68,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f db/003_execution_outbox.sql
           psql -v ON_ERROR_STOP=1 -f db/004_pgvector.sql
           psql -v ON_ERROR_STOP=1 -f db/005_durable_executions.sql
+          psql -v ON_ERROR_STOP=1 -f db/006_execution_input_json.sql
           psql -v ON_ERROR_STOP=1 -f db/tests/pgvector.sql
           psql -v ON_ERROR_STOP=1 -f db/tests/tenant_isolation.sql
 

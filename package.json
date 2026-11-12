@@ -1,0 +1,12 @@
+{
+  "name": "lawpilot-backend-starter",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["packages/contracts", "apps/platform-api", "services/root-supervisor"],
+  "scripts": {
+    "build": "npm run build -w @lawpilot/contracts && npm run build -w @lawpilot/platform-api && npm run build -w @lawpilot/root-supervisor",
+    "test": "npm run test -w @lawpilot/contracts"
+  },
+  "engines": {"node": ">=22"},
+  "devDependencies": {"typescript": "^5.9.0", "@types/node": "^22.0.0", "tsx": "^4.20.0"}
+}

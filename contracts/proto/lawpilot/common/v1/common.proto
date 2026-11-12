@@ -1,0 +1,25 @@
+syntax = "proto3";
+package lawpilot.common.v1;
+
+// Server-generated; service callers MUST authenticate their identity independently.
+message ExecutionContext {
+  string request_id = 1;
+  string tenant_id = 2;
+  string principal_id = 3;
+  string correlation_id = 4;
+  string idempotency_key = 5;
+}
+
+message ResourceRef {
+  string resource_type = 1;
+  string resource_id = 2;
+  string provider_hint = 3; // Non-authoritative hint only.
+}
+
+message EvidenceReference {
+  string document_id = 1;
+  string document_version_id = 2;
+  string passage_id = 3;
+  int32 page_number = 4;
+  string source_sha256 = 5;
+}

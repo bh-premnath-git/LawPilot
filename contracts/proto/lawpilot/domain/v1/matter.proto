@@ -1,0 +1,16 @@
+syntax = "proto3";
+package lawpilot.domain.v1;
+import "lawpilot/common/v1/common.proto";
+message Matter {
+ string id = 1;
+ string tenant_id = 2;
+ string title = 3;
+ string status = 4;
+ string resource_owner = 5; // Canonical owner identifier, never assumed to be Clio.
+}
+message ReadMatterRequest {
+ lawpilot.common.v1.ExecutionContext context = 1;
+ string matter_id = 2;
+}
+message ReadMatterResponse { Matter matter = 1; }
+service MatterService { rpc Read(ReadMatterRequest) returns (ReadMatterResponse); }

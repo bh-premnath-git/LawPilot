@@ -1,0 +1,65 @@
+{
+  "realm": "lawpilot-dev",
+  "enabled": true,
+  "displayName": "LawPilot DEV (synthetic data only)",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "clients": [
+    {
+      "clientId": "lawpilot-web",
+      "name": "LawPilot development web",
+      "publicClient": true,
+      "enabled": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:3000/*",
+        "http://localhost:3003/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000",
+        "http://localhost:3003"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "protocolMappers": [
+        {
+          "name": "lawpilot-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "lawpilot-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "lawpilot-api",
+      "enabled": true,
+      "bearerOnly": true,
+      "publicClient": false,
+      "protocol": "openid-connect"
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "firm_admin"
+      },
+      {
+        "name": "lawyer"
+      },
+      {
+        "name": "paralegal"
+      },
+      {
+        "name": "client"
+      }
+    ]
+  },
+  "users": []
+}

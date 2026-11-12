@@ -1,0 +1,54 @@
+openapi: 3.1.0
+info:
+  title: LawPilot Platform API (starter)
+  version: 0.1.0
+  description: Protected endpoints require a Keycloak access token and server-enforced tenancy.
+servers:
+  - url: http://localhost:3000
+components:
+  securitySchemes:
+    oidc:
+      type: openIdConnect
+      openIdConnectUrl: http://localhost:8080/realms/lawpilot-dev/.well-known/openid-configuration
+  schemas:
+    AIRequest:
+      type: object
+      additionalProperties: false
+      required: [capabilityId, input, idempotencyKey]
+      properties:
+        capabilityId: {type: string, pattern: '^[a-z][a-z0-9.]*\.v[1-9]\d*$'}
+        matterId: {type: string, format: uuid}
+        input: {type: object}
+        idempotencyKey: {type: string, minLength: 8, maxLength: 128}
+paths:
+  /v1/healthz:
+    get:
+      summary: Process liveness
+      responses:
+        '200': {description: Alive}
+  /v1/tenants/{tenantId}/matters/{matterId}:
+    get:
+      summary: Read a matter after membership and matter ACL checks
+      security: [{oidc: []}]
+      parameters:
+        - {name: tenantId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: matterId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200': {description: Authorized matter}
+        '403': {description: No membership or matter permission}
+  /v1/tenants/{tenantId}/ai/execute:
+    post:
+      summary: Synchronous mock AI capability call (move to durable async processing before production)
+      security: [{oidc: []}]
+      parameters:
+        - {name: tenantId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AIRequest'}
+      responses:
+        '200': {description: Mock AI result or idempotent previous result}
+        '403': {description: Permission denied}
+        '422': {description: Unsupported capability}
+        '503': {description: AI worker unavailable}

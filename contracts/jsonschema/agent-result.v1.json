@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.lawpilot.example/ai/agent-result.v1.json",
+  "title": "AgentResult v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "executionId",
+    "agentId",
+    "agentVersion",
+    "status",
+    "output",
+    "evidence",
+    "proposedActions",
+    "requiresAttorneyReview"
+  ],
+  "properties": {
+    "executionId": {
+      "type": "string"
+    },
+    "agentId": {
+      "type": "string"
+    },
+    "agentVersion": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "completed",
+        "abstained",
+        "failed"
+      ]
+    },
+    "output": {
+      "type": "object"
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "documentId",
+          "documentVersionId",
+          "passageId"
+        ],
+        "properties": {
+          "documentId": {
+            "type": "string"
+          },
+          "documentVersionId": {
+            "type": "string"
+          },
+          "passageId": {
+            "type": "string"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "proposedActions": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "requiresAttorneyReview": {
+      "type": "boolean"
+    }
+  }
+}

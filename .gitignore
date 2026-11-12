@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+*.log
+__pycache__/
+.pytest_cache/
+.venv/
+.target/
+target/
+.DS_Store
+.coverage
+*.pem
+*.key
+*.token

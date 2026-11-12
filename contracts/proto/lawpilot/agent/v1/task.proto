@@ -1,0 +1,23 @@
+syntax = "proto3";
+package lawpilot.agent.v1;
+import "lawpilot/common/v1/common.proto";
+message AgentTask {
+ lawpilot.common.v1.ExecutionContext context = 1;
+ string capability_id = 2;
+ string capability_version = 3;
+ lawpilot.common.v1.ResourceRef resource = 4;
+ bytes validated_input_json = 5; // Registered capability schema, strictly validated.
+}
+message AgentResult {
+ string execution_id = 1;
+ string agent_id = 2;
+ string agent_version = 3;
+ enum Status { STATUS_UNSPECIFIED = 0; COMPLETED = 1; ABSTAINED = 2; FAILED = 3; }
+ Status status = 4;
+ bytes validated_output_json = 5;
+ repeated lawpilot.common.v1.EvidenceReference evidence = 6;
+ bool requires_attorney_review = 7;
+}
+service AgentExecutor {
+ rpc Execute(AgentTask) returns (AgentResult);
+}

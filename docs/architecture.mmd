@@ -1,0 +1,36 @@
+flowchart TB
+ Client["Lawyer / Client UI - Next.js + optional WASM"]
+ KC["Keycloak OIDC + Organizations"]
+ Gateway["Platform API / BFF - NestJS"]
+ Domain["Canonical Domain + Matter ACL"]
+ Temporal["Durable Business Workflows - Go / Temporal"]
+ Supervisor["ROOT SUPERVISOR - TypeScript"]
+ Agent["Specialized AI Capabilities - Python"]
+ RAG["Tenant/Matter Evidence Retrieval - Future"]
+ Rust["Document Processing - Rust"]
+ Registry["Versioned Capability/Provider Registry"]
+ Router["Provider Router - Go"]
+ Clio["Clio Manage v4 Adapter"]
+ Other["MyCase / Custom / Native Adapters - Future"]
+ PG[("Tenant-RLS PostgreSQL")]
+ S3[("Encrypted Documents")]
+ Observability["OpenTelemetry + Durable Audit"]
+ Client --> Gateway
+ Client -.-> KC
+ Gateway --> Domain
+ Domain --> PG
+ Domain --> Temporal
+ Temporal <--> Supervisor
+ Supervisor --> Registry
+ Supervisor <--> Agent
+ Agent -.-> RAG
+ Temporal --> Rust
+ Rust --> S3
+ Temporal --> Router
+ Router --> Registry
+ Router --> Clio
+ Router --> Other
+ Gateway -.-> Observability
+ Temporal -.-> Observability
+ Supervisor -.-> Observability
+ Router -.-> Observability

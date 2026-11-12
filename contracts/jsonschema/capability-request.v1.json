@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.lawpilot.example/ai/capability-request.v1.json",
+  "title": "CapabilityRequest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "executionId",
+    "tenantId",
+    "principalId",
+    "capabilityId",
+    "input",
+    "traceId"
+  ],
+  "properties": {
+    "executionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tenantId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "principalId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "matterId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "capabilityId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "input": {
+      "type": "object"
+    },
+    "traceId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "agentVersion": {
+      "type": "string"
+    }
+  }
+}

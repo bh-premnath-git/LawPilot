@@ -1,0 +1,76 @@
+# LOCAL DEV ONLY: ports and placeholder passwords must not be carried to production.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: lawpilot
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-dev-postgres-only}
+    ports: ["127.0.0.1:5432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d lawpilot"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4.0
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-local-dev-keycloak-only}
+      KC_HOSTNAME: http://localhost:8080
+      KC_HOSTNAME_STRICT: "false"
+    ports: ["127.0.0.1:8080:8080"]
+    volumes:
+      - ./infra/keycloak:/opt/keycloak/data/import:ro
+
+  root-supervisor:
+    build: { context: ., dockerfile: services/root-supervisor/Dockerfile }
+    environment:
+      SUPERVISOR_PORT: "3001"
+      AI_URL: http://ai-capabilities:8000
+      INTERNAL_HMAC_KEY: ${INTERNAL_HMAC_KEY:?copy .env.example to .env and set a long secret}
+    depends_on: [ai-capabilities]
+    ports: ["127.0.0.1:3001:3001"]
+
+  ai-capabilities:
+    build: { context: ., dockerfile: services/ai-capabilities/Dockerfile }
+    environment:
+      INTERNAL_HMAC_KEY: ${INTERNAL_HMAC_KEY:?copy .env.example to .env and set a long secret}
+    ports: ["127.0.0.1:8000:8000"]
+
+  provider-router:
+    build: { context: ., dockerfile: services/provider-router/Dockerfile }
+    environment:
+      INTERNAL_HMAC_KEY: ${INTERNAL_HMAC_KEY:?copy .env.example to .env and set a long secret}
+    ports: ["127.0.0.1:8082:8082"]
+
+  platform-api:
+    build: { context: ., dockerfile: apps/platform-api/Dockerfile }
+    environment:
+      API_PORT: "3000"
+      DATABASE_URL: postgresql://lawpilot_app:local-dev-app-only@postgres:5432/lawpilot
+      KEYCLOAK_ISSUER: http://localhost:8080/realms/lawpilot-dev
+      KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/lawpilot-dev/protocol/openid-connect/certs
+      KEYCLOAK_AUDIENCE: lawpilot-api
+      SUPERVISOR_URL: http://root-supervisor:3001
+      INTERNAL_HMAC_KEY: ${INTERNAL_HMAC_KEY:?copy .env.example to .env and set a long secret}
+    depends_on:
+      postgres: {condition: service_healthy}
+      root-supervisor: {condition: service_started}
+      keycloak: {condition: service_started}
+    ports: ["127.0.0.1:3000:3000"]
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.134.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./infra/otel-collector.yaml:/etc/otelcol/config.yaml:ro
+    ports: ["127.0.0.1:4317:4317", "127.0.0.1:4318:4318"]
+
+volumes:
+  pgdata:

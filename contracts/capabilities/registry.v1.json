@@ -1,0 +1,37 @@
+{
+  "registryVersion": "1.0",
+  "capabilities": [
+    {
+      "id": "intake.summarize.v1",
+      "agentId": "intake-agent",
+      "agentVersion": "0.1.0",
+      "requiresMatter": false,
+      "requiresAttorneyReview": true,
+      "maxInputBytes": 8192
+    },
+    {
+      "id": "document.summarize.v1",
+      "agentId": "document-agent",
+      "agentVersion": "0.1.0",
+      "requiresMatter": true,
+      "requiresAttorneyReview": true,
+      "maxInputBytes": 8192
+    },
+    {
+      "id": "legal.draft.v1",
+      "agentId": "drafting-agent",
+      "agentVersion": "0.1.0",
+      "requiresMatter": true,
+      "requiresAttorneyReview": true,
+      "maxInputBytes": 8192
+    },
+    {
+      "id": "matter.qa.v1",
+      "agentId": "case-qa-agent",
+      "agentVersion": "0.1.0",
+      "requiresMatter": true,
+      "requiresAttorneyReview": false,
+      "maxInputBytes": 8192
+    }
+  ]
+}

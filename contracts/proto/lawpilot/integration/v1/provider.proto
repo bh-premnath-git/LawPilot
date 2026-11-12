@@ -1,0 +1,29 @@
+syntax = "proto3";
+package lawpilot.integration.v1;
+import "lawpilot/common/v1/common.proto";
+
+message ProviderManifest {
+  string provider_id = 1;
+  string adapter_version = 2;
+  repeated Capability capabilities = 3;
+}
+message Capability {
+  string id = 1;
+  string contract_version = 2;
+  bool supported = 3;
+}
+message CanonicalMatter {
+  string id = 1;
+  string tenant_id = 2;
+  string title = 3;
+  string status = 4;
+  string external_source = 5;
+}
+message GetMatterRequest {
+  lawpilot.common.v1.ExecutionContext context = 1;
+  lawpilot.common.v1.ResourceRef matter = 2;
+}
+message GetMatterResponse { CanonicalMatter matter = 1; }
+service MatterProvider {
+  rpc GetMatter(GetMatterRequest) returns (GetMatterResponse);
+}

@@ -34,6 +34,8 @@ class CapabilityService(bindings.CapabilityServiceServicer):
         json_format.ParseDict(result.output, reply.output)
         for reference in result.evidence:
             value=reply.evidence.add(document_id=reference.documentId,document_version_id=reference.documentVersionId,passage_id=reference.passageId)
+            if reference.contentSha256 is not None:
+                value.content_sha256=reference.contentSha256
             if reference.pageNumber is not None:
                 value.page_number=reference.pageNumber
         return reply

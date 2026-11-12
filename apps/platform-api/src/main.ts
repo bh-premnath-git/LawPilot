@@ -6,6 +6,7 @@ import { Request, Response, json } from 'express';
 import { randomUUID } from 'node:crypto';
 import { AuthService } from './auth.service';
 import { DbService } from './db.service';
+import {ContextController,ContextClient} from './context/context.controller';
 import {CalendarController,CalendarClient} from './calendar/calendar.controller';
 import { ExecutionsService } from './executions.service';
 import { AccessService } from './access.service';
@@ -62,7 +63,7 @@ class TelemetryLifecycle implements OnApplicationShutdown {
   async onApplicationShutdown(): Promise<void> { await shutdownTelemetry(); }
 }
 
-@Module({controllers:[ApiController,CalendarController],providers:[AuthService,DbService,AccessService,ExecutionsService,CalendarClient,TelemetryLifecycle]})
+@Module({controllers:[ApiController,CalendarController,ContextController],providers:[AuthService,DbService,AccessService,ExecutionsService,CalendarClient,ContextClient,TelemetryLifecycle]})
 class AppModule{}
 async function bootstrap(){
   if(!process.env.KEYCLOAK_ISSUER||!process.env.KEYCLOAK_AUDIENCE||!process.env.DATABASE_URL){throw new Error('Missing required auth/DB env');}

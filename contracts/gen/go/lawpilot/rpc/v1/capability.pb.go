@@ -121,6 +121,7 @@ type EvidenceRef struct {
 	DocumentVersionId string                 `protobuf:"bytes,2,opt,name=document_version_id,json=documentVersionId,proto3" json:"document_version_id,omitempty"`
 	PassageId         string                 `protobuf:"bytes,3,opt,name=passage_id,json=passageId,proto3" json:"passage_id,omitempty"`
 	PageNumber        *int32                 `protobuf:"varint,4,opt,name=page_number,json=pageNumber,proto3,oneof" json:"page_number,omitempty"`
+	ContentSha256     string                 `protobuf:"bytes,5,opt,name=content_sha256,json=contentSha256,proto3" json:"content_sha256,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -181,6 +182,13 @@ func (x *EvidenceRef) GetPageNumber() int32 {
 		return *x.PageNumber
 	}
 	return 0
+}
+
+func (x *EvidenceRef) GetContentSha256() string {
+	if x != nil {
+		return x.ContentSha256
+	}
+	return ""
 }
 
 type ExecuteCapabilityResponse struct {
@@ -287,7 +295,7 @@ const file_lawpilot_rpc_v1_capability_proto_rawDesc = "" +
 	"\tmatter_id\x18\x04 \x01(\tR\bmatterId\x12#\n" +
 	"\rcapability_id\x18\x05 \x01(\tR\fcapabilityId\x12-\n" +
 	"\x05input\x18\x06 \x01(\v2\x17.google.protobuf.StructR\x05input\x12\x19\n" +
-	"\btrace_id\x18\a \x01(\tR\atraceId\"\xb3\x01\n" +
+	"\btrace_id\x18\a \x01(\tR\atraceId\"\xda\x01\n" +
 	"\vEvidenceRef\x12\x1f\n" +
 	"\vdocument_id\x18\x01 \x01(\tR\n" +
 	"documentId\x12.\n" +
@@ -295,7 +303,8 @@ const file_lawpilot_rpc_v1_capability_proto_rawDesc = "" +
 	"\n" +
 	"passage_id\x18\x03 \x01(\tR\tpassageId\x12$\n" +
 	"\vpage_number\x18\x04 \x01(\x05H\x00R\n" +
-	"pageNumber\x88\x01\x01B\x0e\n" +
+	"pageNumber\x88\x01\x01\x12%\n" +
+	"\x0econtent_sha256\x18\x05 \x01(\tR\rcontentSha256B\x0e\n" +
 	"\f_page_number\"\xdd\x02\n" +
 	"\x19ExecuteCapabilityResponse\x12!\n" +
 	"\fexecution_id\x18\x01 \x01(\tR\vexecutionId\x12\x19\n" +

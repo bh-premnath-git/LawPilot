@@ -38,6 +38,7 @@ export interface EvidenceRef {
   documentVersionId: string;
   passageId: string;
   pageNumber?: number | undefined;
+  contentSha256: string;
 }
 
 export interface ExecuteCapabilityResponse {
@@ -240,7 +241,7 @@ export const ExecuteCapabilityRequest: MessageFns<ExecuteCapabilityRequest> = {
 };
 
 function createBaseEvidenceRef(): EvidenceRef {
-  return { documentId: "", documentVersionId: "", passageId: "", pageNumber: undefined };
+  return { documentId: "", documentVersionId: "", passageId: "", pageNumber: undefined, contentSha256: "" };
 }
 
 export const EvidenceRef: MessageFns<EvidenceRef> = {
@@ -256,6 +257,9 @@ export const EvidenceRef: MessageFns<EvidenceRef> = {
     }
     if (message.pageNumber !== undefined) {
       writer.uint32(32).int32(message.pageNumber);
+    }
+    if (message.contentSha256 !== "") {
+      writer.uint32(42).string(message.contentSha256);
     }
     return writer;
   },
@@ -299,6 +303,14 @@ export const EvidenceRef: MessageFns<EvidenceRef> = {
           message.pageNumber = reader.int32();
           continue;
         }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.contentSha256 = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -330,6 +342,11 @@ export const EvidenceRef: MessageFns<EvidenceRef> = {
         : isSet(object.page_number)
         ? globalThis.Number(object.page_number)
         : undefined,
+      contentSha256: isSet(object.contentSha256)
+        ? globalThis.String(object.contentSha256)
+        : isSet(object.content_sha256)
+        ? globalThis.String(object.content_sha256)
+        : "",
     };
   },
 
@@ -347,6 +364,9 @@ export const EvidenceRef: MessageFns<EvidenceRef> = {
     if (message.pageNumber !== undefined) {
       obj.pageNumber = Math.round(message.pageNumber);
     }
+    if (message.contentSha256 !== undefined) {
+      obj.contentSha256 = message.contentSha256;
+    }
     return obj;
   },
 
@@ -359,6 +379,7 @@ export const EvidenceRef: MessageFns<EvidenceRef> = {
     message.documentVersionId = object.documentVersionId ?? "";
     message.passageId = object.passageId ?? "";
     message.pageNumber = object.pageNumber ?? undefined;
+    message.contentSha256 = object.contentSha256 ?? "";
     return message;
   },
 };

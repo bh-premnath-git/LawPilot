@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Extractive quote output v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "claims"
+  ],
+  "properties": {
+    "kind": {
+      "const": "extractive_quotes.v1"
+    },
+    "claims": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "citation",
+          "quote"
+        ],
+        "properties": {
+          "citation": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "documentId",
+              "versionId",
+              "passageId",
+              "contentSha256",
+              "byteStart",
+              "byteEnd"
+            ],
+            "properties": {
+              "documentId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "versionId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "passageId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "contentSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "byteStart": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "byteEnd": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          },
+          "quote": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        }
+      }
+    }
+  }
+}

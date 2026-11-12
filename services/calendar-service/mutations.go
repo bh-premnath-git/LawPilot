@@ -358,7 +358,7 @@ func (s *Service) DecideProposal(ctx context.Context, r *pb.DecideProposalReques
 		if _, err = tx.Exec(ctx, "UPDATE calendar_proposals SET status=$3,reviewed_by=$4,reviewed_at=now() WHERE tenant_id=$1 AND id=$2", tenant, r.ProposalId, state, who); err != nil {
 			return err
 		}
-		if err = event(ctx, tx, tenant, who, r.ProposalId, "calendar.proposal."+state+".v1", 1, state); err != nil {
+		if err = event(ctx, tx, tenant, who, r.ProposalId, "calendar.proposal."+state+".v1", 2, state); err != nil {
 			return err
 		}
 		return save(ctx, tx, tenant, who, r.IdempotencyKey, hash, reply)

@@ -60,6 +60,7 @@ class Evidence(BaseModel):
     documentVersionId: str
     passageId: str
     pageNumber: int | None = None
+    contentSha256: str | None = Field(default=None, pattern=r'^[a-f0-9]{64}$')
 
 class Result(BaseModel):
     model_config = ConfigDict(extra='forbid')

@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "trustedPolicyId": "lawpilot.context.policy.v1",
+  "sourceTrust": "untrusted_source",
+  "groundingMode": "exact_quotes_only",
+  "ttlSeconds": 300,
+  "recipes": [
+    {"id": "matter.qa.v1", "version": "1.0", "maxSources": 8, "maxBytes": 16384, "scope": "one_authorized_matter", "retrieval": "lexical_or_configured_hybrid"},
+    {"id": "document.summary.v1", "version": "1.0", "maxSources": 128, "maxBytes": 16384, "scope": "one_current_authorized_document", "retrieval": "complete_document_or_fail"}
+  ]
+}

@@ -13,16 +13,16 @@ This is not completion of the full roadmap. Real provider write/reconciliation t
 | P0-01 durable execution | Local mock path implemented and tested with real PostgreSQL/Temporal; external-write recovery remains dependent on provider integration; awaiting_review has no approval ingress yet |
 | P0-02 trusted workload identity | AI/calendar paths use mTLS with workload caller allowlists and delegated user JWT verification for calendar; production issuance/rotation and Temporal identity remain pending |
 | P0-03 authoritative approval | Pending: authenticated immutable-artifact decisions and trusted effects; keep sample approval workflow separate |
-| P0-04 evidence authorization | Pending: authoritative document/version/passage resolution and claim support checks |
+| P0-04 evidence authorization | Native text resolver and transactional save/delivery checks verify current document/version/passage/hash/range plus exact quotes; generated legal prose/semantic claim evaluation remain blocked |
 | P0-05 contract governance | Generated Go/TS/Python gRPC clients, Buf wire/JSON checks and generation drift CI added; broader provider/event contract governance remains pending |
 | P0-06 migrations/recovery | Forward SQL 005 and local role separation added; version runner, checksums, production role provisioning, restore/upgrade tests pending |
 | P1-01 provider registry | Pending: DB ownership resolution and two adapter conformance fixtures |
 | P1-02 Clio adapter | Pending: real OAuth, sandbox, vault-backed credentials, webhooks and rate/reconciliation handling |
-| P1-03 context engine | Pending: typed recipes, scoped source snapshots, reproducibility and invalidation |
-| P1-04 document ingestion | Pending: storage/scanning/parsing, versioned passages and embedding/retrieval pipeline |
+| P1-03 context engine | Two typed recipes, scoped lexical/configured hybrid retrieval, reproducible expiring snapshots and permission/source invalidation implemented; broader firm/template/task/calendar recipes remain pending |
+| P1-04 document ingestion | Native UTF-8 version/chunk/hash and configured embedding/retrieval path implemented; binary parsing/scanning, encrypted object storage and durable reindex orchestration remain pending |
 | P1-05 real AI capabilities | Pending: model gateway, approved providers/templates, legal evaluations and output gates |
 | P1-06 calendar domain | Native Go domain, civil time/bounded recurrence, immutable proposals, ACL/revision/conflict tests and Temporal reminders added; external sync, invitations and legal deadline verification remain pending |
-| P1-07 general events | Execution command delivery only is implemented; event publication, consumer inbox and revision handling remain pending |
+| P1-07 general events | PostgreSQL domain journal, leased publication/fanout, transactional consumer inbox/effects, stale-revision guards, retries/dead-letter operations and current-matter metadata SSE added; external broker and more domain subscribers remain pending |
 | P1-08 calendar AI | Pending: authorized fresh briefings and approval-backed scheduling proposals |
 | P1-09 firm knowledge/templates | Pending: immutable approved versions, CRUD and publish permissions |
 | P2-01 authorization | Extend tested tenant/matter/capability boundary to new action-specific domains |
@@ -41,3 +41,5 @@ Next reviewable slices follow the specification: P0-02/P0-03 service identity an
 Calendar/gRPC implementation details, local environment and explicit limits: [CALENDAR_GRPC.md](CALENDAR_GRPC.md). Migration 007 adds this native domain. Calendar proposal approval is scoped to native scheduling; it does not complete P0-03 authoritative AI/legal artifact approval.
 
 Calendar overlap policy is explicit: new shared firm calendars allow overlaps; exclusive single-resource calendars enforce calendar-wide conflicts. Migration 008 preserves existing exclusive behavior, with a manager-only policy transition API. Attendee/resource conflicts across calendars and external reservation semantics remain pending.
+
+General events and native secure retrieval implementation, migrations 009/010, environment and acceptance limits: [EVENTS_CONTEXT.md](EVENTS_CONTEXT.md). No real LLM, binary scanning or encrypted object storage is claimed.

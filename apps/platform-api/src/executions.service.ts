@@ -52,6 +52,10 @@ export class ExecutionsService {
         if(!retried.rowCount)fail(409,'CONFLICT');
         await c.query("INSERT INTO audit_events(tenant_id,actor_id,action,resource_id,decision_code) VALUES($1,$2,'ai.dispatch_retry',$3,'owner_retry')",[tenant,principal,id]);
       }
+      if(row.matter_id && row.result?.status==='completed' && (findCapability(registry,row.capability_id)?.requiresMatter ?? true)){
+        const verified=await c.query('SELECT verify_execution_result($1,$2,$3::jsonb) AS verified',[tenant,id,JSON.stringify(row.result)]);
+        if(!verified.rows[0]?.verified){row.result=null;row.error_code='EVIDENCE_STALE_OR_UNAUTHORIZED';}
+      }
       const delivery=await c.query("SELECT publish_state,delivery_attempts,last_error_code,available_at FROM outbox_events WHERE tenant_id=$1 AND aggregate_id=$2 AND event_type='lawpilot.ai.accepted.v1'",[tenant,id]);
       return {executionId:row.id,status:row.status,result:row.result,errorCode:row.error_code,activityAttempts:row.activity_attempts,updatedAt:row.updated_at,delivery:delivery.rows[0]||null};
     });

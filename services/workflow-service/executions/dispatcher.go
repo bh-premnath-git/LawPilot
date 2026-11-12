@@ -127,7 +127,7 @@ func (d *Dispatcher) Reconcile(ctx context.Context) error {
 			continue
 		}
 		if status == enumspb.WORKFLOW_EXECUTION_STATUS_FAILED || status == enumspb.WORKFLOW_EXECUTION_STATUS_TIMED_OUT || status == enumspb.WORKFLOW_EXECUTION_STATUS_TERMINATED || status == enumspb.WORKFLOW_EXECUTION_STATUS_CANCELED {
-			if _, err = d.Store.Finish(ctx, value.Ref, "failed", "WORKFLOW_TERMINATED", nil, false); err != nil {
+			if _, err = d.Store.Finish(ctx, value.Ref, "failed", "WORKFLOW_TERMINATED", nil, false, false); err != nil {
 				return err
 			}
 		}

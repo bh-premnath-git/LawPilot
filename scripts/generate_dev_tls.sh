@@ -9,7 +9,7 @@ if [[ -e "$out/ca.key" ]]; then
   exit 1
 fi
 openssl req -x509 -newkey rsa:3072 -nodes -days 7 -subj /CN=LawPilot-Development-CA -keyout "$out/ca.key" -out "$out/ca.pem" 2>/dev/null
-for identity in api-gateway execution-worker root-supervisor ai-capabilities calendar-service; do
+for identity in api-gateway execution-worker root-supervisor ai-capabilities calendar-service context-engine; do
   openssl req -newkey rsa:2048 -nodes -subj "/CN=$identity" -keyout "$out/$identity.key" -out "$out/$identity.csr" 2>/dev/null
   cat > "$out/$identity.ext" <<EXT
 basicConstraints=critical,CA:FALSE

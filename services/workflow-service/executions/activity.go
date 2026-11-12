@@ -62,6 +62,7 @@ type Evidence struct {
 	DocumentID        string `json:"documentId"`
 	DocumentVersionID string `json:"documentVersionId"`
 	PassageID         string `json:"passageId"`
+	ContentSHA256     string `json:"contentSha256,omitempty"`
 	PageNumber        *int   `json:"pageNumber,omitempty"`
 }
 type Result struct {
@@ -195,9 +196,12 @@ func (a *Activities) Run(ctx context.Context, ref Ref) (string, error) {
 	if result.Status == "completed" && cap.RequiresAttorneyReview {
 		state = "awaiting_review"
 	}
-	state, err = a.Store.Finish(ctx, ref, state, result.Status, raw, true)
+	state, err = a.Store.Finish(ctx, ref, state, result.Status, raw, true, cap.RequiresMatter && result.Status == "completed")
 	if errors.Is(err, ErrPermission) {
 		return "", permanent("PERMISSION_DENIED")
+	}
+	if errors.Is(err, ErrEvidence) {
+		return "", permanent("EVIDENCE_VERIFICATION_FAILED")
 	}
 	if err != nil {
 		return "", fmt.Errorf("DATABASE_UNAVAILABLE")
@@ -211,5 +215,5 @@ type Failure struct {
 }
 
 func (a *Activities) Fail(ctx context.Context, in Failure) (string, error) {
-	return a.Store.Finish(ctx, in.Ref, "failed", in.Code, nil, false)
+	return a.Store.Finish(ctx, in.Ref, "failed", in.Code, nil, false, false)
 }

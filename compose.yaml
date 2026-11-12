@@ -14,6 +14,8 @@ services:
       - ./db/006_execution_input_json.sql:/docker-entrypoint-initdb.d/006_execution_input_json.sql:ro
       - ./db/007_calendar_domain.sql:/docker-entrypoint-initdb.d/007_calendar_domain.sql:ro
       - ./db/008_calendar_overlap_policy.sql:/docker-entrypoint-initdb.d/008_calendar_overlap_policy.sql:ro
+      - ./db/009_events_context.sql:/docker-entrypoint-initdb.d/009_events_context.sql:ro
+      - ./db/010_authoritative_evidence.sql:/docker-entrypoint-initdb.d/010_authoritative_evidence.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d lawpilot"]
       interval: 5s
@@ -133,6 +135,7 @@ services:
     environment:
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
       API_PORT: "3000"
+      CONTEXT_GRPC_ADDRESS: context-engine:50054
       CALENDAR_GRPC_ADDRESS: calendar-service:50051
       GRPC_CA_FILE: /run/lawpilot/tls/ca.pem
       GRPC_CLIENT_CERT_FILE: /run/lawpilot/tls/service.pem
@@ -165,6 +168,40 @@ services:
     depends_on:
       postgres: {condition: service_healthy}
       keycloak: {condition: service_started}
+    restart: unless-stopped
+
+  context-engine:
+    build: { context: ., dockerfile: services/context-engine/Dockerfile }
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    environment:
+      APP_ENV: development
+      CONTEXT_DATABASE_URL: postgresql://lawpilot_context:local-dev-context-only@postgres:5432/lawpilot
+      KEYCLOAK_ISSUER: http://localhost:8080/realms/lawpilot-dev
+      KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/lawpilot-dev/protocol/openid-connect/certs
+      KEYCLOAK_AUDIENCE: lawpilot-api
+      GRPC_CA_FILE: /run/lawpilot/tls/ca.pem
+      GRPC_SERVER_CERT_FILE: /run/lawpilot/tls/service.pem
+      GRPC_SERVER_KEY_FILE: /run/lawpilot/tls/service.key
+      EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL:-}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
+      EMBEDDING_REVISION: ${EMBEDDING_REVISION:-}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-}
+    volumes:
+      - ./work/tls/ca.pem:/run/lawpilot/tls/ca.pem:ro
+      - ./work/tls/context-engine.pem:/run/lawpilot/tls/service.pem:ro
+      - ./work/tls/context-engine.key:/run/lawpilot/tls/service.key:ro
+    depends_on:
+      postgres: {condition: service_healthy}
+      keycloak: {condition: service_started}
+    restart: unless-stopped
+
+  domain-events:
+    build: { context: ., dockerfile: services/context-engine/Dockerfile }
+    command: ["domain-events"]
+    environment:
+      EVENT_DATABASE_URL: postgresql://lawpilot_events:local-dev-events-only@postgres:5432/lawpilot
+    depends_on:
+      postgres: {condition: service_healthy}
     restart: unless-stopped
 
   otel-collector:

@@ -7,7 +7,7 @@ message ExecuteCapabilityRequest {
  string execution_id = 1; string tenant_id = 2; string principal_id = 3; string matter_id = 4;
  string capability_id = 5; google.protobuf.Struct input = 6; string trace_id = 7;
 }
-message EvidenceRef { string document_id = 1; string document_version_id = 2; string passage_id = 3; optional int32 page_number = 4; }
+message EvidenceRef { string document_id = 1; string document_version_id = 2; string passage_id = 3; optional int32 page_number = 4; string content_sha256 = 5; }
 message ExecuteCapabilityResponse {
  string execution_id = 1; string agent_id = 2; string agent_version = 3; string status = 4;
  google.protobuf.Struct output = 5; repeated EvidenceRef evidence = 6; optional bool requires_attorney_review = 7;

@@ -6,15 +6,15 @@
 
 | Component | State | What exists |
 |---|---|---|
-| NestJS platform API | Starter implementation | Keycloak JWT validation, tenant membership and matter-grant checks, AI execution endpoint, health check |
+| NestJS platform API | Durable mock execution API | Keycloak identity/grants, atomic 202 acceptance, owner-only polling/cancel/requeue and database readiness |
 | TypeScript Root Supervisor | Runnable starter | Signed internal API, versioned capability discovery and bounded delegation to Python |
 | Python AI capability service | Runnable **safe mock** | Four registered capabilities, schema-checked requests, explicit abstention for unsupported evidence |
 | Go provider router | Runnable starter | Capability discovery, mock legal provider and explicit non-implemented Clio adapter |
 | PostgreSQL + pgvector | PostgreSQL 18 / pgvector 0.8.7 | Canonical records, permissions, audit/outbox, tenant RLS and vector similarity primitives |
 | Keycloak | Dev infrastructure | Importable demo realm, OIDC/JWKS boundary; no production users provisioned |
-| Go Temporal worker | Integration scaffold | Example approval workflow with explicit lawyer signal; separate startup |
+| Go Temporal worker + dispatcher | Runnable local mock path | Leased/fenced command delivery, persistent Temporal workflows, bounded activity retries and recovery; authoritative approvals pending |
 | Rust document worker | Source scaffold | SHA-256/metadata processor; **no legal PDF extraction** |
-| OpenTelemetry | AI request-path instrumentation | OTLP export and W3C traces across API, Supervisor and Python; Go/Temporal/Rust instrumentation pending |
+| OpenTelemetry | AI request-path instrumentation | API spans and Supervisor → Python traces; durable Go/Temporal trace propagation pending |
 | Clio OAuth + webhooks | **NOT IMPLEMENTED** | Exact API boundaries and handshake/security checklist, no credentials or pretend success |
 | RAG, legal drafting, real LLM | **NOT IMPLEMENTED** | Capability contracts + safe mock only; no invented citations or drafts |
 
@@ -62,6 +62,7 @@ Paste the generated value into `INTERNAL_HMAC_KEY` in `.env`, then start:
 docker compose --env-file .env up --build -d
 docker compose --env-file .env ps
 curl -fsS http://localhost:3000/v1/healthz
+curl -fsS http://localhost:3000/v1/readyz
 curl -fsS http://localhost:3001/healthz
 curl -fsS http://localhost:8000/healthz
 curl -fsS http://localhost:8082/healthz
@@ -91,15 +92,15 @@ pgvector is enabled as infrastructure. Embedding generation, matter-scoped retri
 
 The complete template is [`.env.example`](.env.example). The following values match the local development topology:
 
-| Variable | API running on your host | API running in Compose |
+| Variable | Service running on your host | Service running in Compose |
 |---|---|---|
 | `KEYCLOAK_ISSUER` | `http://localhost:8080/realms/lawpilot-dev` | Same browser-visible issuer |
 | `KEYCLOAK_JWKS_URL` | `http://localhost:8080/realms/lawpilot-dev/protocol/openid-connect/certs` | `http://keycloak:8080/realms/lawpilot-dev/protocol/openid-connect/certs` |
 | `KEYCLOAK_AUDIENCE` | `lawpilot-api` | `lawpilot-api` |
 | `DATABASE_URL` | `postgresql://lawpilot_app:local-dev-app-only@localhost:5432/lawpilot` | `postgresql://lawpilot_app:local-dev-app-only@postgres:5432/lawpilot` |
-| `SUPERVISOR_URL` | `http://localhost:3001` | `http://root-supervisor:3001` |
+| `SUPERVISOR_URL` (Go execution worker) | `http://localhost:3001` | `http://root-supervisor:3001` |
 | `AI_URL` (supervisor process) | `http://localhost:8000` | `http://ai-capabilities:8000` |
-| `INTERNAL_HMAC_KEY` | Your generated secret, at least 32 characters | Same secret across API, supervisor, AI worker and provider router |
+| `INTERNAL_HMAC_KEY` | Your generated secret, at least 32 characters | Same secret across Go execution worker, supervisor, AI worker and provider router; API does not need it |
 
 `NODE_ENV=development` is the local setting. `API_PORT=3000` and `SUPERVISOR_PORT=3001` are the default service ports.
 
@@ -159,14 +160,25 @@ curl -fsS \
   -H "Authorization: Bearer $LAWPILOT_ACCESS_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"capabilityId":"intake.summarize.v1","idempotencyKey":"local-intake-test-001","input":{"answers":{"issue":"Synthetic intake example"}}}' \
-  http://localhost:3000/v1/tenants/11111111-1111-4111-8111-111111111111/ai/execute
+  http://localhost:3000/v1/tenants/11111111-1111-4111-8111-111111111111/executions
 
-unset LAWPILOT_ACCESS_TOKEN
 ```
 
-The matter request returns the synthetic matter. Intake returns a mock field count, not an AI legal summary. Other capabilities abstain because evidence/templates are not wired. Reusing the same idempotency key and body returns the existing execution; use a new key for a new request. Reusing a key for a different body returns `409`.
+The matter request returns the synthetic matter. The execution request returns **202** with `executionId`, `status`, `statusUrl` and a `Location` header. Poll the returned URL with the same access token to read its authorized status/result. The deprecated `/ai/execute` path now has the same asynchronous 202 behavior.
 
-The AI execution endpoint is a synchronous demonstration path. It checks permissions before dispatch and again after the worker returns; a revoked grant blocks result delivery. Production durability and asynchronous processing require the Temporal command/outbox integration.
+```bash
+# Replace the final UUID with executionId from the acceptance response.
+curl -fsS -H "Authorization: Bearer $LAWPILOT_ACCESS_TOKEN" \
+  http://localhost:3000/v1/tenants/11111111-1111-4111-8111-111111111111/executions/REPLACE_WITH_EXECUTION_ID
+```
+
+Intake remains a mock field count; completed output requiring attorney review stays `awaiting_review` until the authoritative approval domain is implemented. Other capabilities abstain without evidence/templates. No provider writes are enabled. Request inputs stay in the database; only references/status metadata enter Temporal history and the outbox.
+
+Acceptance, audit and dispatch intent commit together. A leased dispatcher starts a stable-ID Temporal workflow, Go activities call the Supervisor, and current grants are rechecked before execution, result commit and status delivery. Repeated equivalent requests reuse an execution; changing a request under the same idempotency key returns `409`.
+
+See [durable execution setup, migration and recovery tests](docs/DURABLE_EXECUTIONS.md) for cancellation, dead-letter retry, state semantics and local Temporal startup. The full uploaded requirements and remaining milestones are tracked in [the remediation status](docs/REMEDIATION_STATUS.md).
+
+When finished polling, clear the shell token with `unset LAWPILOT_ACCESS_TOKEN`.
 
 ### Troubleshooting and persistence
 
@@ -175,19 +187,20 @@ The AI execution endpoint is a synchronous demonstration path. It checks permiss
 | `401` | Access token rather than ID/refresh token; expiry, issuer, audience, signing keys, and machine clock |
 | `403` | Active membership for the token's `sub`, capability grant, and `matter.read` grant when a matter is supplied |
 | `400` or `422` | Request schema, UUIDs, supported capability ID, and required matter ID |
-| `503` from AI execution | Supervisor/AI logs, matching HMAC secrets, downstream reachability and response validation |
+| Execution stays queued/running or fails | Inspect the status response, delivery attempts and error code; check outbox-dispatcher/execution-worker/Temporal logs and worker HMAC configuration |
+| `dead_letter` delivery | Fix Temporal connectivity, then use the owner-authorized dispatch/retry endpoint; IDs remain stable |
 | Keycloak changes are missing | Startup import only creates a missing realm; it does not update an existing realm |
 | Database tables are missing after a failed first start | Inspect PostgreSQL initialization logs and ensure `db/001_init.sql` is readable by the container user; an existing database volume does not rerun initialization scripts |
 
-Keycloak data persists in `keycloakdata`; PostgreSQL 18 data persists in `pgdata18`. `docker compose --env-file .env down` preserves both volumes. Apply changes to an existing realm through the admin console or an explicit migration. Bootstrap admin environment values are for initial creation; changing them does not reset an existing administrator's password. Removing volumes deletes local users and application data.
+Keycloak data persists in `keycloakdata`; PostgreSQL 18 data persists in `pgdata18`; local Temporal history persists in `temporaldata`. `docker compose --env-file .env down` preserves these volumes. Apply changes to an existing realm through the admin console or an explicit migration. Bootstrap admin environment values are for initial creation; changing them does not reset an existing administrator's password. Removing volumes deletes local users and application data.
 
 ### Upgrading an existing local installation
 
-The PostgreSQL 18 change uses a fresh `pgdata18` volume; PostgreSQL 16 data is not migrated. For an existing PostgreSQL 18 database, apply [the database migrations](docs/LAYER_STATUS.md#upgrade-an-existing-local-database). Existing Keycloak realms still require the organization setting described there.
+The PostgreSQL 18 change uses a fresh `pgdata18` volume; PostgreSQL 16 data is not migrated. For an existing PostgreSQL 18 database, apply migration `005_durable_executions.sql` once as described in [durable execution upgrades](docs/DURABLE_EXECUTIONS.md#start-and-upgrade). Existing Keycloak realms still require the organization setting described there.
 
 ### Request tracing
 
-Compose configures `OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318` for the API, supervisor and Python worker. On your host, use `http://localhost:4318` with a running collector; unset it to disable export. These services propagate W3C trace context and export static operation names and HTTP response status without request bodies, legal text or tokens. Audit events are stored separately. Go, Temporal and Rust instrumentation remains future work.
+Compose configures `OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318` for the API, supervisor and Python worker. On your host, use `http://localhost:4318` with a running collector; unset it to disable export. The Supervisor propagates W3C context to Python; the API exports separate request spans. Go/Temporal queue-boundary propagation is not implemented yet. Custom span attributes omit request bodies, legal text and tokens. Audit events are stored separately. Go, Temporal and Rust instrumentation remains future work.
 
 ## Validate without Docker
 
@@ -201,6 +214,8 @@ npm ci && npm run build && npm test
 
 ## Document map
 
+- [Remediation tracker](docs/REMEDIATION_STATUS.md): uploaded requirements and implemented versus pending work
+- [Durable executions](docs/DURABLE_EXECUTIONS.md): asynchronous API, roles, dispatch/recovery and migration 005
 - [Layer status](docs/LAYER_STATUS.md): ordered fixes, migrations, verification and remaining integrations
 - [Architecture](docs/ARCHITECTURE.md): ownership, request flow, service isolation
 - [Implementation roadmap](docs/ROADMAP.md): milestones and release gates

@@ -64,3 +64,9 @@ Clio/tenant upload -> authorized ingestion -> virus scan -> Rust/Python parse ->
 - Compatibility verified at CI via schema changes and conformance fixtures.
 - Keys, OAuth tokens and legal document contents never appear in prompts, audit payloads or telemetry.
 - Supervisor never calls unrestricted code execution or arbitrary external URLs.
+
+## Implemented durable mock command path
+
+The API now atomically accepts execution + audit + outbox, returning 202 and an owner-authorized status URL. A leased/fenced dispatcher starts a stable-ID Temporal workflow; Go activities load and reauthorize the stored request, delegate to the existing Root Supervisor, and persist validated outcomes with audit/outbox metadata. Cancellation and dead-letter requeue preserve operation identity. Local Temporal history persists in SQLite. See [DURABLE_EXECUTIONS.md](DURABLE_EXECUTIONS.md).
+
+Raw inputs/results remain in RLS-protected PostgreSQL records; Temporal histories/outbox commands carry references only. The API holds no internal HMAC secret. Worker-to-Supervisor HMAC is still development transport, not production workload identity. No provider mutations or authoritative approvals are enabled. Provider, evidence, context, calendar and general-event work follow [the uploaded remediation roadmap](REMEDIATION_STATUS.md).

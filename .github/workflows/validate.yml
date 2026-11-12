@@ -17,7 +17,7 @@ jobs:
           POSTGRES_PASSWORD: local-ci-postgres-only
         ports: [5432:5432]
         options: >-
-          --health-cmd "pg_isready -U postgres -d lawpilot"
+          --health-cmd "pg_isready -h 127.0.0.1 -U postgres -d lawpilot"
           --health-interval 5s --health-timeout 3s --health-retries 15
     steps:
       - uses: actions/checkout@v4
@@ -67,5 +67,40 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f db/002_tenant_directory_rls.sql
           psql -v ON_ERROR_STOP=1 -f db/003_execution_outbox.sql
           psql -v ON_ERROR_STOP=1 -f db/004_pgvector.sql
+          psql -v ON_ERROR_STOP=1 -f db/005_durable_executions.sql
           psql -v ON_ERROR_STOP=1 -f db/tests/pgvector.sql
           psql -v ON_ERROR_STOP=1 -f db/tests/tenant_isolation.sql
+
+      - name: Durable execution database integration
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:local-ci-postgres-only@localhost:5432/lawpilot
+          TEST_APP_DATABASE_URL: postgresql://lawpilot_app:local-dev-app-only@localhost:5432/lawpilot
+          TEST_WORKFLOW_DATABASE_URL: postgresql://lawpilot_workflow:local-dev-workflow-only@localhost:5432/lawpilot
+          TEST_DISPATCHER_DATABASE_URL: postgresql://lawpilot_dispatcher:local-dev-dispatcher-only@localhost:5432/lawpilot
+        run: |
+          npm run test -w @lawpilot/platform-api
+          (cd services/workflow-service && go test -count=1 ./executions)
+      - name: Build non-root execution image
+        run: |
+          docker build -f services/workflow-service/Dockerfile -t lawpilot-execution-worker:ci .
+          docker run --rm --entrypoint sh lawpilot-execution-worker:ci -c 'test "$(id -u)" = 10001 && test -r contracts/capabilities/registry.v1.json'
+      - name: Durable execution process recovery
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:local-ci-postgres-only@localhost:5432/lawpilot
+          TEST_APP_DATABASE_URL: postgresql://lawpilot_app:local-dev-app-only@localhost:5432/lawpilot
+          TEST_WORKFLOW_DATABASE_URL: postgresql://lawpilot_workflow:local-dev-workflow-only@localhost:5432/lawpilot
+          TEST_DISPATCHER_DATABASE_URL: postgresql://lawpilot_dispatcher:local-dev-dispatcher-only@localhost:5432/lawpilot
+          TEMPORAL_BIN: work/temporal
+        run: |
+          mkdir -p work
+          curl -fsSL https://github.com/temporalio/cli/releases/download/v1.10.0/temporal_cli_1.10.0_linux_amd64.tar.gz -o work/temporal.tar.gz
+          tar -xzf work/temporal.tar.gz -C work temporal
+          (cd services/workflow-service && go build -o ../../work/execution-worker ./cmd/worker && go build -o ../../work/outbox-dispatcher ./cmd/dispatcher)
+          node scripts/test_durable_recovery.cjs
+      - name: Upload recovery test diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: durable-recovery-logs
+          path: work/recovery-*/*.log
+          if-no-files-found: ignore

@@ -10,11 +10,54 @@ services:
     volumes:
       - pgdata18:/var/lib/postgresql
       - ./db/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
+      - ./db/005_durable_executions.sql:/docker-entrypoint-initdb.d/005_durable_executions.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d lawpilot"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d lawpilot"]
       interval: 5s
       timeout: 3s
       retries: 15
+
+  # Local durable Temporal server. Production requires a managed/operated cluster.
+  temporal:
+    image: temporalio/temporal:1.10.0
+    restart: unless-stopped
+    command: ["server", "start-dev", "--ip", "0.0.0.0", "--db-filename", "/home/temporal/temporal.db"]
+    volumes: ["temporaldata:/home/temporal"]
+    ports: ["127.0.0.1:7233:7233", "127.0.0.1:8233:8233"]
+    healthcheck:
+      test: ["CMD", "temporal", "operator", "cluster", "health", "--address", "127.0.0.1:7233"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  execution-worker:
+    build: { context: ., dockerfile: services/workflow-service/Dockerfile }
+    environment:
+      WORKFLOW_DATABASE_URL: postgresql://lawpilot_workflow:local-dev-workflow-only@postgres:5432/lawpilot
+      TEMPORAL_ADDRESS: temporal:7233
+      TEMPORAL_NAMESPACE: default
+      TEMPORAL_TASK_QUEUE: lawpilot-executions-v1
+      SUPERVISOR_URL: http://root-supervisor:3001
+      INTERNAL_HMAC_KEY: ${INTERNAL_HMAC_KEY:?set a long development secret}
+    depends_on:
+      postgres: {condition: service_healthy}
+      temporal: {condition: service_healthy}
+      root-supervisor: {condition: service_started}
+    restart: unless-stopped
+
+  outbox-dispatcher:
+    build: { context: ., dockerfile: services/workflow-service/Dockerfile }
+    command: ["outbox-dispatcher"]
+    environment:
+      DISPATCHER_DATABASE_URL: postgresql://lawpilot_dispatcher:local-dev-dispatcher-only@postgres:5432/lawpilot
+      WORKFLOW_DATABASE_URL: postgresql://lawpilot_workflow:local-dev-workflow-only@postgres:5432/lawpilot
+      TEMPORAL_ADDRESS: temporal:7233
+      TEMPORAL_NAMESPACE: default
+      TEMPORAL_TASK_QUEUE: lawpilot-executions-v1
+    depends_on:
+      postgres: {condition: service_healthy}
+      temporal: {condition: service_healthy}
+    restart: unless-stopped
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.8.2
@@ -61,11 +104,8 @@ services:
       KEYCLOAK_ISSUER: http://localhost:8080/realms/lawpilot-dev
       KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/lawpilot-dev/protocol/openid-connect/certs
       KEYCLOAK_AUDIENCE: lawpilot-api
-      SUPERVISOR_URL: http://root-supervisor:3001
-      INTERNAL_HMAC_KEY: ${INTERNAL_HMAC_KEY:?copy .env.example to .env and set a long secret}
     depends_on:
       postgres: {condition: service_healthy}
-      root-supervisor: {condition: service_started}
       keycloak: {condition: service_started}
     ports: ["127.0.0.1:3000:3000"]
 
@@ -77,5 +117,6 @@ services:
     ports: ["127.0.0.1:4317:4317", "127.0.0.1:4318:4318"]
 
 volumes:
+  temporaldata:
   pgdata18:
   keycloakdata:

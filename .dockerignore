@@ -1,0 +1,14 @@
+.git
+work
+.env
+.env.*
+!.env.example
+**/node_modules
+**/dist
+**/target
+**/.venv
+**/__pycache__
+**/.pytest_cache
+*.pem
+*.key
+*.token

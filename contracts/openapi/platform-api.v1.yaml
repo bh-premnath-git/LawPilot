@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
-  title: LawPilot Platform API (starter)
-  version: 0.1.0
-  description: Protected endpoints require a Keycloak access token and server-enforced tenancy.
+  title: LawPilot Platform API
+  version: 0.2.0
+  description: Keycloak identity, server-side grants and durable mock AI execution. No provider writes or real legal AI.
 servers:
   - url: http://localhost:3000
 components:
@@ -10,6 +10,9 @@ components:
     oidc:
       type: openIdConnect
       openIdConnectUrl: http://localhost:8080/realms/lawpilot-dev/.well-known/openid-configuration
+  parameters:
+    TenantId: {name: tenantId, in: path, required: true, schema: {type: string, format: uuid}}
+    ExecutionId: {name: id, in: path, required: true, schema: {type: string, format: uuid}}
   schemas:
     AIRequest:
       type: object
@@ -20,35 +23,140 @@ components:
         matterId: {type: string, format: uuid}
         input: {type: object}
         idempotencyKey: {type: string, minLength: 8, maxLength: 128}
+    ExecutionState:
+      type: string
+      enum: [accepted, queued, running, awaiting_review, completed, rejected, cancelled, failed]
+    AcceptedExecution:
+      type: object
+      additionalProperties: false
+      required: [executionId, status, statusUrl]
+      properties:
+        executionId: {type: string, format: uuid}
+        status: {$ref: '#/components/schemas/ExecutionState'}
+        statusUrl: {type: string, format: uri-reference}
+    ExecutionStatus:
+      type: object
+      additionalProperties: false
+      required: [executionId, status, result, errorCode, activityAttempts, updatedAt, delivery]
+      properties:
+        executionId: {type: string, format: uuid}
+        status: {$ref: '#/components/schemas/ExecutionState'}
+        result: {type: [object, 'null']}
+        errorCode: {type: [string, 'null']}
+        activityAttempts: {type: integer, minimum: 0}
+        updatedAt: {type: string, format: date-time}
+        delivery:
+          type: [object, 'null']
+          properties:
+            publish_state: {type: string, enum: [pending, leased, delivered, dead_letter]}
+            delivery_attempts: {type: integer, minimum: 0}
+            last_error_code: {type: [string, 'null']}
+            available_at: {type: string, format: date-time}
 paths:
   /v1/healthz:
     get:
       summary: Process liveness
       responses:
         '200': {description: Alive}
+  /v1/readyz:
+    get:
+      summary: Database connectivity and durable execution schema readiness; Temporal may be offline during acceptance
+      responses:
+        '200': {description: Database and schema ready}
+        '503': {description: DATABASE_NOT_READY}
   /v1/tenants/{tenantId}/matters/{matterId}:
     get:
       summary: Read a matter after membership and matter ACL checks
       security: [{oidc: []}]
       parameters:
-        - {name: tenantId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {$ref: '#/components/parameters/TenantId'}
         - {name: matterId, in: path, required: true, schema: {type: string, format: uuid}}
       responses:
         '200': {description: Authorized matter}
-        '403': {description: No membership or matter permission}
-  /v1/tenants/{tenantId}/ai/execute:
+        '401': {description: Invalid token}
+        '403': {description: Permission denied}
+  /v1/tenants/{tenantId}/executions:
     post:
-      summary: Synchronous mock AI capability call (move to durable async processing before production)
+      summary: Atomically accept an authorized durable AI command and outbox intent
       security: [{oidc: []}]
       parameters:
-        - {name: tenantId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {$ref: '#/components/parameters/TenantId'}
       requestBody:
         required: true
         content:
           application/json:
             schema: {$ref: '#/components/schemas/AIRequest'}
       responses:
-        '200': {description: Mock AI result or idempotent previous result}
+        '202':
+          description: Accepted or idempotent existing execution
+          headers:
+            Location: {schema: {type: string, format: uri-reference}}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AcceptedExecution'}
+        '400': {description: Invalid request}
+        '401': {description: Invalid token}
         '403': {description: Permission denied}
+        '409': {description: Idempotency key reused with different content}
+        '413': {description: Input too large}
         '422': {description: Unsupported capability}
-        '503': {description: AI worker unavailable}
+  /v1/tenants/{tenantId}/ai/execute:
+    post:
+      deprecated: true
+      summary: Compatibility route to durable acceptance; returns 202, never synchronous results
+      security: [{oidc: []}]
+      parameters:
+        - {$ref: '#/components/parameters/TenantId'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AIRequest'}
+      responses:
+        '202':
+          description: Poll the returned statusUrl
+          headers:
+            Location: {schema: {type: string, format: uri-reference}}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AcceptedExecution'}
+        '403': {description: Permission denied}
+        '409': {description: Idempotency conflict}
+  /v1/tenants/{tenantId}/executions/{id}:
+    get:
+      summary: Owner-only execution view with current membership/capability/matter reauthorization
+      security: [{oidc: []}]
+      parameters:
+        - {$ref: '#/components/parameters/TenantId'}
+        - {$ref: '#/components/parameters/ExecutionId'}
+      responses:
+        '200':
+          description: Status, delivery health and authorized result; no stored request input
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ExecutionStatus'}
+        '403': {description: Grants revoked or missing}
+        '404': {description: Execution absent or belongs to a different principal}
+  /v1/tenants/{tenantId}/executions/{id}/cancel:
+    post:
+      summary: Idempotently cancel an owned execution and enqueue Temporal cancellation
+      security: [{oidc: []}]
+      parameters:
+        - {$ref: '#/components/parameters/TenantId'}
+        - {$ref: '#/components/parameters/ExecutionId'}
+      responses:
+        '202': {description: Current execution status; completed terminal outcomes remain unchanged}
+        '403': {description: Permission denied}
+        '404': {description: Not found}
+  /v1/tenants/{tenantId}/executions/{id}/dispatch/retry:
+    post:
+      summary: Requeue an owned dead-lettered start intent using its existing workflow ID
+      security: [{oidc: []}]
+      parameters:
+        - {$ref: '#/components/parameters/TenantId'}
+        - {$ref: '#/components/parameters/ExecutionId'}
+      responses:
+        '202': {description: Requeued start intent; event and execution IDs preserved}
+        '403': {description: Permission denied}
+        '404': {description: Not found}
+        '409': {description: Execution terminal or no dead letter to retry}

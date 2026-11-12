@@ -17,3 +17,9 @@
 - Logs: remove OAuth tokens, passwords, legal content, contact data and user text. Keep audit as immutable access-controlled records, independently from telemetry.
 - Operations: secrets manager, KMS rotation, backups/restore testing, incident response, SAST/SCA, container scanning, dependency pinning, least-privilege IAM.
 - Security release gate: cross-tenant tests, cross-matter tests, ACL revocation during workflows, malicious-document tests, approval bypass tests.
+
+## Durable command boundary
+
+The API accepts a command only after tenant membership/capability/matter checks, atomically with a metadata-only dispatch intent. Status/cancel/requeue require the original principal and current grants. Worker activities reauthorize both before inference and result persistence; cancellation/terminal-state guards prevent late overwrites. Raw request/results remain in RLS-protected execution rows, never workflow histories or outbox metadata. Dispatcher roles can execute narrow metadata/lease functions but cannot SELECT private inputs.
+
+Worker-to-Supervisor transport still uses development HMAC, and authoritative approval/evidence resolution are not implemented. Consequently real provider writes, confidential-data processing and production deployment remain outside the implemented scope. See [remediation tracking](REMEDIATION_STATUS.md) for P0-02/P0-03/P0-04 gates.

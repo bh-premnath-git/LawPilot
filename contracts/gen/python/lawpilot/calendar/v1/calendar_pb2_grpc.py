@@ -44,6 +44,11 @@ class CalendarServiceStub(object):
                 request_serializer=lawpilot_dot_calendar_dot_v1_dot_calendar__pb2.CreateCalendarRequest.SerializeToString,
                 response_deserializer=lawpilot_dot_calendar_dot_v1_dot_calendar__pb2.CreateCalendarResponse.FromString,
                 _registered_method=True)
+        self.SetOverlapPolicy = channel.unary_unary(
+                '/lawpilot.calendar.v1.CalendarService/SetOverlapPolicy',
+                request_serializer=lawpilot_dot_calendar_dot_v1_dot_calendar__pb2.SetOverlapPolicyRequest.SerializeToString,
+                response_deserializer=lawpilot_dot_calendar_dot_v1_dot_calendar__pb2.SetOverlapPolicyResponse.FromString,
+                _registered_method=True)
         self.GrantCalendar = channel.unary_unary(
                 '/lawpilot.calendar.v1.CalendarService/GrantCalendar',
                 request_serializer=lawpilot_dot_calendar_dot_v1_dot_calendar__pb2.GrantCalendarRequest.SerializeToString,
@@ -116,6 +121,12 @@ class CalendarServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def CreateCalendar(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SetOverlapPolicy(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -205,6 +216,11 @@ def add_CalendarServiceServicer_to_server(servicer, server):
                     servicer.CreateCalendar,
                     request_deserializer=lawpilot_dot_calendar_dot_v1_dot_calendar__pb2.CreateCalendarRequest.FromString,
                     response_serializer=lawpilot_dot_calendar_dot_v1_dot_calendar__pb2.CreateCalendarResponse.SerializeToString,
+            ),
+            'SetOverlapPolicy': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetOverlapPolicy,
+                    request_deserializer=lawpilot_dot_calendar_dot_v1_dot_calendar__pb2.SetOverlapPolicyRequest.FromString,
+                    response_serializer=lawpilot_dot_calendar_dot_v1_dot_calendar__pb2.SetOverlapPolicyResponse.SerializeToString,
             ),
             'GrantCalendar': grpc.unary_unary_rpc_method_handler(
                     servicer.GrantCalendar,
@@ -321,6 +337,33 @@ class CalendarService(object):
             '/lawpilot.calendar.v1.CalendarService/CreateCalendar',
             lawpilot_dot_calendar_dot_v1_dot_calendar__pb2.CreateCalendarRequest.SerializeToString,
             lawpilot_dot_calendar_dot_v1_dot_calendar__pb2.CreateCalendarResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SetOverlapPolicy(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/lawpilot.calendar.v1.CalendarService/SetOverlapPolicy',
+            lawpilot_dot_calendar_dot_v1_dot_calendar__pb2.SetOverlapPolicyRequest.SerializeToString,
+            lawpilot_dot_calendar_dot_v1_dot_calendar__pb2.SetOverlapPolicyResponse.FromString,
             options,
             channel_credentials,
             insecure,

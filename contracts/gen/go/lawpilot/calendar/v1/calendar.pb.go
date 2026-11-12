@@ -727,6 +727,7 @@ type Calendar struct {
 	ApprovalRequired bool                   `protobuf:"varint,4,opt,name=approval_required,json=approvalRequired,proto3" json:"approval_required,omitempty"`
 	Revision         int64                  `protobuf:"varint,5,opt,name=revision,proto3" json:"revision,omitempty"`
 	Authority        string                 `protobuf:"bytes,6,opt,name=authority,proto3" json:"authority,omitempty"`
+	OverlapPolicy    string                 `protobuf:"bytes,7,opt,name=overlap_policy,json=overlapPolicy,proto3" json:"overlap_policy,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -799,6 +800,13 @@ func (x *Calendar) GetRevision() int64 {
 func (x *Calendar) GetAuthority() string {
 	if x != nil {
 		return x.Authority
+	}
+	return ""
+}
+
+func (x *Calendar) GetOverlapPolicy() string {
+	if x != nil {
+		return x.OverlapPolicy
 	}
 	return ""
 }
@@ -1486,6 +1494,7 @@ type CreateCalendarRequest struct {
 	DefaultTimeZone  string                 `protobuf:"bytes,3,opt,name=default_time_zone,json=defaultTimeZone,proto3" json:"default_time_zone,omitempty"`
 	ApprovalRequired *bool                  `protobuf:"varint,4,opt,name=approval_required,json=approvalRequired,proto3,oneof" json:"approval_required,omitempty"`
 	IdempotencyKey   string                 `protobuf:"bytes,5,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
+	OverlapPolicy    string                 `protobuf:"bytes,6,opt,name=overlap_policy,json=overlapPolicy,proto3" json:"overlap_policy,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -1555,6 +1564,13 @@ func (x *CreateCalendarRequest) GetIdempotencyKey() string {
 	return ""
 }
 
+func (x *CreateCalendarRequest) GetOverlapPolicy() string {
+	if x != nil {
+		return x.OverlapPolicy
+	}
+	return ""
+}
+
 type CreateCalendarResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Calendar      *Calendar              `protobuf:"bytes,1,opt,name=calendar,proto3" json:"calendar,omitempty"`
@@ -1599,6 +1615,126 @@ func (x *CreateCalendarResponse) GetCalendar() *Calendar {
 	return nil
 }
 
+type SetOverlapPolicyRequest struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Scope            *RequestScope          `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	CalendarId       string                 `protobuf:"bytes,2,opt,name=calendar_id,json=calendarId,proto3" json:"calendar_id,omitempty"`
+	OverlapPolicy    string                 `protobuf:"bytes,3,opt,name=overlap_policy,json=overlapPolicy,proto3" json:"overlap_policy,omitempty"`
+	ExpectedRevision int64                  `protobuf:"varint,4,opt,name=expected_revision,json=expectedRevision,proto3" json:"expected_revision,omitempty"`
+	IdempotencyKey   string                 `protobuf:"bytes,5,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *SetOverlapPolicyRequest) Reset() {
+	*x = SetOverlapPolicyRequest{}
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetOverlapPolicyRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetOverlapPolicyRequest) ProtoMessage() {}
+
+func (x *SetOverlapPolicyRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetOverlapPolicyRequest.ProtoReflect.Descriptor instead.
+func (*SetOverlapPolicyRequest) Descriptor() ([]byte, []int) {
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *SetOverlapPolicyRequest) GetScope() *RequestScope {
+	if x != nil {
+		return x.Scope
+	}
+	return nil
+}
+
+func (x *SetOverlapPolicyRequest) GetCalendarId() string {
+	if x != nil {
+		return x.CalendarId
+	}
+	return ""
+}
+
+func (x *SetOverlapPolicyRequest) GetOverlapPolicy() string {
+	if x != nil {
+		return x.OverlapPolicy
+	}
+	return ""
+}
+
+func (x *SetOverlapPolicyRequest) GetExpectedRevision() int64 {
+	if x != nil {
+		return x.ExpectedRevision
+	}
+	return 0
+}
+
+func (x *SetOverlapPolicyRequest) GetIdempotencyKey() string {
+	if x != nil {
+		return x.IdempotencyKey
+	}
+	return ""
+}
+
+type SetOverlapPolicyResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Calendar      *Calendar              `protobuf:"bytes,1,opt,name=calendar,proto3" json:"calendar,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetOverlapPolicyResponse) Reset() {
+	*x = SetOverlapPolicyResponse{}
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetOverlapPolicyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetOverlapPolicyResponse) ProtoMessage() {}
+
+func (x *SetOverlapPolicyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetOverlapPolicyResponse.ProtoReflect.Descriptor instead.
+func (*SetOverlapPolicyResponse) Descriptor() ([]byte, []int) {
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *SetOverlapPolicyResponse) GetCalendar() *Calendar {
+	if x != nil {
+		return x.Calendar
+	}
+	return nil
+}
+
 type GrantCalendarRequest struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	Scope            *RequestScope          `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
@@ -1613,7 +1749,7 @@ type GrantCalendarRequest struct {
 
 func (x *GrantCalendarRequest) Reset() {
 	*x = GrantCalendarRequest{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[18]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1625,7 +1761,7 @@ func (x *GrantCalendarRequest) String() string {
 func (*GrantCalendarRequest) ProtoMessage() {}
 
 func (x *GrantCalendarRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[18]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1638,7 +1774,7 @@ func (x *GrantCalendarRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GrantCalendarRequest.ProtoReflect.Descriptor instead.
 func (*GrantCalendarRequest) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{18}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *GrantCalendarRequest) GetScope() *RequestScope {
@@ -1692,7 +1828,7 @@ type GrantCalendarResponse struct {
 
 func (x *GrantCalendarResponse) Reset() {
 	*x = GrantCalendarResponse{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[19]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1704,7 +1840,7 @@ func (x *GrantCalendarResponse) String() string {
 func (*GrantCalendarResponse) ProtoMessage() {}
 
 func (x *GrantCalendarResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[19]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1717,7 +1853,7 @@ func (x *GrantCalendarResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GrantCalendarResponse.ProtoReflect.Descriptor instead.
 func (*GrantCalendarResponse) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{19}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *GrantCalendarResponse) GetCalendar() *Calendar {
@@ -1742,7 +1878,7 @@ type ListEntriesRequest struct {
 
 func (x *ListEntriesRequest) Reset() {
 	*x = ListEntriesRequest{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[20]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1754,7 +1890,7 @@ func (x *ListEntriesRequest) String() string {
 func (*ListEntriesRequest) ProtoMessage() {}
 
 func (x *ListEntriesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[20]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1767,7 +1903,7 @@ func (x *ListEntriesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListEntriesRequest.ProtoReflect.Descriptor instead.
 func (*ListEntriesRequest) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{20}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *ListEntriesRequest) GetScope() *RequestScope {
@@ -1831,7 +1967,7 @@ type ListEntriesResponse struct {
 
 func (x *ListEntriesResponse) Reset() {
 	*x = ListEntriesResponse{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[21]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1843,7 +1979,7 @@ func (x *ListEntriesResponse) String() string {
 func (*ListEntriesResponse) ProtoMessage() {}
 
 func (x *ListEntriesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[21]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1856,7 +1992,7 @@ func (x *ListEntriesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListEntriesResponse.ProtoReflect.Descriptor instead.
 func (*ListEntriesResponse) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{21}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *ListEntriesResponse) GetEntries() []*CalendarEntry {
@@ -1898,7 +2034,7 @@ type GetEntryRequest struct {
 
 func (x *GetEntryRequest) Reset() {
 	*x = GetEntryRequest{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[22]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1910,7 +2046,7 @@ func (x *GetEntryRequest) String() string {
 func (*GetEntryRequest) ProtoMessage() {}
 
 func (x *GetEntryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[22]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1923,7 +2059,7 @@ func (x *GetEntryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetEntryRequest.ProtoReflect.Descriptor instead.
 func (*GetEntryRequest) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{22}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *GetEntryRequest) GetScope() *RequestScope {
@@ -1956,7 +2092,7 @@ type GetEntryResponse struct {
 
 func (x *GetEntryResponse) Reset() {
 	*x = GetEntryResponse{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[23]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1968,7 +2104,7 @@ func (x *GetEntryResponse) String() string {
 func (*GetEntryResponse) ProtoMessage() {}
 
 func (x *GetEntryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[23]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1981,7 +2117,7 @@ func (x *GetEntryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetEntryResponse.ProtoReflect.Descriptor instead.
 func (*GetEntryResponse) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{23}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *GetEntryResponse) GetEntry() *CalendarEntry {
@@ -2003,7 +2139,7 @@ type MutateEntryRequest struct {
 
 func (x *MutateEntryRequest) Reset() {
 	*x = MutateEntryRequest{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[24]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2015,7 +2151,7 @@ func (x *MutateEntryRequest) String() string {
 func (*MutateEntryRequest) ProtoMessage() {}
 
 func (x *MutateEntryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[24]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2028,7 +2164,7 @@ func (x *MutateEntryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MutateEntryRequest.ProtoReflect.Descriptor instead.
 func (*MutateEntryRequest) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{24}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *MutateEntryRequest) GetScope() *RequestScope {
@@ -2068,7 +2204,7 @@ type MutateEntryResponse struct {
 
 func (x *MutateEntryResponse) Reset() {
 	*x = MutateEntryResponse{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[25]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2080,7 +2216,7 @@ func (x *MutateEntryResponse) String() string {
 func (*MutateEntryResponse) ProtoMessage() {}
 
 func (x *MutateEntryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[25]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2093,7 +2229,7 @@ func (x *MutateEntryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MutateEntryResponse.ProtoReflect.Descriptor instead.
 func (*MutateEntryResponse) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{25}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *MutateEntryResponse) GetResult() *MutationResult {
@@ -2115,7 +2251,7 @@ type ProposeEntryRequest struct {
 
 func (x *ProposeEntryRequest) Reset() {
 	*x = ProposeEntryRequest{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[26]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2127,7 +2263,7 @@ func (x *ProposeEntryRequest) String() string {
 func (*ProposeEntryRequest) ProtoMessage() {}
 
 func (x *ProposeEntryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[26]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2140,7 +2276,7 @@ func (x *ProposeEntryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProposeEntryRequest.ProtoReflect.Descriptor instead.
 func (*ProposeEntryRequest) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{26}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *ProposeEntryRequest) GetScope() *RequestScope {
@@ -2180,7 +2316,7 @@ type ProposeEntryResponse struct {
 
 func (x *ProposeEntryResponse) Reset() {
 	*x = ProposeEntryResponse{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[27]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2192,7 +2328,7 @@ func (x *ProposeEntryResponse) String() string {
 func (*ProposeEntryResponse) ProtoMessage() {}
 
 func (x *ProposeEntryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[27]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2205,7 +2341,7 @@ func (x *ProposeEntryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProposeEntryResponse.ProtoReflect.Descriptor instead.
 func (*ProposeEntryResponse) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{27}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *ProposeEntryResponse) GetResult() *MutationResult {
@@ -2229,7 +2365,7 @@ type DecideProposalRequest struct {
 
 func (x *DecideProposalRequest) Reset() {
 	*x = DecideProposalRequest{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[28]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2241,7 +2377,7 @@ func (x *DecideProposalRequest) String() string {
 func (*DecideProposalRequest) ProtoMessage() {}
 
 func (x *DecideProposalRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[28]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2254,7 +2390,7 @@ func (x *DecideProposalRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DecideProposalRequest.ProtoReflect.Descriptor instead.
 func (*DecideProposalRequest) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{28}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *DecideProposalRequest) GetScope() *RequestScope {
@@ -2308,7 +2444,7 @@ type DecideProposalResponse struct {
 
 func (x *DecideProposalResponse) Reset() {
 	*x = DecideProposalResponse{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[29]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2320,7 +2456,7 @@ func (x *DecideProposalResponse) String() string {
 func (*DecideProposalResponse) ProtoMessage() {}
 
 func (x *DecideProposalResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[29]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2333,7 +2469,7 @@ func (x *DecideProposalResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DecideProposalResponse.ProtoReflect.Descriptor instead.
 func (*DecideProposalResponse) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{29}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *DecideProposalResponse) GetResult() *MutationResult {
@@ -2354,7 +2490,7 @@ type GetProposalRequest struct {
 
 func (x *GetProposalRequest) Reset() {
 	*x = GetProposalRequest{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[30]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2366,7 +2502,7 @@ func (x *GetProposalRequest) String() string {
 func (*GetProposalRequest) ProtoMessage() {}
 
 func (x *GetProposalRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[30]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2379,7 +2515,7 @@ func (x *GetProposalRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetProposalRequest.ProtoReflect.Descriptor instead.
 func (*GetProposalRequest) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{30}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *GetProposalRequest) GetScope() *RequestScope {
@@ -2418,7 +2554,7 @@ type GetProposalResponse struct {
 
 func (x *GetProposalResponse) Reset() {
 	*x = GetProposalResponse{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[31]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2430,7 +2566,7 @@ func (x *GetProposalResponse) String() string {
 func (*GetProposalResponse) ProtoMessage() {}
 
 func (x *GetProposalResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[31]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2443,7 +2579,7 @@ func (x *GetProposalResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetProposalResponse.ProtoReflect.Descriptor instead.
 func (*GetProposalResponse) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{31}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *GetProposalResponse) GetProposalId() string {
@@ -2507,7 +2643,7 @@ type AvailabilityRequest struct {
 
 func (x *AvailabilityRequest) Reset() {
 	*x = AvailabilityRequest{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[32]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2519,7 +2655,7 @@ func (x *AvailabilityRequest) String() string {
 func (*AvailabilityRequest) ProtoMessage() {}
 
 func (x *AvailabilityRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[32]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2532,7 +2668,7 @@ func (x *AvailabilityRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AvailabilityRequest.ProtoReflect.Descriptor instead.
 func (*AvailabilityRequest) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{32}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *AvailabilityRequest) GetScope() *RequestScope {
@@ -2574,7 +2710,7 @@ type BusyInterval struct {
 
 func (x *BusyInterval) Reset() {
 	*x = BusyInterval{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[33]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2586,7 +2722,7 @@ func (x *BusyInterval) String() string {
 func (*BusyInterval) ProtoMessage() {}
 
 func (x *BusyInterval) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[33]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2599,7 +2735,7 @@ func (x *BusyInterval) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BusyInterval.ProtoReflect.Descriptor instead.
 func (*BusyInterval) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{33}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *BusyInterval) GetStart() *timestamppb.Timestamp {
@@ -2621,13 +2757,14 @@ type AvailabilityResponse struct {
 	Busy          []*BusyInterval        `protobuf:"bytes,1,rep,name=busy,proto3" json:"busy,omitempty"`
 	Coverage      string                 `protobuf:"bytes,2,opt,name=coverage,proto3" json:"coverage,omitempty"`
 	Warnings      []string               `protobuf:"bytes,3,rep,name=warnings,proto3" json:"warnings,omitempty"`
+	OverlapPolicy string                 `protobuf:"bytes,4,opt,name=overlap_policy,json=overlapPolicy,proto3" json:"overlap_policy,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *AvailabilityResponse) Reset() {
 	*x = AvailabilityResponse{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[34]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2639,7 +2776,7 @@ func (x *AvailabilityResponse) String() string {
 func (*AvailabilityResponse) ProtoMessage() {}
 
 func (x *AvailabilityResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[34]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2652,7 +2789,7 @@ func (x *AvailabilityResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AvailabilityResponse.ProtoReflect.Descriptor instead.
 func (*AvailabilityResponse) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{34}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *AvailabilityResponse) GetBusy() []*BusyInterval {
@@ -2676,6 +2813,13 @@ func (x *AvailabilityResponse) GetWarnings() []string {
 	return nil
 }
 
+func (x *AvailabilityResponse) GetOverlapPolicy() string {
+	if x != nil {
+		return x.OverlapPolicy
+	}
+	return ""
+}
+
 type SyncStatusRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Scope         *RequestScope          `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
@@ -2686,7 +2830,7 @@ type SyncStatusRequest struct {
 
 func (x *SyncStatusRequest) Reset() {
 	*x = SyncStatusRequest{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[35]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2698,7 +2842,7 @@ func (x *SyncStatusRequest) String() string {
 func (*SyncStatusRequest) ProtoMessage() {}
 
 func (x *SyncStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[35]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2711,7 +2855,7 @@ func (x *SyncStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncStatusRequest.ProtoReflect.Descriptor instead.
 func (*SyncStatusRequest) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{35}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *SyncStatusRequest) GetScope() *RequestScope {
@@ -2740,7 +2884,7 @@ type SyncStatusResponse struct {
 
 func (x *SyncStatusResponse) Reset() {
 	*x = SyncStatusResponse{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[36]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2752,7 +2896,7 @@ func (x *SyncStatusResponse) String() string {
 func (*SyncStatusResponse) ProtoMessage() {}
 
 func (x *SyncStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[36]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2765,7 +2909,7 @@ func (x *SyncStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncStatusResponse.ProtoReflect.Descriptor instead.
 func (*SyncStatusResponse) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{36}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *SyncStatusResponse) GetAuthority() string {
@@ -2809,7 +2953,7 @@ type Reminder struct {
 
 func (x *Reminder) Reset() {
 	*x = Reminder{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[37]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2821,7 +2965,7 @@ func (x *Reminder) String() string {
 func (*Reminder) ProtoMessage() {}
 
 func (x *Reminder) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[37]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2834,7 +2978,7 @@ func (x *Reminder) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Reminder.ProtoReflect.Descriptor instead.
 func (*Reminder) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{37}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *Reminder) GetId() string {
@@ -2883,7 +3027,7 @@ type ListRemindersRequest struct {
 
 func (x *ListRemindersRequest) Reset() {
 	*x = ListRemindersRequest{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[38]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2895,7 +3039,7 @@ func (x *ListRemindersRequest) String() string {
 func (*ListRemindersRequest) ProtoMessage() {}
 
 func (x *ListRemindersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[38]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2908,7 +3052,7 @@ func (x *ListRemindersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRemindersRequest.ProtoReflect.Descriptor instead.
 func (*ListRemindersRequest) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{38}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *ListRemindersRequest) GetScope() *RequestScope {
@@ -2941,7 +3085,7 @@ type ListRemindersResponse struct {
 
 func (x *ListRemindersResponse) Reset() {
 	*x = ListRemindersResponse{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[39]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2953,7 +3097,7 @@ func (x *ListRemindersResponse) String() string {
 func (*ListRemindersResponse) ProtoMessage() {}
 
 func (x *ListRemindersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[39]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2966,7 +3110,7 @@ func (x *ListRemindersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRemindersResponse.ProtoReflect.Descriptor instead.
 func (*ListRemindersResponse) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{39}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *ListRemindersResponse) GetReminders() []*Reminder {
@@ -2988,7 +3132,7 @@ type ReminderWorkRequest struct {
 
 func (x *ReminderWorkRequest) Reset() {
 	*x = ReminderWorkRequest{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[40]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3000,7 +3144,7 @@ func (x *ReminderWorkRequest) String() string {
 func (*ReminderWorkRequest) ProtoMessage() {}
 
 func (x *ReminderWorkRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[40]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3013,7 +3157,7 @@ func (x *ReminderWorkRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReminderWorkRequest.ProtoReflect.Descriptor instead.
 func (*ReminderWorkRequest) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{40}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *ReminderWorkRequest) GetTenantId() string {
@@ -3040,7 +3184,7 @@ type ReminderWorkResponse struct {
 
 func (x *ReminderWorkResponse) Reset() {
 	*x = ReminderWorkResponse{}
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[41]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3052,7 +3196,7 @@ func (x *ReminderWorkResponse) String() string {
 func (*ReminderWorkResponse) ProtoMessage() {}
 
 func (x *ReminderWorkResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[41]
+	mi := &file_lawpilot_calendar_v1_calendar_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3065,7 +3209,7 @@ func (x *ReminderWorkResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReminderWorkResponse.ProtoReflect.Descriptor instead.
 func (*ReminderWorkResponse) Descriptor() ([]byte, []int) {
-	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{41}
+	return file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *ReminderWorkResponse) GetStatus() string {
@@ -3128,14 +3272,15 @@ const file_lawpilot_calendar_v1_calendar_proto_rawDesc = "" +
 	"\treminders\x18\n" +
 	" \x03(\v2\".lawpilot.calendar.v1.ReminderSpecR\tremindersB\n" +
 	"\n" +
-	"\bschedule\"\xc1\x01\n" +
+	"\bschedule\"\xe8\x01\n" +
 	"\bCalendar\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12*\n" +
 	"\x11default_time_zone\x18\x03 \x01(\tR\x0fdefaultTimeZone\x12+\n" +
 	"\x11approval_required\x18\x04 \x01(\bR\x10approvalRequired\x12\x1a\n" +
 	"\brevision\x18\x05 \x01(\x03R\brevision\x12\x1c\n" +
-	"\tauthority\x18\x06 \x01(\tR\tauthority\"\xdc\x05\n" +
+	"\tauthority\x18\x06 \x01(\tR\tauthority\x12%\n" +
+	"\x0eoverlap_policy\x18\a \x01(\tR\roverlapPolicy\"\xdc\x05\n" +
 	"\rCalendarEntry\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
 	"\vcalendar_id\x18\x02 \x01(\tR\n" +
@@ -3194,15 +3339,25 @@ const file_lawpilot_calendar_v1_calendar_proto_rawDesc = "" +
 	"\x14ListCalendarsRequest\x128\n" +
 	"\x05scope\x18\x01 \x01(\v2\".lawpilot.calendar.v1.RequestScopeR\x05scope\"U\n" +
 	"\x15ListCalendarsResponse\x12<\n" +
-	"\tcalendars\x18\x01 \x03(\v2\x1e.lawpilot.calendar.v1.CalendarR\tcalendars\"\x82\x02\n" +
+	"\tcalendars\x18\x01 \x03(\v2\x1e.lawpilot.calendar.v1.CalendarR\tcalendars\"\xa9\x02\n" +
 	"\x15CreateCalendarRequest\x128\n" +
 	"\x05scope\x18\x01 \x01(\v2\".lawpilot.calendar.v1.RequestScopeR\x05scope\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12*\n" +
 	"\x11default_time_zone\x18\x03 \x01(\tR\x0fdefaultTimeZone\x120\n" +
 	"\x11approval_required\x18\x04 \x01(\bH\x00R\x10approvalRequired\x88\x01\x01\x12'\n" +
-	"\x0fidempotency_key\x18\x05 \x01(\tR\x0eidempotencyKeyB\x14\n" +
+	"\x0fidempotency_key\x18\x05 \x01(\tR\x0eidempotencyKey\x12%\n" +
+	"\x0eoverlap_policy\x18\x06 \x01(\tR\roverlapPolicyB\x14\n" +
 	"\x12_approval_required\"T\n" +
 	"\x16CreateCalendarResponse\x12:\n" +
+	"\bcalendar\x18\x01 \x01(\v2\x1e.lawpilot.calendar.v1.CalendarR\bcalendar\"\xf1\x01\n" +
+	"\x17SetOverlapPolicyRequest\x128\n" +
+	"\x05scope\x18\x01 \x01(\v2\".lawpilot.calendar.v1.RequestScopeR\x05scope\x12\x1f\n" +
+	"\vcalendar_id\x18\x02 \x01(\tR\n" +
+	"calendarId\x12%\n" +
+	"\x0eoverlap_policy\x18\x03 \x01(\tR\roverlapPolicy\x12+\n" +
+	"\x11expected_revision\x18\x04 \x01(\x03R\x10expectedRevision\x12'\n" +
+	"\x0fidempotency_key\x18\x05 \x01(\tR\x0eidempotencyKey\"V\n" +
+	"\x18SetOverlapPolicyResponse\x12:\n" +
 	"\bcalendar\x18\x01 \x01(\v2\x1e.lawpilot.calendar.v1.CalendarR\bcalendar\"\x8c\x02\n" +
 	"\x14GrantCalendarRequest\x128\n" +
 	"\x05scope\x18\x01 \x01(\v2\".lawpilot.calendar.v1.RequestScopeR\x05scope\x12\x1f\n" +
@@ -3287,11 +3442,12 @@ const file_lawpilot_calendar_v1_calendar_proto_rawDesc = "" +
 	"\x02to\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\x02to\"n\n" +
 	"\fBusyInterval\x120\n" +
 	"\x05start\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\x05start\x12,\n" +
-	"\x03end\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x03end\"\x86\x01\n" +
+	"\x03end\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x03end\"\xad\x01\n" +
 	"\x14AvailabilityResponse\x126\n" +
 	"\x04busy\x18\x01 \x03(\v2\".lawpilot.calendar.v1.BusyIntervalR\x04busy\x12\x1a\n" +
 	"\bcoverage\x18\x02 \x01(\tR\bcoverage\x12\x1a\n" +
-	"\bwarnings\x18\x03 \x03(\tR\bwarnings\"n\n" +
+	"\bwarnings\x18\x03 \x03(\tR\bwarnings\x12%\n" +
+	"\x0eoverlap_policy\x18\x04 \x01(\tR\roverlapPolicy\"n\n" +
 	"\x11SyncStatusRequest\x128\n" +
 	"\x05scope\x18\x01 \x01(\v2\".lawpilot.calendar.v1.RequestScopeR\x05scope\x12\x1f\n" +
 	"\vcalendar_id\x18\x02 \x01(\tR\n" +
@@ -3343,10 +3499,11 @@ const file_lawpilot_calendar_v1_calendar_proto_rawDesc = "" +
 	"\x18CHANGE_SCOPE_UNSPECIFIED\x10\x00\x12\x1b\n" +
 	"\x17CHANGE_SCOPE_OCCURRENCE\x10\x01\x12#\n" +
 	"\x1fCHANGE_SCOPE_THIS_AND_FOLLOWING\x10\x02\x12\x17\n" +
-	"\x13CHANGE_SCOPE_SERIES\x10\x032\xb4\v\n" +
+	"\x13CHANGE_SCOPE_SERIES\x10\x032\xa7\f\n" +
 	"\x0fCalendarService\x12h\n" +
 	"\rListCalendars\x12*.lawpilot.calendar.v1.ListCalendarsRequest\x1a+.lawpilot.calendar.v1.ListCalendarsResponse\x12k\n" +
-	"\x0eCreateCalendar\x12+.lawpilot.calendar.v1.CreateCalendarRequest\x1a,.lawpilot.calendar.v1.CreateCalendarResponse\x12h\n" +
+	"\x0eCreateCalendar\x12+.lawpilot.calendar.v1.CreateCalendarRequest\x1a,.lawpilot.calendar.v1.CreateCalendarResponse\x12q\n" +
+	"\x10SetOverlapPolicy\x12-.lawpilot.calendar.v1.SetOverlapPolicyRequest\x1a..lawpilot.calendar.v1.SetOverlapPolicyResponse\x12h\n" +
 	"\rGrantCalendar\x12*.lawpilot.calendar.v1.GrantCalendarRequest\x1a+.lawpilot.calendar.v1.GrantCalendarResponse\x12b\n" +
 	"\vListEntries\x12(.lawpilot.calendar.v1.ListEntriesRequest\x1a).lawpilot.calendar.v1.ListEntriesResponse\x12Y\n" +
 	"\bGetEntry\x12%.lawpilot.calendar.v1.GetEntryRequest\x1a&.lawpilot.calendar.v1.GetEntryResponse\x12b\n" +
@@ -3374,59 +3531,61 @@ func file_lawpilot_calendar_v1_calendar_proto_rawDescGZIP() []byte {
 }
 
 var file_lawpilot_calendar_v1_calendar_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_lawpilot_calendar_v1_calendar_proto_msgTypes = make([]protoimpl.MessageInfo, 42)
+var file_lawpilot_calendar_v1_calendar_proto_msgTypes = make([]protoimpl.MessageInfo, 44)
 var file_lawpilot_calendar_v1_calendar_proto_goTypes = []any{
-	(EntryKind)(0),                 // 0: lawpilot.calendar.v1.EntryKind
-	(Visibility)(0),                // 1: lawpilot.calendar.v1.Visibility
-	(Frequency)(0),                 // 2: lawpilot.calendar.v1.Frequency
-	(ChangeScope)(0),               // 3: lawpilot.calendar.v1.ChangeScope
-	(*RequestScope)(nil),           // 4: lawpilot.calendar.v1.RequestScope
-	(*CivilDate)(nil),              // 5: lawpilot.calendar.v1.CivilDate
-	(*TimedInterval)(nil),          // 6: lawpilot.calendar.v1.TimedInterval
-	(*AllDayInterval)(nil),         // 7: lawpilot.calendar.v1.AllDayInterval
-	(*RecurrenceRule)(nil),         // 8: lawpilot.calendar.v1.RecurrenceRule
-	(*ReminderSpec)(nil),           // 9: lawpilot.calendar.v1.ReminderSpec
-	(*EntryDraft)(nil),             // 10: lawpilot.calendar.v1.EntryDraft
-	(*Calendar)(nil),               // 11: lawpilot.calendar.v1.Calendar
-	(*CalendarEntry)(nil),          // 12: lawpilot.calendar.v1.CalendarEntry
-	(*CreateEntry)(nil),            // 13: lawpilot.calendar.v1.CreateEntry
-	(*UpdateEntry)(nil),            // 14: lawpilot.calendar.v1.UpdateEntry
-	(*CancelEntry)(nil),            // 15: lawpilot.calendar.v1.CancelEntry
-	(*CalendarCommand)(nil),        // 16: lawpilot.calendar.v1.CalendarCommand
-	(*MutationResult)(nil),         // 17: lawpilot.calendar.v1.MutationResult
-	(*ListCalendarsRequest)(nil),   // 18: lawpilot.calendar.v1.ListCalendarsRequest
-	(*ListCalendarsResponse)(nil),  // 19: lawpilot.calendar.v1.ListCalendarsResponse
-	(*CreateCalendarRequest)(nil),  // 20: lawpilot.calendar.v1.CreateCalendarRequest
-	(*CreateCalendarResponse)(nil), // 21: lawpilot.calendar.v1.CreateCalendarResponse
-	(*GrantCalendarRequest)(nil),   // 22: lawpilot.calendar.v1.GrantCalendarRequest
-	(*GrantCalendarResponse)(nil),  // 23: lawpilot.calendar.v1.GrantCalendarResponse
-	(*ListEntriesRequest)(nil),     // 24: lawpilot.calendar.v1.ListEntriesRequest
-	(*ListEntriesResponse)(nil),    // 25: lawpilot.calendar.v1.ListEntriesResponse
-	(*GetEntryRequest)(nil),        // 26: lawpilot.calendar.v1.GetEntryRequest
-	(*GetEntryResponse)(nil),       // 27: lawpilot.calendar.v1.GetEntryResponse
-	(*MutateEntryRequest)(nil),     // 28: lawpilot.calendar.v1.MutateEntryRequest
-	(*MutateEntryResponse)(nil),    // 29: lawpilot.calendar.v1.MutateEntryResponse
-	(*ProposeEntryRequest)(nil),    // 30: lawpilot.calendar.v1.ProposeEntryRequest
-	(*ProposeEntryResponse)(nil),   // 31: lawpilot.calendar.v1.ProposeEntryResponse
-	(*DecideProposalRequest)(nil),  // 32: lawpilot.calendar.v1.DecideProposalRequest
-	(*DecideProposalResponse)(nil), // 33: lawpilot.calendar.v1.DecideProposalResponse
-	(*GetProposalRequest)(nil),     // 34: lawpilot.calendar.v1.GetProposalRequest
-	(*GetProposalResponse)(nil),    // 35: lawpilot.calendar.v1.GetProposalResponse
-	(*AvailabilityRequest)(nil),    // 36: lawpilot.calendar.v1.AvailabilityRequest
-	(*BusyInterval)(nil),           // 37: lawpilot.calendar.v1.BusyInterval
-	(*AvailabilityResponse)(nil),   // 38: lawpilot.calendar.v1.AvailabilityResponse
-	(*SyncStatusRequest)(nil),      // 39: lawpilot.calendar.v1.SyncStatusRequest
-	(*SyncStatusResponse)(nil),     // 40: lawpilot.calendar.v1.SyncStatusResponse
-	(*Reminder)(nil),               // 41: lawpilot.calendar.v1.Reminder
-	(*ListRemindersRequest)(nil),   // 42: lawpilot.calendar.v1.ListRemindersRequest
-	(*ListRemindersResponse)(nil),  // 43: lawpilot.calendar.v1.ListRemindersResponse
-	(*ReminderWorkRequest)(nil),    // 44: lawpilot.calendar.v1.ReminderWorkRequest
-	(*ReminderWorkResponse)(nil),   // 45: lawpilot.calendar.v1.ReminderWorkResponse
-	(*timestamppb.Timestamp)(nil),  // 46: google.protobuf.Timestamp
+	(EntryKind)(0),                   // 0: lawpilot.calendar.v1.EntryKind
+	(Visibility)(0),                  // 1: lawpilot.calendar.v1.Visibility
+	(Frequency)(0),                   // 2: lawpilot.calendar.v1.Frequency
+	(ChangeScope)(0),                 // 3: lawpilot.calendar.v1.ChangeScope
+	(*RequestScope)(nil),             // 4: lawpilot.calendar.v1.RequestScope
+	(*CivilDate)(nil),                // 5: lawpilot.calendar.v1.CivilDate
+	(*TimedInterval)(nil),            // 6: lawpilot.calendar.v1.TimedInterval
+	(*AllDayInterval)(nil),           // 7: lawpilot.calendar.v1.AllDayInterval
+	(*RecurrenceRule)(nil),           // 8: lawpilot.calendar.v1.RecurrenceRule
+	(*ReminderSpec)(nil),             // 9: lawpilot.calendar.v1.ReminderSpec
+	(*EntryDraft)(nil),               // 10: lawpilot.calendar.v1.EntryDraft
+	(*Calendar)(nil),                 // 11: lawpilot.calendar.v1.Calendar
+	(*CalendarEntry)(nil),            // 12: lawpilot.calendar.v1.CalendarEntry
+	(*CreateEntry)(nil),              // 13: lawpilot.calendar.v1.CreateEntry
+	(*UpdateEntry)(nil),              // 14: lawpilot.calendar.v1.UpdateEntry
+	(*CancelEntry)(nil),              // 15: lawpilot.calendar.v1.CancelEntry
+	(*CalendarCommand)(nil),          // 16: lawpilot.calendar.v1.CalendarCommand
+	(*MutationResult)(nil),           // 17: lawpilot.calendar.v1.MutationResult
+	(*ListCalendarsRequest)(nil),     // 18: lawpilot.calendar.v1.ListCalendarsRequest
+	(*ListCalendarsResponse)(nil),    // 19: lawpilot.calendar.v1.ListCalendarsResponse
+	(*CreateCalendarRequest)(nil),    // 20: lawpilot.calendar.v1.CreateCalendarRequest
+	(*CreateCalendarResponse)(nil),   // 21: lawpilot.calendar.v1.CreateCalendarResponse
+	(*SetOverlapPolicyRequest)(nil),  // 22: lawpilot.calendar.v1.SetOverlapPolicyRequest
+	(*SetOverlapPolicyResponse)(nil), // 23: lawpilot.calendar.v1.SetOverlapPolicyResponse
+	(*GrantCalendarRequest)(nil),     // 24: lawpilot.calendar.v1.GrantCalendarRequest
+	(*GrantCalendarResponse)(nil),    // 25: lawpilot.calendar.v1.GrantCalendarResponse
+	(*ListEntriesRequest)(nil),       // 26: lawpilot.calendar.v1.ListEntriesRequest
+	(*ListEntriesResponse)(nil),      // 27: lawpilot.calendar.v1.ListEntriesResponse
+	(*GetEntryRequest)(nil),          // 28: lawpilot.calendar.v1.GetEntryRequest
+	(*GetEntryResponse)(nil),         // 29: lawpilot.calendar.v1.GetEntryResponse
+	(*MutateEntryRequest)(nil),       // 30: lawpilot.calendar.v1.MutateEntryRequest
+	(*MutateEntryResponse)(nil),      // 31: lawpilot.calendar.v1.MutateEntryResponse
+	(*ProposeEntryRequest)(nil),      // 32: lawpilot.calendar.v1.ProposeEntryRequest
+	(*ProposeEntryResponse)(nil),     // 33: lawpilot.calendar.v1.ProposeEntryResponse
+	(*DecideProposalRequest)(nil),    // 34: lawpilot.calendar.v1.DecideProposalRequest
+	(*DecideProposalResponse)(nil),   // 35: lawpilot.calendar.v1.DecideProposalResponse
+	(*GetProposalRequest)(nil),       // 36: lawpilot.calendar.v1.GetProposalRequest
+	(*GetProposalResponse)(nil),      // 37: lawpilot.calendar.v1.GetProposalResponse
+	(*AvailabilityRequest)(nil),      // 38: lawpilot.calendar.v1.AvailabilityRequest
+	(*BusyInterval)(nil),             // 39: lawpilot.calendar.v1.BusyInterval
+	(*AvailabilityResponse)(nil),     // 40: lawpilot.calendar.v1.AvailabilityResponse
+	(*SyncStatusRequest)(nil),        // 41: lawpilot.calendar.v1.SyncStatusRequest
+	(*SyncStatusResponse)(nil),       // 42: lawpilot.calendar.v1.SyncStatusResponse
+	(*Reminder)(nil),                 // 43: lawpilot.calendar.v1.Reminder
+	(*ListRemindersRequest)(nil),     // 44: lawpilot.calendar.v1.ListRemindersRequest
+	(*ListRemindersResponse)(nil),    // 45: lawpilot.calendar.v1.ListRemindersResponse
+	(*ReminderWorkRequest)(nil),      // 46: lawpilot.calendar.v1.ReminderWorkRequest
+	(*ReminderWorkResponse)(nil),     // 47: lawpilot.calendar.v1.ReminderWorkResponse
+	(*timestamppb.Timestamp)(nil),    // 48: google.protobuf.Timestamp
 }
 var file_lawpilot_calendar_v1_calendar_proto_depIdxs = []int32{
-	46, // 0: lawpilot.calendar.v1.TimedInterval.start:type_name -> google.protobuf.Timestamp
-	46, // 1: lawpilot.calendar.v1.TimedInterval.end:type_name -> google.protobuf.Timestamp
+	48, // 0: lawpilot.calendar.v1.TimedInterval.start:type_name -> google.protobuf.Timestamp
+	48, // 1: lawpilot.calendar.v1.TimedInterval.end:type_name -> google.protobuf.Timestamp
 	5,  // 2: lawpilot.calendar.v1.AllDayInterval.start_date:type_name -> lawpilot.calendar.v1.CivilDate
 	5,  // 3: lawpilot.calendar.v1.AllDayInterval.end_date_exclusive:type_name -> lawpilot.calendar.v1.CivilDate
 	2,  // 4: lawpilot.calendar.v1.RecurrenceRule.frequency:type_name -> lawpilot.calendar.v1.Frequency
@@ -3452,69 +3611,73 @@ var file_lawpilot_calendar_v1_calendar_proto_depIdxs = []int32{
 	11, // 24: lawpilot.calendar.v1.ListCalendarsResponse.calendars:type_name -> lawpilot.calendar.v1.Calendar
 	4,  // 25: lawpilot.calendar.v1.CreateCalendarRequest.scope:type_name -> lawpilot.calendar.v1.RequestScope
 	11, // 26: lawpilot.calendar.v1.CreateCalendarResponse.calendar:type_name -> lawpilot.calendar.v1.Calendar
-	4,  // 27: lawpilot.calendar.v1.GrantCalendarRequest.scope:type_name -> lawpilot.calendar.v1.RequestScope
-	11, // 28: lawpilot.calendar.v1.GrantCalendarResponse.calendar:type_name -> lawpilot.calendar.v1.Calendar
-	4,  // 29: lawpilot.calendar.v1.ListEntriesRequest.scope:type_name -> lawpilot.calendar.v1.RequestScope
-	46, // 30: lawpilot.calendar.v1.ListEntriesRequest.from:type_name -> google.protobuf.Timestamp
-	46, // 31: lawpilot.calendar.v1.ListEntriesRequest.to:type_name -> google.protobuf.Timestamp
-	12, // 32: lawpilot.calendar.v1.ListEntriesResponse.entries:type_name -> lawpilot.calendar.v1.CalendarEntry
-	46, // 33: lawpilot.calendar.v1.ListEntriesResponse.as_of:type_name -> google.protobuf.Timestamp
-	4,  // 34: lawpilot.calendar.v1.GetEntryRequest.scope:type_name -> lawpilot.calendar.v1.RequestScope
-	12, // 35: lawpilot.calendar.v1.GetEntryResponse.entry:type_name -> lawpilot.calendar.v1.CalendarEntry
-	4,  // 36: lawpilot.calendar.v1.MutateEntryRequest.scope:type_name -> lawpilot.calendar.v1.RequestScope
-	16, // 37: lawpilot.calendar.v1.MutateEntryRequest.command:type_name -> lawpilot.calendar.v1.CalendarCommand
-	17, // 38: lawpilot.calendar.v1.MutateEntryResponse.result:type_name -> lawpilot.calendar.v1.MutationResult
-	4,  // 39: lawpilot.calendar.v1.ProposeEntryRequest.scope:type_name -> lawpilot.calendar.v1.RequestScope
-	16, // 40: lawpilot.calendar.v1.ProposeEntryRequest.command:type_name -> lawpilot.calendar.v1.CalendarCommand
-	17, // 41: lawpilot.calendar.v1.ProposeEntryResponse.result:type_name -> lawpilot.calendar.v1.MutationResult
-	4,  // 42: lawpilot.calendar.v1.DecideProposalRequest.scope:type_name -> lawpilot.calendar.v1.RequestScope
-	17, // 43: lawpilot.calendar.v1.DecideProposalResponse.result:type_name -> lawpilot.calendar.v1.MutationResult
-	4,  // 44: lawpilot.calendar.v1.GetProposalRequest.scope:type_name -> lawpilot.calendar.v1.RequestScope
-	16, // 45: lawpilot.calendar.v1.GetProposalResponse.command:type_name -> lawpilot.calendar.v1.CalendarCommand
-	4,  // 46: lawpilot.calendar.v1.AvailabilityRequest.scope:type_name -> lawpilot.calendar.v1.RequestScope
-	46, // 47: lawpilot.calendar.v1.AvailabilityRequest.from:type_name -> google.protobuf.Timestamp
-	46, // 48: lawpilot.calendar.v1.AvailabilityRequest.to:type_name -> google.protobuf.Timestamp
-	46, // 49: lawpilot.calendar.v1.BusyInterval.start:type_name -> google.protobuf.Timestamp
-	46, // 50: lawpilot.calendar.v1.BusyInterval.end:type_name -> google.protobuf.Timestamp
-	37, // 51: lawpilot.calendar.v1.AvailabilityResponse.busy:type_name -> lawpilot.calendar.v1.BusyInterval
-	4,  // 52: lawpilot.calendar.v1.SyncStatusRequest.scope:type_name -> lawpilot.calendar.v1.RequestScope
-	46, // 53: lawpilot.calendar.v1.Reminder.due_at:type_name -> google.protobuf.Timestamp
-	4,  // 54: lawpilot.calendar.v1.ListRemindersRequest.scope:type_name -> lawpilot.calendar.v1.RequestScope
-	41, // 55: lawpilot.calendar.v1.ListRemindersResponse.reminders:type_name -> lawpilot.calendar.v1.Reminder
-	46, // 56: lawpilot.calendar.v1.ReminderWorkResponse.due_at:type_name -> google.protobuf.Timestamp
-	18, // 57: lawpilot.calendar.v1.CalendarService.ListCalendars:input_type -> lawpilot.calendar.v1.ListCalendarsRequest
-	20, // 58: lawpilot.calendar.v1.CalendarService.CreateCalendar:input_type -> lawpilot.calendar.v1.CreateCalendarRequest
-	22, // 59: lawpilot.calendar.v1.CalendarService.GrantCalendar:input_type -> lawpilot.calendar.v1.GrantCalendarRequest
-	24, // 60: lawpilot.calendar.v1.CalendarService.ListEntries:input_type -> lawpilot.calendar.v1.ListEntriesRequest
-	26, // 61: lawpilot.calendar.v1.CalendarService.GetEntry:input_type -> lawpilot.calendar.v1.GetEntryRequest
-	28, // 62: lawpilot.calendar.v1.CalendarService.MutateEntry:input_type -> lawpilot.calendar.v1.MutateEntryRequest
-	30, // 63: lawpilot.calendar.v1.CalendarService.ProposeEntry:input_type -> lawpilot.calendar.v1.ProposeEntryRequest
-	34, // 64: lawpilot.calendar.v1.CalendarService.GetProposal:input_type -> lawpilot.calendar.v1.GetProposalRequest
-	32, // 65: lawpilot.calendar.v1.CalendarService.DecideProposal:input_type -> lawpilot.calendar.v1.DecideProposalRequest
-	36, // 66: lawpilot.calendar.v1.CalendarService.Availability:input_type -> lawpilot.calendar.v1.AvailabilityRequest
-	39, // 67: lawpilot.calendar.v1.CalendarService.SyncStatus:input_type -> lawpilot.calendar.v1.SyncStatusRequest
-	42, // 68: lawpilot.calendar.v1.CalendarService.ListReminders:input_type -> lawpilot.calendar.v1.ListRemindersRequest
-	44, // 69: lawpilot.calendar.v1.CalendarService.LoadReminderWork:input_type -> lawpilot.calendar.v1.ReminderWorkRequest
-	44, // 70: lawpilot.calendar.v1.CalendarService.DeliverReminder:input_type -> lawpilot.calendar.v1.ReminderWorkRequest
-	19, // 71: lawpilot.calendar.v1.CalendarService.ListCalendars:output_type -> lawpilot.calendar.v1.ListCalendarsResponse
-	21, // 72: lawpilot.calendar.v1.CalendarService.CreateCalendar:output_type -> lawpilot.calendar.v1.CreateCalendarResponse
-	23, // 73: lawpilot.calendar.v1.CalendarService.GrantCalendar:output_type -> lawpilot.calendar.v1.GrantCalendarResponse
-	25, // 74: lawpilot.calendar.v1.CalendarService.ListEntries:output_type -> lawpilot.calendar.v1.ListEntriesResponse
-	27, // 75: lawpilot.calendar.v1.CalendarService.GetEntry:output_type -> lawpilot.calendar.v1.GetEntryResponse
-	29, // 76: lawpilot.calendar.v1.CalendarService.MutateEntry:output_type -> lawpilot.calendar.v1.MutateEntryResponse
-	31, // 77: lawpilot.calendar.v1.CalendarService.ProposeEntry:output_type -> lawpilot.calendar.v1.ProposeEntryResponse
-	35, // 78: lawpilot.calendar.v1.CalendarService.GetProposal:output_type -> lawpilot.calendar.v1.GetProposalResponse
-	33, // 79: lawpilot.calendar.v1.CalendarService.DecideProposal:output_type -> lawpilot.calendar.v1.DecideProposalResponse
-	38, // 80: lawpilot.calendar.v1.CalendarService.Availability:output_type -> lawpilot.calendar.v1.AvailabilityResponse
-	40, // 81: lawpilot.calendar.v1.CalendarService.SyncStatus:output_type -> lawpilot.calendar.v1.SyncStatusResponse
-	43, // 82: lawpilot.calendar.v1.CalendarService.ListReminders:output_type -> lawpilot.calendar.v1.ListRemindersResponse
-	45, // 83: lawpilot.calendar.v1.CalendarService.LoadReminderWork:output_type -> lawpilot.calendar.v1.ReminderWorkResponse
-	45, // 84: lawpilot.calendar.v1.CalendarService.DeliverReminder:output_type -> lawpilot.calendar.v1.ReminderWorkResponse
-	71, // [71:85] is the sub-list for method output_type
-	57, // [57:71] is the sub-list for method input_type
-	57, // [57:57] is the sub-list for extension type_name
-	57, // [57:57] is the sub-list for extension extendee
-	0,  // [0:57] is the sub-list for field type_name
+	4,  // 27: lawpilot.calendar.v1.SetOverlapPolicyRequest.scope:type_name -> lawpilot.calendar.v1.RequestScope
+	11, // 28: lawpilot.calendar.v1.SetOverlapPolicyResponse.calendar:type_name -> lawpilot.calendar.v1.Calendar
+	4,  // 29: lawpilot.calendar.v1.GrantCalendarRequest.scope:type_name -> lawpilot.calendar.v1.RequestScope
+	11, // 30: lawpilot.calendar.v1.GrantCalendarResponse.calendar:type_name -> lawpilot.calendar.v1.Calendar
+	4,  // 31: lawpilot.calendar.v1.ListEntriesRequest.scope:type_name -> lawpilot.calendar.v1.RequestScope
+	48, // 32: lawpilot.calendar.v1.ListEntriesRequest.from:type_name -> google.protobuf.Timestamp
+	48, // 33: lawpilot.calendar.v1.ListEntriesRequest.to:type_name -> google.protobuf.Timestamp
+	12, // 34: lawpilot.calendar.v1.ListEntriesResponse.entries:type_name -> lawpilot.calendar.v1.CalendarEntry
+	48, // 35: lawpilot.calendar.v1.ListEntriesResponse.as_of:type_name -> google.protobuf.Timestamp
+	4,  // 36: lawpilot.calendar.v1.GetEntryRequest.scope:type_name -> lawpilot.calendar.v1.RequestScope
+	12, // 37: lawpilot.calendar.v1.GetEntryResponse.entry:type_name -> lawpilot.calendar.v1.CalendarEntry
+	4,  // 38: lawpilot.calendar.v1.MutateEntryRequest.scope:type_name -> lawpilot.calendar.v1.RequestScope
+	16, // 39: lawpilot.calendar.v1.MutateEntryRequest.command:type_name -> lawpilot.calendar.v1.CalendarCommand
+	17, // 40: lawpilot.calendar.v1.MutateEntryResponse.result:type_name -> lawpilot.calendar.v1.MutationResult
+	4,  // 41: lawpilot.calendar.v1.ProposeEntryRequest.scope:type_name -> lawpilot.calendar.v1.RequestScope
+	16, // 42: lawpilot.calendar.v1.ProposeEntryRequest.command:type_name -> lawpilot.calendar.v1.CalendarCommand
+	17, // 43: lawpilot.calendar.v1.ProposeEntryResponse.result:type_name -> lawpilot.calendar.v1.MutationResult
+	4,  // 44: lawpilot.calendar.v1.DecideProposalRequest.scope:type_name -> lawpilot.calendar.v1.RequestScope
+	17, // 45: lawpilot.calendar.v1.DecideProposalResponse.result:type_name -> lawpilot.calendar.v1.MutationResult
+	4,  // 46: lawpilot.calendar.v1.GetProposalRequest.scope:type_name -> lawpilot.calendar.v1.RequestScope
+	16, // 47: lawpilot.calendar.v1.GetProposalResponse.command:type_name -> lawpilot.calendar.v1.CalendarCommand
+	4,  // 48: lawpilot.calendar.v1.AvailabilityRequest.scope:type_name -> lawpilot.calendar.v1.RequestScope
+	48, // 49: lawpilot.calendar.v1.AvailabilityRequest.from:type_name -> google.protobuf.Timestamp
+	48, // 50: lawpilot.calendar.v1.AvailabilityRequest.to:type_name -> google.protobuf.Timestamp
+	48, // 51: lawpilot.calendar.v1.BusyInterval.start:type_name -> google.protobuf.Timestamp
+	48, // 52: lawpilot.calendar.v1.BusyInterval.end:type_name -> google.protobuf.Timestamp
+	39, // 53: lawpilot.calendar.v1.AvailabilityResponse.busy:type_name -> lawpilot.calendar.v1.BusyInterval
+	4,  // 54: lawpilot.calendar.v1.SyncStatusRequest.scope:type_name -> lawpilot.calendar.v1.RequestScope
+	48, // 55: lawpilot.calendar.v1.Reminder.due_at:type_name -> google.protobuf.Timestamp
+	4,  // 56: lawpilot.calendar.v1.ListRemindersRequest.scope:type_name -> lawpilot.calendar.v1.RequestScope
+	43, // 57: lawpilot.calendar.v1.ListRemindersResponse.reminders:type_name -> lawpilot.calendar.v1.Reminder
+	48, // 58: lawpilot.calendar.v1.ReminderWorkResponse.due_at:type_name -> google.protobuf.Timestamp
+	18, // 59: lawpilot.calendar.v1.CalendarService.ListCalendars:input_type -> lawpilot.calendar.v1.ListCalendarsRequest
+	20, // 60: lawpilot.calendar.v1.CalendarService.CreateCalendar:input_type -> lawpilot.calendar.v1.CreateCalendarRequest
+	22, // 61: lawpilot.calendar.v1.CalendarService.SetOverlapPolicy:input_type -> lawpilot.calendar.v1.SetOverlapPolicyRequest
+	24, // 62: lawpilot.calendar.v1.CalendarService.GrantCalendar:input_type -> lawpilot.calendar.v1.GrantCalendarRequest
+	26, // 63: lawpilot.calendar.v1.CalendarService.ListEntries:input_type -> lawpilot.calendar.v1.ListEntriesRequest
+	28, // 64: lawpilot.calendar.v1.CalendarService.GetEntry:input_type -> lawpilot.calendar.v1.GetEntryRequest
+	30, // 65: lawpilot.calendar.v1.CalendarService.MutateEntry:input_type -> lawpilot.calendar.v1.MutateEntryRequest
+	32, // 66: lawpilot.calendar.v1.CalendarService.ProposeEntry:input_type -> lawpilot.calendar.v1.ProposeEntryRequest
+	36, // 67: lawpilot.calendar.v1.CalendarService.GetProposal:input_type -> lawpilot.calendar.v1.GetProposalRequest
+	34, // 68: lawpilot.calendar.v1.CalendarService.DecideProposal:input_type -> lawpilot.calendar.v1.DecideProposalRequest
+	38, // 69: lawpilot.calendar.v1.CalendarService.Availability:input_type -> lawpilot.calendar.v1.AvailabilityRequest
+	41, // 70: lawpilot.calendar.v1.CalendarService.SyncStatus:input_type -> lawpilot.calendar.v1.SyncStatusRequest
+	44, // 71: lawpilot.calendar.v1.CalendarService.ListReminders:input_type -> lawpilot.calendar.v1.ListRemindersRequest
+	46, // 72: lawpilot.calendar.v1.CalendarService.LoadReminderWork:input_type -> lawpilot.calendar.v1.ReminderWorkRequest
+	46, // 73: lawpilot.calendar.v1.CalendarService.DeliverReminder:input_type -> lawpilot.calendar.v1.ReminderWorkRequest
+	19, // 74: lawpilot.calendar.v1.CalendarService.ListCalendars:output_type -> lawpilot.calendar.v1.ListCalendarsResponse
+	21, // 75: lawpilot.calendar.v1.CalendarService.CreateCalendar:output_type -> lawpilot.calendar.v1.CreateCalendarResponse
+	23, // 76: lawpilot.calendar.v1.CalendarService.SetOverlapPolicy:output_type -> lawpilot.calendar.v1.SetOverlapPolicyResponse
+	25, // 77: lawpilot.calendar.v1.CalendarService.GrantCalendar:output_type -> lawpilot.calendar.v1.GrantCalendarResponse
+	27, // 78: lawpilot.calendar.v1.CalendarService.ListEntries:output_type -> lawpilot.calendar.v1.ListEntriesResponse
+	29, // 79: lawpilot.calendar.v1.CalendarService.GetEntry:output_type -> lawpilot.calendar.v1.GetEntryResponse
+	31, // 80: lawpilot.calendar.v1.CalendarService.MutateEntry:output_type -> lawpilot.calendar.v1.MutateEntryResponse
+	33, // 81: lawpilot.calendar.v1.CalendarService.ProposeEntry:output_type -> lawpilot.calendar.v1.ProposeEntryResponse
+	37, // 82: lawpilot.calendar.v1.CalendarService.GetProposal:output_type -> lawpilot.calendar.v1.GetProposalResponse
+	35, // 83: lawpilot.calendar.v1.CalendarService.DecideProposal:output_type -> lawpilot.calendar.v1.DecideProposalResponse
+	40, // 84: lawpilot.calendar.v1.CalendarService.Availability:output_type -> lawpilot.calendar.v1.AvailabilityResponse
+	42, // 85: lawpilot.calendar.v1.CalendarService.SyncStatus:output_type -> lawpilot.calendar.v1.SyncStatusResponse
+	45, // 86: lawpilot.calendar.v1.CalendarService.ListReminders:output_type -> lawpilot.calendar.v1.ListRemindersResponse
+	47, // 87: lawpilot.calendar.v1.CalendarService.LoadReminderWork:output_type -> lawpilot.calendar.v1.ReminderWorkResponse
+	47, // 88: lawpilot.calendar.v1.CalendarService.DeliverReminder:output_type -> lawpilot.calendar.v1.ReminderWorkResponse
+	74, // [74:89] is the sub-list for method output_type
+	59, // [59:74] is the sub-list for method input_type
+	59, // [59:59] is the sub-list for extension type_name
+	59, // [59:59] is the sub-list for extension extendee
+	0,  // [0:59] is the sub-list for field type_name
 }
 
 func init() { file_lawpilot_calendar_v1_calendar_proto_init() }
@@ -3542,7 +3705,7 @@ func file_lawpilot_calendar_v1_calendar_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_lawpilot_calendar_v1_calendar_proto_rawDesc), len(file_lawpilot_calendar_v1_calendar_proto_rawDesc)),
 			NumEnums:      4,
-			NumMessages:   42,
+			NumMessages:   44,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

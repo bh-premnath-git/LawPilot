@@ -29,11 +29,14 @@ docker compose --env-file .env up --build -d
 
 Development certificates expire after seven days. Stop the stack, explicitly remove `work/tls`, regenerate, then recreate service containers to rotate. Keys are 0600; each container receives only its own leaf key/certificate and the public CA. The CA private key stays on the host. Never commit generated credentials or reuse this CA in production.
 
-Fresh databases apply `007_calendar_domain.sql` after 005/006. For an existing PG18 database, stop API/consumers during this schema change and apply once as migration administrator:
+Fresh databases apply `007_calendar_domain.sql` after 005/006, then `008_calendar_overlap_policy.sql`. For an existing PG18 database, stop the API, calendar service, execution worker and dispatcher during this schema change and apply each missing migration once as migration administrator:
 
 ```bash
 docker compose exec -T postgres psql -U postgres -d lawpilot -v ON_ERROR_STOP=1 < db/007_calendar_domain.sql
+docker compose exec -T postgres psql -U postgres -d lawpilot -v ON_ERROR_STOP=1 < db/008_calendar_overlap_policy.sql
 ```
+
+Migration 008 and the matching service release must be deployed together: old writers do not supply the new policy field for exclusive calendars. The calendar service checks for the new column at startup. No additional environment variable is required for booking policy.
 
 The new role is `lawpilot_calendar` with a local-only placeholder password documented in `.env.example`; production provisioning must replace it. Tenant RLS applies to every calendar table. Calendar service can update only decision columns on stored proposals, not their immutable command bytes/hash. This migration does not introduce a migration version/checksum runner.
 
@@ -52,11 +55,25 @@ Host-run processes must set their own environment (NestJS does not read `.env` a
 
 Every gRPC process requires `GRPC_CA_FILE`. The full variable names are `GRPC_CLIENT_CERT_FILE`, `GRPC_CLIENT_KEY_FILE`, `GRPC_SERVER_CERT_FILE`, `GRPC_SERVER_KEY_FILE`. Use absolute file paths when starting outside the repository root. Compose supplies these per process automatically. Server name validation pins calendar-service/root-supervisor/ai-capabilities respectively.
 
+## Overlap policy and resource semantics
+
+| Policy | Intended use | Conflict scope |
+|---|---|---|
+| `shared` (new default) | Shared firm/multi-attorney calendar | Overlaps allowed, including overlapping attendees; no implicit reservation inferred |
+| `exclusive` (explicit opt-in) | One calendar representing a single attorney or meeting room | Active busy entries must not overlap within that calendar |
+
+Calendar visibility and booking exclusivity are independent. Participant IDs represent attendance and visibility, not a canonical resource reservation. Two attorneys can have simultaneous appointments on a shared firm calendar. Even exclusive calendars do not enforce attendee/resource conflicts across separate calendars. Use one exclusive calendar per resource when that local scope is sufficient; do not treat it as firm-wide resource scheduling.
+
+Availability returns calendar occupancy, its overlapPolicy, and an explicit warning that attendee/cross-calendar resource availability is not checked. A busy interval on a shared firm calendar does not imply every attorney is unavailable. Before external synchronization, a future resource domain must define stable resource IDs, attendee busy/declined/optional states, cross-calendar conflict rules and provider reservation semantics; this slice does not invent those rules.
+
+Migration 008 preserves existing calendars as `exclusive`, so existing booking intent is not silently relaxed. Managers can explicitly convert existing shared firm calendars using the policy endpoint. The entry-level enforcement flag is bound to the calendar policy by a deferred composite foreign key; a writer cannot bypass exclusivity by downgrading one entry. Policy transitions lock the calendar and update all entries atomically; enabling exclusive mode over conflicting data rolls back completely. Cancelled entries and unverified deadline candidates do not reserve busy time.
+
 ## Calendar REST surface
 
 All routes start `/v1/tenants/:tenantId` and require a Keycloak access token. IDs are UUIDs; mutation bodies require an `idempotencyKey` (8–128 characters).
 
-- `GET/POST /calendars`; create accepts name, defaultTimeZone, approvalRequired (defaults true).
+- `GET/POST /calendars`; create accepts name, defaultTimeZone, approvalRequired (defaults true), overlapPolicy (`shared` by default, or `exclusive`).
+- `PATCH /calendars/:id/overlap-policy`: overlapPolicy, expectedRevision, idempotencyKey; requires calendar manage permission. Changes are audited and atomic. Existing overlaps prevent switching to exclusive.
 - `PUT /calendars/:id/grants/:principalId`: permissions (`read`, `write`, `approve`, `manage`), expectedRevision. An empty permissions array revokes access.
 - `GET /calendar-entries?calendarId=...&from=...&to=...`: range at most 93 days; keyset pageSize ≤100 and pageToken. ACL filtering precedes pagination.
 - `GET /calendar-entries/:id?calendarId=...`: typed entry, ETag revision.
@@ -90,9 +107,9 @@ Entry example:
 
 An all-day schedule uses `type: "all_day"`, civil `startDate`, `endDateExclusive` and `timeZone`. Supported years are 2000–2200. Timed inputs use explicit RFC3339 offsets with at most millisecond precision; IANA zones are required. Optional recurrence is `{frequency: "daily"|"weekly", interval: 1, count: 10}`, bounded to 366 occurrences. Recurrences preserve wall time; ambiguous/nonexistent recurrence local times are rejected. Update/cancel scope is `occurrence`, `this_and_following`, or `series`; series changes require expectedSeriesRevision. Recurrence rule replacement is not implemented. Cancelled occurrences are not resurrected.
 
-Private entries are creator-only. Internal entries require staff calendar/matter access. Client views contain only shared appointments/consultations in which that client participates, with staff notes, other participants, and creator identity removed. Native busy overlap is prevented transactionally and by a database exclusion constraint; adjacent events are allowed. `deadline_candidate` is unverified and does not reserve busy time; `verified_deadline` is rejected. No service calculates or asserts legal deadline authority.
+Private entries are creator-only. Internal entries require staff calendar/matter access. Client views contain only shared appointments/consultations in which that client participates, with staff notes, other participants, and creator identity removed. Overlap blocking applies only to calendars explicitly marked `exclusive`, with transaction serialization and a database exclusion constraint; adjacent events are allowed. Shared calendars allow concurrent appointments. `deadline_candidate` is unverified and does not reserve busy time; `verified_deadline` is rejected. No service calculates or asserts legal deadline authority.
 
-Reminders belong to the requesting actor and entry revision. Temporal timers produce an idempotent in-app `due` state/event after reauthorization; they do not send messages. Changes/cancellations invalidate old scheduled/due reminders. Offsets are 0–40320 minutes, at most three per entry. No user notification inbox/UI is claimed.
+Reminders belong to the requesting actor and entry revision. Temporal timers produce an idempotent in-app `due` state/event after reauthorization; they do not send messages. Changes/cancellations invalidate old scheduled/due reminders. Offsets are 0–40320 minutes, at most three per entry. At-start reminders allow up to one minute of timer/delivery jitter; deliveries at least one minute after event start are suppressed as stale. No user notification inbox/UI is claimed.
 
 ## Contract generation and verification
 

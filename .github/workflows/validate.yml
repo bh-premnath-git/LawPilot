@@ -83,6 +83,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f db/005_durable_executions.sql
           psql -v ON_ERROR_STOP=1 -f db/006_execution_input_json.sql
           psql -v ON_ERROR_STOP=1 -f db/007_calendar_domain.sql
+          psql -v ON_ERROR_STOP=1 -f db/008_calendar_overlap_policy.sql
           psql -v ON_ERROR_STOP=1 -f db/tests/pgvector.sql
           psql -v ON_ERROR_STOP=1 -f db/tests/tenant_isolation.sql
 

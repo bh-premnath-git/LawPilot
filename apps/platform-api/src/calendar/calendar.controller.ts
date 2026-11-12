@@ -271,6 +271,7 @@ export class CalendarController {
           name: z.string().min(1).max(120),
           defaultTimeZone: z.string().min(1).max(100),
           approvalRequired: z.boolean().default(true),
+          overlapPolicy: z.enum(["shared", "exclusive"]).default("shared"),
           idempotencyKey: key,
         })
         .strict(),
@@ -278,6 +279,31 @@ export class CalendarController {
     );
     return RPC.CreateCalendarResponse.toJSON(
       await this.call("createCalendar", tenant, req, value),
+    );
+  }
+  @Patch("calendars/:calendarId/overlap-policy")
+  async setOverlapPolicy(
+    @Param("tenantId") tenant: string,
+    @Param("calendarId") calendarId: string,
+    @Req() req: Request,
+    @Body() body: unknown,
+  ) {
+    parse(uuid, calendarId);
+    const value = parse(
+      z
+        .object({
+          overlapPolicy: z.enum(["shared", "exclusive"]),
+          expectedRevision: revision,
+          idempotencyKey: key,
+        })
+        .strict(),
+      body,
+    );
+    return RPC.SetOverlapPolicyResponse.toJSON(
+      await this.call("setOverlapPolicy", tenant, req, {
+        ...value,
+        calendarId,
+      }),
     );
   }
   @Put("calendars/:calendarId/grants/:principalId") async grants(

@@ -4,6 +4,7 @@ import (
 	"context"
 	pb "github.com/bh-premnath-git/LawPilot/contracts/gen/go/lawpilot/calendar/v1"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -74,7 +75,7 @@ func fixtureFor(t *testing.T, approval bool) *fixture {
 	for _, who := range []string{f.alice, f.bob} {
 		admin.Exec(ctx, "INSERT INTO matter_grants(tenant_id,matter_id,principal_id,permission)VALUES($1,$2,$3,'matter.read')", f.tenant, f.matter, who)
 	}
-	created, err := f.s.CreateCalendar(f.ctx(f.alice), &pb.CreateCalendarRequest{Scope: f.scope(), Name: "Native", DefaultTimeZone: "America/New_York", ApprovalRequired: &approval, IdempotencyKey: uuid.NewString()})
+	created, err := f.s.CreateCalendar(f.ctx(f.alice), &pb.CreateCalendarRequest{Scope: f.scope(), Name: "Native", DefaultTimeZone: "America/New_York", ApprovalRequired: &approval, OverlapPolicy: "exclusive", IdempotencyKey: uuid.NewString()})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -347,5 +348,131 @@ func TestSeriesApprovalRequiresEveryAffectedMatterAndNoWriteGrant(t *testing.T) 
 	}
 	if _, err = f.s.DecideProposal(f.ctx(f.bob), decision); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestSharedCalendarAllowsOverlappingAttorneysAndPolicyTransitions(t *testing.T) {
+	f := fixtureFor(t, false)
+	ctx := context.Background()
+	// Default is a shared firm calendar, not a single resource reservation.
+	noApproval := false
+	created, err := f.s.CreateCalendar(f.ctx(f.alice), &pb.CreateCalendarRequest{Scope: f.scope(), Name: "Firm", DefaultTimeZone: "UTC", ApprovalRequired: &noApproval, IdempotencyKey: uuid.NewString()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if created.Calendar.OverlapPolicy != "shared" {
+		t.Fatal("shared must be default")
+	}
+	f.calendar = created.Calendar
+	for _, who := range []string{f.alice, f.bob} {
+		if who == f.bob {
+			granted, err := f.s.GrantCalendar(f.ctx(f.alice), &pb.GrantCalendarRequest{Scope: f.scope(), CalendarId: f.calendar.Id, PrincipalId: who, Permissions: []string{"read", "write"}, ExpectedRevision: f.calendar.Revision, IdempotencyKey: uuid.NewString()})
+			if err != nil {
+				t.Fatal(err)
+			}
+			f.calendar = granted.Calendar
+		}
+		draft := draftAt(8)
+		draft.ParticipantPrincipalIds = []string{who}
+		f.create(t, who, draft)
+	}
+	concurrent := make(chan error, 2)
+	for _, who := range []string{f.alice, f.bob} {
+		go func(who string) {
+			draft := draftAt(9)
+			draft.ParticipantPrincipalIds = []string{who}
+			_, err := f.s.MutateEntry(f.ctx(who), &pb.MutateEntryRequest{Scope: f.scope(), CalendarId: f.calendar.Id, Command: createCommand(draft), IdempotencyKey: uuid.NewString()})
+			concurrent <- err
+		}(who)
+	}
+	for i := 0; i < 2; i++ {
+		if err := <-concurrent; err != nil {
+			t.Fatal("shared calendar rejected concurrent attorneys", err)
+		}
+	}
+	// Shared calendars do not infer an attendee lock either: participants are
+	// visibility/attendance metadata, not a canonical resource reservation model.
+	third := draftAt(8)
+	third.ParticipantPrincipalIds = []string{f.alice}
+	f.create(t, f.alice, third)
+	request := &pb.SetOverlapPolicyRequest{Scope: f.scope(), CalendarId: f.calendar.Id, OverlapPolicy: "exclusive", ExpectedRevision: f.calendar.Revision, IdempotencyKey: uuid.NewString()}
+	if _, err = f.s.SetOverlapPolicy(f.ctx(f.bob), request); status.Code(err) != codes.PermissionDenied {
+		t.Fatal("non-manager changed policy", err)
+	}
+	if _, err = f.s.SetOverlapPolicy(f.ctx(f.alice), request); status.Code(err) != codes.AlreadyExists {
+		t.Fatal("exclusive policy allowed existing overlaps", err)
+	}
+	var policy string
+	if err = f.admin.QueryRow(ctx, "SELECT overlap_policy FROM calendars WHERE id=$1", f.calendar.Id).Scan(&policy); err != nil || policy != "shared" {
+		t.Fatal("failed transition did not roll back", policy, err)
+	}
+	// A separate empty resource calendar can opt into exclusive mode explicitly.
+	empty, err := f.s.CreateCalendar(f.ctx(f.alice), &pb.CreateCalendarRequest{Scope: f.scope(), Name: "Room A", DefaultTimeZone: "UTC", ApprovalRequired: &noApproval, IdempotencyKey: uuid.NewString()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.CalendarId = empty.Calendar.Id
+	request.ExpectedRevision = empty.Calendar.Revision
+	request.IdempotencyKey = uuid.NewString()
+	changed, err := f.s.SetOverlapPolicy(f.ctx(f.alice), request)
+	if err != nil || changed.Calendar.OverlapPolicy != "exclusive" {
+		t.Fatal(err)
+	}
+	repeated, err := f.s.SetOverlapPolicy(f.ctx(f.alice), request)
+	if err != nil || repeated.Calendar.Revision != changed.Calendar.Revision {
+		t.Fatal("policy retry not idempotent", err)
+	}
+	f.calendar = changed.Calendar
+	f.create(t, f.alice, draftAt(8))
+	if _, err = f.s.MutateEntry(f.ctx(f.alice), &pb.MutateEntryRequest{Scope: f.scope(), CalendarId: f.calendar.Id, Command: createCommand(draftAt(8)), IdempotencyKey: uuid.NewString()}); status.Code(err) != codes.AlreadyExists {
+		t.Fatal("exclusive calendar accepted overlap", err)
+	}
+	// Managers can explicitly convert existing exclusive firm calendars to shared.
+	request.ExpectedRevision = f.calendar.Revision
+	request.OverlapPolicy = "shared"
+	request.IdempotencyKey = uuid.NewString()
+	changed, err = f.s.SetOverlapPolicy(f.ctx(f.alice), request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.calendar = changed.Calendar
+	f.create(t, f.alice, draftAt(8))
+}
+
+func TestDatabasePolicyCannotBeBypassedByEntryFlag(t *testing.T) {
+	f := fixtureFor(t, false)
+	created := f.create(t, f.alice, draftAt(9))
+	err := f.s.tx(context.Background(), f.tenant, f.calendar.Id, true, func(tx pgx.Tx) error {
+		_, err := tx.Exec(context.Background(), "UPDATE calendar_entries SET overlap_policy='shared' WHERE tenant_id=$1 AND id=$2", f.tenant, created.EntryIds[0])
+		return err
+	})
+	if err == nil {
+		t.Fatal("entry downgraded exclusive constraint independently")
+	}
+}
+
+func TestAtStartReminderAllowsTimerJitterButSuppressesStaleDelivery(t *testing.T) {
+	f := fixtureFor(t, false)
+	for _, day := range []int{20, 21} {
+		draft := draftAt(day)
+		draft.Reminders = []*pb.ReminderSpec{{MinutesBefore: 0}}
+		created := f.create(t, f.alice, draft)
+		items, err := f.s.ListReminders(f.ctx(f.alice), &pb.ListRemindersRequest{Scope: f.scope(), CalendarId: f.calendar.Id, EntryId: created.EntryIds[0]})
+		if err != nil || len(items.GetReminders()) != 1 {
+			t.Fatal(err)
+		}
+		reminder := items.Reminders[0]
+		at := reminder.DueAt.AsTime().Add(time.Second)
+		expected := "due"
+		if day == 21 {
+			at = at.Add(time.Minute)
+			expected = "cancelled"
+		}
+		f.s.Now = func() time.Time { return at }
+		result, err := f.s.DeliverReminder(context.Background(), &pb.ReminderWorkRequest{TenantId: f.tenant, ReminderId: reminder.Id})
+		if err != nil || result.GetStatus() != expected {
+			t.Fatal("unexpected at-start reminder policy", result, err)
+		}
+		f.s.Now = func() time.Time { return time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC) }
 	}
 }

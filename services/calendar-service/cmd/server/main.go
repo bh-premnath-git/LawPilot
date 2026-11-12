@@ -35,7 +35,7 @@ func main() {
 	if err = pool.Ping(ctx); err != nil {
 		log.Fatal("database unavailable")
 	}
-	if _, err = pool.Exec(ctx, "SELECT id FROM calendars LIMIT 0"); err != nil {
+	if _, err = pool.Exec(ctx, "SELECT overlap_policy FROM calendars LIMIT 0"); err != nil {
 		log.Fatal("calendar migration required")
 	}
 	tls, err := calendar.Credentials(required("GRPC_CA_FILE"), required("GRPC_SERVER_CERT_FILE"), required("GRPC_SERVER_KEY_FILE"))

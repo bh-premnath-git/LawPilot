@@ -196,7 +196,7 @@ Keycloak data persists in `keycloakdata`; PostgreSQL 18 data persists in `pgdata
 
 ### Upgrading an existing local installation
 
-The PostgreSQL 18 change uses a fresh `pgdata18` volume; PostgreSQL 16 data is not migrated. For an existing PostgreSQL 18 database, apply migration `005_durable_executions.sql` once as described in [durable execution upgrades](docs/DURABLE_EXECUTIONS.md#start-and-upgrade). Existing Keycloak realms still require the organization setting described there.
+The PostgreSQL 18 change uses a fresh `pgdata18` volume; PostgreSQL 16 data is not migrated. For an existing PostgreSQL 18 database, apply `005_durable_executions.sql` once if missing, then `006_execution_input_json.sql`, as described in [durable execution upgrades](docs/DURABLE_EXECUTIONS.md#start-and-upgrade). Existing Keycloak realms still require the organization setting described there.
 
 ### Request tracing
 

@@ -54,6 +54,7 @@ Fresh Compose databases run `001_init.sql`, `005_durable_executions.sql` and `00
 ```bash
 # Stop the old synchronous API before migration so it cannot accept new legacy rows.
 docker compose --env-file .env stop platform-api
+# Skip the next line if migration 005 is already installed.
 docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -v ON_ERROR_STOP=1 < db/005_durable_executions.sql
 docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -v ON_ERROR_STOP=1 < db/006_execution_input_json.sql
 docker compose --env-file .env up --build -d

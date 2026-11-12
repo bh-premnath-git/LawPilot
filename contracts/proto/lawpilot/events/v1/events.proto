@@ -1,0 +1,13 @@
+syntax = "proto3";
+package lawpilot.events.v1;
+option go_package = "github.com/bh-premnath-git/LawPilot/contracts/gen/go/lawpilot/events/v1;eventsv1";
+import "google/protobuf/timestamp.proto";
+// Journal envelopes contain metadata only, never prompts, excerpts or tokens.
+// Legacy outbox messages are validated and normalized before entering this domain.
+message DomainEvent {
+ string specversion = 1; string id = 2; string source = 3; string type = 4;
+ google.protobuf.Timestamp time = 5; string tenant_id = 6; string schema_version = 7;
+ string correlation_id = 8; string causation_id = 9; int64 position = 10;
+ AggregateChange data = 11;
+}
+message AggregateChange { string aggregate_id = 1; string aggregate_type = 2; int64 revision = 3; string matter_id = 4; }

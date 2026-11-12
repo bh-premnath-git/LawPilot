@@ -47,6 +47,7 @@ let integrationLock;
  const entry={title:'Synthetic appointment',description:'SYNTHETIC_PRIVATE_NOTES',kind:'appointment',visibility:'shared',schedule:{type:'timed',start:start.toISOString(),end:end.toISOString(),timeZone:'America/New_York'},participantPrincipalIds:[owner,client],reminders:[{minutesBefore:1}]};
  const command={calendarId,entry,idempotencyKey:randomUUID()};const mutation=await request('POST','calendar-entries',command,201),entryId=mutation.result.entryIds[0];
  assert.deepEqual(await request('POST','calendar-entries',command,201),mutation);
+ const listed=await request('GET',`calendar-entries?calendarId=${calendarId}&from=${encodeURIComponent(start.toISOString())}&to=${encodeURIComponent(end.toISOString())}`);assert.equal(listed.entries.length,1);
  await request('POST','calendar-entries',{...command,idempotencyKey:randomUUID()},409);
  const firmCalendar=await request('POST','calendars',{name:'Shared firm',defaultTimeZone:'UTC',approvalRequired:false,idempotencyKey:randomUUID()},201);
  assert.equal(firmCalendar.calendar.overlapPolicy,'shared');

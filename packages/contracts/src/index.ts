@@ -10,7 +10,7 @@ export type CapabilityRequest = z.infer<typeof capabilityRequestSchema>;
 
 export const evidenceSchema = z.object({
   documentId: z.string().min(1), documentVersionId: z.string().min(1),
-  passageId: z.string().min(1), pageNumber: z.number().int().positive().optional(),
+  passageId: z.string().min(1), contentSha256: z.string().regex(/^[a-f0-9]{64}$/).optional(), pageNumber: z.number().int().positive().optional(),
 }).strict();
 export const agentResultSchema = z.object({
   executionId: z.string().min(1), agentId: z.string().min(1), agentVersion: z.string().min(1),

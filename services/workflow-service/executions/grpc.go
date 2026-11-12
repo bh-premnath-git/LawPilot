@@ -39,6 +39,9 @@ func (a *Activities) invokeRPC(ctx context.Context, e Execution) ([]byte, error)
 	references := []map[string]any{}
 	for _, ref := range reply.Evidence {
 		value := map[string]any{"documentId": ref.DocumentId, "documentVersionId": ref.DocumentVersionId, "passageId": ref.PassageId}
+		if ref.ContentSha256 != "" {
+			value["contentSha256"] = ref.ContentSha256
+		}
 		if ref.PageNumber != nil {
 			value["pageNumber"] = *ref.PageNumber
 		}

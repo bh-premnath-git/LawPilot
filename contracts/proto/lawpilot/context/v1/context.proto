@@ -1,0 +1,36 @@
+syntax = "proto3";
+package lawpilot.context.v1;
+option go_package = "github.com/bh-premnath-git/LawPilot/contracts/gen/go/lawpilot/context/v1;contextv1";
+import "google/protobuf/timestamp.proto";
+message Scope { string tenant_id = 1; string request_id = 2; }
+message Citation { string document_id = 1; string version_id = 2; string passage_id = 3; string content_sha256 = 4; int32 byte_start = 5; int32 byte_end = 6; }
+message IngestTextRequest { Scope scope = 1; string matter_id = 2; string document_id = 3; int64 expected_revision = 4; string title = 5; string text = 6; string idempotency_key = 7; }
+message Document { string id = 1; string matter_id = 2; string version_id = 3; int64 revision = 4; string content_sha256 = 5; string state = 6; int32 passage_count = 7; string indexing_mode = 8; }
+message IngestTextResponse { Document document = 1; }
+message DeleteDocumentRequest { Scope scope = 1; string matter_id = 2; string document_id = 3; int64 expected_revision = 4; string idempotency_key = 5; }
+message DeleteDocumentResponse { Document document = 1; }
+message ContextRecipe { string id = 1; string version = 2; int32 max_sources = 3; int32 max_bytes = 4; }
+message BuildContextRequest { Scope scope = 1; string matter_id = 2; string recipe_id = 3; string query = 4; string document_id = 5; }
+// Source text is untrusted data. It must never become tool, system or policy instructions.
+message Source { Citation citation = 1; string text = 2; string trust = 3; }
+message ContextPackage { string id = 1; ContextRecipe recipe = 2; string snapshot_sha256 = 3; repeated Source sources = 4; string retrieval_mode = 5; string trusted_policy_id = 6; google.protobuf.Timestamp expires_at = 7; bool complete_document = 8; string grounding_mode = 9; string embedding_profile_id = 10; repeated string warnings = 11; string query_sha256 = 12; }
+message BuildContextResponse { ContextPackage package = 1; }
+message GetContextRequest { Scope scope = 1; string matter_id = 2; string package_id = 3; }
+message GetContextResponse { ContextPackage package = 1; }
+message ResolveCitationRequest { Scope scope = 1; string matter_id = 2; Citation citation = 3; string quote = 4; }
+message ResolveCitationResponse { Citation citation = 1; string verified_quote = 2; }
+// Internal worker scope: actor/matter/capability are loaded from the stored execution.
+message VerifyExecutionEvidenceRequest { string tenant_id = 1; string execution_id = 2; repeated Citation citations = 3; }
+message VerifyExecutionEvidenceResponse { bool verified = 1; }
+message ListMatterEventsRequest { Scope scope = 1; string matter_id = 2; int64 after_position = 3; int32 limit = 4; }
+message EventNotification { string id = 1; int64 position = 2; string type = 3; string aggregate_id = 4; int64 aggregate_revision = 5; google.protobuf.Timestamp occurred_at = 6; }
+message ListMatterEventsResponse { repeated EventNotification events = 1; int64 next_position = 2; }
+service ContextService {
+ rpc IngestText(IngestTextRequest) returns (IngestTextResponse);
+ rpc DeleteDocument(DeleteDocumentRequest) returns (DeleteDocumentResponse);
+ rpc BuildContext(BuildContextRequest) returns (BuildContextResponse);
+ rpc GetContext(GetContextRequest) returns (GetContextResponse);
+ rpc ResolveCitation(ResolveCitationRequest) returns (ResolveCitationResponse);
+ rpc VerifyExecutionEvidence(VerifyExecutionEvidenceRequest) returns (VerifyExecutionEvidenceResponse);
+ rpc ListMatterEvents(ListMatterEventsRequest) returns (ListMatterEventsResponse);
+}

@@ -56,6 +56,10 @@
           "pageNumber": {
             "type": "integer",
             "minimum": 1
+          },
+          "contentSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
           }
         },
         "additionalProperties": false

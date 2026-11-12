@@ -10,6 +10,7 @@
 | TypeScript Root Supervisor | Runnable starter | mTLS gRPC, versioned capability discovery and bounded delegation to Python |
 | Python AI capability service | Runnable **safe mock** | Four registered capabilities, schema-checked requests, explicit abstention for unsupported evidence |
 | Go provider router | Runnable starter | Capability discovery, mock legal provider and explicit non-implemented Clio adapter |
+| Go context engine + domain events | Runnable native text path | Versioned text, authorized lexical/configured vector retrieval, expiring context snapshots, exact-quote evidence checks, leased journal/consumer inboxes and authorized SSE |
 | Go native calendar | Runnable native domain | Tenant/matter ACLs, typed time/recurrence, explicit shared/exclusive overlap policy, revisions, approval proposals, calendar occupancy and Temporal in-app reminder state; external sync pending |
 | PostgreSQL + pgvector | PostgreSQL 18 / pgvector 0.8.7 | Canonical records, permissions, audit/outbox, tenant RLS and vector similarity primitives |
 | Keycloak | Dev infrastructure | Importable demo realm, OIDC/JWKS boundary; no production users provisioned |
@@ -17,7 +18,7 @@
 | Rust document worker | Source scaffold | SHA-256/metadata processor; **no legal PDF extraction** |
 | OpenTelemetry | AI request-path instrumentation | API spans and Supervisor → Python traces; durable Go/Temporal trace propagation pending |
 | Clio OAuth + webhooks | **NOT IMPLEMENTED** | Exact API boundaries and handshake/security checklist, no credentials or pretend success |
-| RAG, legal drafting, real LLM | **NOT IMPLEMENTED** | Capability contracts + safe mock only; no invented citations or drafts |
+| Legal drafting / real LLM | **NOT IMPLEMENTED** | Retrieval context and exact quotation are implemented separately; AI capabilities remain safe mocks |
 
 ## Backend layers and implementation order
 
@@ -36,6 +37,8 @@
 See [layer status and upgrade steps](docs/LAYER_STATUS.md) for the fixes, tests and remaining work at each boundary. These responsibilities describe the target architecture; the implementation table above identifies current starter functionality.
 
 See [calendar and gRPC setup, contracts, endpoints and limitations](docs/CALENDAR_GRPC.md). Apply missing migrations 007 and 008 to an existing PostgreSQL 18 database before starting the new calendar service.
+
+See [general events and secure context setup, APIs and scope](docs/EVENTS_CONTEXT.md). Apply missing migrations **009 and 010** and regenerate development workload certificates to add the context-engine identity. Embedding settings are optional; unset means explicitly lexical retrieval.
 
 ## Architecture rules
 

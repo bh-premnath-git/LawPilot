@@ -188,6 +188,10 @@ export class CalendarClient implements OnModuleDestroy {
           },
         );
       }
+      const requestType = (RPC as any)[
+        method[0].toUpperCase() + method.slice(1) + "Request"
+      ];
+      payload = requestType.fromPartial(payload);
       const metadata = new Metadata();
       metadata.set("authorization", authorization || "");
       return await new Promise((resolve, reject) =>

@@ -102,7 +102,7 @@ func (s *Store) Begin(ctx context.Context, ref Ref) (Execution, error) {
 	})
 	return e, err
 }
-func (s *Store) Finish(ctx context.Context, ref Ref, status, code string, result json.RawMessage, reauthorize bool) (string, error) {
+func (s *Store) Finish(ctx context.Context, ref Ref, status, code string, result json.RawMessage, reauthorize bool, requireEvidence bool) (string, error) {
 	state := ""
 	err := s.transaction(ctx, ref.TenantID, func(tx pgx.Tx) error {
 		e, err := s.load(ctx, tx, ref)
@@ -116,6 +116,15 @@ func (s *Store) Finish(ctx context.Context, ref Ref, status, code string, result
 		if reauthorize {
 			if err = permitted(ctx, tx, e); err != nil {
 				return err
+			}
+		}
+		if requireEvidence && reauthorize && e.MatterID != nil && (status == "completed" || status == "awaiting_review") && code == "completed" {
+			var verified bool
+			if err = tx.QueryRow(ctx, "SELECT verify_execution_result($1,$2,$3::jsonb)", e.TenantID, e.ExecutionID, []byte(result)).Scan(&verified); err != nil {
+				return err
+			}
+			if !verified {
+				return ErrEvidence
 			}
 		}
 		_, err = tx.Exec(ctx, `UPDATE ai_executions SET status=$3,error_code=CASE WHEN $3='failed' THEN NULLIF($4,'') ELSE NULL END,result=$5,updated_at=now(),completed_at=CASE WHEN $3='awaiting_review' THEN NULL ELSE now() END WHERE tenant_id=$1 AND id=$2`, ref.TenantID, ref.ExecutionID, status, code, []byte(result))
@@ -143,3 +152,5 @@ func Open(ctx context.Context, url string) (*pgxpool.Pool, error) {
 	}
 	return pgxpool.NewWithConfig(ctx, config)
 }
+
+var ErrEvidence = errors.New("EVIDENCE_VERIFICATION_FAILED")

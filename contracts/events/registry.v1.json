@@ -1,0 +1,34 @@
+{
+  "version": "1.0",
+  "types": [
+    "document.version.created.v1",
+    "document.deleted.v1",
+    "matter.updated.v1",
+    "calendar.created.v1",
+    "calendar.grants.updated.v1",
+    "calendar.overlap_policy.changed.v1",
+    "calendar.entry.created.v1",
+    "calendar.entry.updated.v1",
+    "calendar.entry.cancelled.v1",
+    "calendar.entry.proposed.v1",
+    "calendar.proposal.approved.v1",
+    "calendar.proposal.rejected.v1",
+    "calendar.reminder.due.v1",
+    "lawpilot.ai.completed.v1",
+    "lawpilot.ai.failed.v1",
+    "lawpilot.ai.queued.v1",
+    "lawpilot.ai.running.v1",
+    "lawpilot.ai.awaiting_review.v1",
+    "lawpilot.ai.rejected.v1"
+  ],
+  "commandTypes": [
+    "lawpilot.ai.accepted.v1",
+    "lawpilot.ai.cancelled.v1",
+    "calendar.reminder.scheduled.v1",
+    "calendar.reminder.cancelled.v1"
+  ],
+  "consumers": [
+    "context-invalidation.v1",
+    "aggregate-heads.v1"
+  ]
+}

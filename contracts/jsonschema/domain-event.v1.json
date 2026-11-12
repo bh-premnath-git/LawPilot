@@ -1,7 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://contracts.lawpilot.example/domain-event.v1.json",
-  "title": "DomainEvent v1",
+  "title": "Normalized metadata-only DomainEvent v1",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -12,6 +11,9 @@
     "time",
     "tenantId",
     "schemaVersion",
+    "correlationId",
+    "causationId",
+    "position",
     "data"
   ],
   "properties": {
@@ -20,7 +22,7 @@
     },
     "id": {
       "type": "string",
-      "minLength": 1
+      "format": "uuid"
     },
     "source": {
       "type": "string",
@@ -28,7 +30,7 @@
     },
     "type": {
       "type": "string",
-      "minLength": 1
+      "pattern": "^[a-z][a-z0-9_.]+\\.v1$"
     },
     "time": {
       "type": "string",
@@ -39,17 +41,66 @@
       "format": "uuid"
     },
     "schemaVersion": {
-      "type": "string",
-      "minLength": 1
+      "const": "1.0"
     },
     "correlationId": {
-      "type": "string"
+      "type": "string",
+      "format": "uuid"
     },
-    "aggregateId": {
-      "type": "string"
+    "causationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "position": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        }
+      ]
     },
     "data": {
-      "type": "object"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aggregateId",
+        "aggregateType",
+        "revision"
+      ],
+      "properties": {
+        "aggregateId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "aggregateType": {
+          "enum": [
+            "document",
+            "matter",
+            "calendar",
+            "ai_execution"
+          ]
+        },
+        "revision": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            }
+          ]
+        },
+        "matterId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
     }
   }
 }

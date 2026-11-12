@@ -100,6 +100,9 @@ grpc.addService(RPC.SupervisorServiceService, {
               output: response.output,
               evidence: response.evidence.map((ref) => ({
                 ...ref,
+                ...(ref.contentSha256
+                  ? { contentSha256: ref.contentSha256 }
+                  : { contentSha256: undefined }),
                 ...(ref.pageNumber === undefined
                   ? {}
                   : { pageNumber: ref.pageNumber }),

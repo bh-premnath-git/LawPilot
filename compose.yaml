@@ -11,6 +11,7 @@ services:
       - pgdata18:/var/lib/postgresql
       - ./db/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
       - ./db/005_durable_executions.sql:/docker-entrypoint-initdb.d/005_durable_executions.sql:ro
+      - ./db/006_execution_input_json.sql:/docker-entrypoint-initdb.d/006_execution_input_json.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d lawpilot"]
       interval: 5s

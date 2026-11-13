@@ -79,7 +79,7 @@ func (w *EventWorker) Validate(tenant, kind, version, aggregate string, body []b
 	if _, err := time.Parse(time.RFC3339Nano, e.Time); err != nil {
 		return "INVALID_EVENT_SCHEMA"
 	}
-	sourceOK := e.Source == "context-engine" && strings.HasPrefix(kind, "document.") || e.Source == "calendar-service" && strings.HasPrefix(kind, "calendar.") || (e.Source == "platform-api" || e.Source == "workflow-service" || e.Source == "migration-005") && strings.HasPrefix(kind, "lawpilot.ai.") || e.Source == "platform-api" && kind == "matter.updated.v1"
+	sourceOK := e.Source == "context-engine" && strings.HasPrefix(kind, "document.") || (e.Source == "calendar-service" || e.Source == "integration-service") && strings.HasPrefix(kind, "calendar.") || (e.Source == "platform-api" || e.Source == "workflow-service" || e.Source == "migration-005") && strings.HasPrefix(kind, "lawpilot.ai.") || (e.Source == "platform-api" || e.Source == "integration-service") && kind == "matter.updated.v1"
 	if !sourceOK || e.RevisionInvalid() {
 		return "INVALID_EVENT_SCHEMA"
 	}

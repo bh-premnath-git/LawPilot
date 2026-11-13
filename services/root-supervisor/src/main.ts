@@ -38,7 +38,7 @@ const worker = new RPC.CapabilityServiceClient(target, clientCredentials(), {
   "grpc.max_receive_message_length": 1048576,
 });
 const grpc = new Server({
-  "grpc.max_receive_message_length": 32768,
+  "grpc.max_receive_message_length": 1048576,
   "grpc.max_send_message_length": 1048576,
 });
 grpc.addService(RPC.SupervisorServiceService, {
@@ -84,7 +84,7 @@ grpc.addService(RPC.SupervisorServiceService, {
                 traceMetadata(),
                 {
                   deadline: Math.min(
-                    Date.now() + 20000,
+                    Date.now() + 60000,
                     Number(call.getDeadline()),
                   ),
                 },

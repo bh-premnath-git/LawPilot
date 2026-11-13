@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/bh-premnath-git/LawPilot/packages/workload"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -120,7 +121,7 @@ func (s *Store) Finish(ctx context.Context, ref Ref, status, code string, result
 		}
 		if requireEvidence && reauthorize && e.MatterID != nil && (status == "completed" || status == "awaiting_review") && code == "completed" {
 			var verified bool
-			if err = tx.QueryRow(ctx, "SELECT verify_execution_result($1,$2,$3::jsonb)", e.TenantID, e.ExecutionID, []byte(result)).Scan(&verified); err != nil {
+			if err = tx.QueryRow(ctx, "SELECT verify_ai_execution_result($1,$2,$3::jsonb)", e.TenantID, e.ExecutionID, []byte(result)).Scan(&verified); err != nil {
 				return err
 			}
 			if !verified {
@@ -131,6 +132,21 @@ func (s *Store) Finish(ctx context.Context, ref Ref, status, code string, result
 		if err != nil {
 			return err
 		}
+		var saved struct {
+			Output struct {
+				Kind string `json:"kind"`
+			} `json:"output"`
+		}
+		_ = json.Unmarshal(result, &saved)
+		if status == "awaiting_review" && saved.Output.Kind == "legal_draft.v1" {
+			workflowID := "lawpilot:" + e.TenantID + ":legal_review:" + e.ExecutionID
+			if _, err = tx.Exec(ctx, "INSERT INTO integration_jobs(id,tenant_id,principal_id,kind,resource_id,workflow_id)VALUES($1,$2,$3,'legal_review',$1,$4) ON CONFLICT(id)DO NOTHING", e.ExecutionID, e.TenantID, e.PrincipalID, workflowID); err != nil {
+				return err
+			}
+			if _, err = tx.Exec(ctx, `INSERT INTO outbox_events(tenant_id,event_type,event_version,aggregate_id,event_body)VALUES($1,'legal.review.requested.v1','1.0',$2,jsonb_build_object('specversion','1.0','id',gen_random_uuid()::text,'source','workflow-service','type','legal.review.requested.v1','time',now(),'tenantId',$1::uuid::text,'schemaVersion','1.0','aggregateId',$2::uuid::text,'data',jsonb_build_object('state','queued')))`, e.TenantID, e.ExecutionID); err != nil {
+				return err
+			}
+		}
 		if err = appendEvent(ctx, tx, e, status, code); err != nil {
 			return err
 		}
@@ -140,6 +156,9 @@ func (s *Store) Finish(ctx context.Context, ref Ref, status, code string, result
 	return state, err
 }
 func Open(ctx context.Context, url string) (*pgxpool.Pool, error) {
+	if err := workload.DatabaseURL(url); err != nil {
+		return nil, err
+	}
 	config, err := pgxpool.ParseConfig(url)
 	if err != nil {
 		return nil, err

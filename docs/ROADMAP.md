@@ -1,5 +1,7 @@
 # Active remediation roadmap
 
+Current extension: see [configured integrations and operations](CONFIGURED_INTEGRATIONS.md) for implemented file processing, OAuth/polling adapters, configured legal generation, authoritative review, migrations 011–015 and current limitations. Earlier gap lists below describe the preceding baseline.
+
 Follow [REMEDIATION_STATUS.md](REMEDIATION_STATUS.md) and the uploaded calendar-expanded specification for the current PR sequence. Durable mock execution (P0-01) is implemented locally; the next slices are trusted service identity/authoritative approvals and contract/migration governance. Calendar, Context Engine, real AI, Clio and general event delivery remain pending. The earlier milestone summary below provides product context, not a claim that those capabilities are shipped.
 
 # Phased implementation (updated LawPilot direction)

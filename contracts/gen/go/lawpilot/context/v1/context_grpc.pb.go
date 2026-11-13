@@ -19,6 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
+	ContextService_PrepareExecutionContext_FullMethodName = "/lawpilot.context.v1.ContextService/PrepareExecutionContext"
+	ContextService_GetTemplate_FullMethodName             = "/lawpilot.context.v1.ContextService/GetTemplate"
+	ContextService_CreateTemplate_FullMethodName          = "/lawpilot.context.v1.ContextService/CreateTemplate"
+	ContextService_DecideTemplate_FullMethodName          = "/lawpilot.context.v1.ContextService/DecideTemplate"
+	ContextService_GetLegalReview_FullMethodName          = "/lawpilot.context.v1.ContextService/GetLegalReview"
+	ContextService_DecideLegalReview_FullMethodName       = "/lawpilot.context.v1.ContextService/DecideLegalReview"
+	ContextService_GetReviewDeadline_FullMethodName       = "/lawpilot.context.v1.ContextService/GetReviewDeadline"
+	ContextService_ExpireReview_FullMethodName            = "/lawpilot.context.v1.ContextService/ExpireReview"
+	ContextService_IngestProcessed_FullMethodName         = "/lawpilot.context.v1.ContextService/IngestProcessed"
 	ContextService_IngestText_FullMethodName              = "/lawpilot.context.v1.ContextService/IngestText"
 	ContextService_DeleteDocument_FullMethodName          = "/lawpilot.context.v1.ContextService/DeleteDocument"
 	ContextService_BuildContext_FullMethodName            = "/lawpilot.context.v1.ContextService/BuildContext"
@@ -32,6 +41,15 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ContextServiceClient interface {
+	PrepareExecutionContext(ctx context.Context, in *ExecutionRef, opts ...grpc.CallOption) (*PreparedContext, error)
+	GetTemplate(ctx context.Context, in *TemplateDecisionRequest, opts ...grpc.CallOption) (*TemplateResponse, error)
+	CreateTemplate(ctx context.Context, in *TemplateRequest, opts ...grpc.CallOption) (*TemplateResponse, error)
+	DecideTemplate(ctx context.Context, in *TemplateDecisionRequest, opts ...grpc.CallOption) (*TemplateResponse, error)
+	GetLegalReview(ctx context.Context, in *ReviewRequest, opts ...grpc.CallOption) (*ReviewResponse, error)
+	DecideLegalReview(ctx context.Context, in *ReviewRequest, opts ...grpc.CallOption) (*ReviewResponse, error)
+	GetReviewDeadline(ctx context.Context, in *ExecutionRef, opts ...grpc.CallOption) (*ReviewDeadline, error)
+	ExpireReview(ctx context.Context, in *ExecutionRef, opts ...grpc.CallOption) (*ReviewDeadline, error)
+	IngestProcessed(ctx context.Context, in *IngestProcessedRequest, opts ...grpc.CallOption) (*IngestTextResponse, error)
 	IngestText(ctx context.Context, in *IngestTextRequest, opts ...grpc.CallOption) (*IngestTextResponse, error)
 	DeleteDocument(ctx context.Context, in *DeleteDocumentRequest, opts ...grpc.CallOption) (*DeleteDocumentResponse, error)
 	BuildContext(ctx context.Context, in *BuildContextRequest, opts ...grpc.CallOption) (*BuildContextResponse, error)
@@ -47,6 +65,96 @@ type contextServiceClient struct {
 
 func NewContextServiceClient(cc grpc.ClientConnInterface) ContextServiceClient {
 	return &contextServiceClient{cc}
+}
+
+func (c *contextServiceClient) PrepareExecutionContext(ctx context.Context, in *ExecutionRef, opts ...grpc.CallOption) (*PreparedContext, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PreparedContext)
+	err := c.cc.Invoke(ctx, ContextService_PrepareExecutionContext_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *contextServiceClient) GetTemplate(ctx context.Context, in *TemplateDecisionRequest, opts ...grpc.CallOption) (*TemplateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TemplateResponse)
+	err := c.cc.Invoke(ctx, ContextService_GetTemplate_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *contextServiceClient) CreateTemplate(ctx context.Context, in *TemplateRequest, opts ...grpc.CallOption) (*TemplateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TemplateResponse)
+	err := c.cc.Invoke(ctx, ContextService_CreateTemplate_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *contextServiceClient) DecideTemplate(ctx context.Context, in *TemplateDecisionRequest, opts ...grpc.CallOption) (*TemplateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TemplateResponse)
+	err := c.cc.Invoke(ctx, ContextService_DecideTemplate_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *contextServiceClient) GetLegalReview(ctx context.Context, in *ReviewRequest, opts ...grpc.CallOption) (*ReviewResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReviewResponse)
+	err := c.cc.Invoke(ctx, ContextService_GetLegalReview_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *contextServiceClient) DecideLegalReview(ctx context.Context, in *ReviewRequest, opts ...grpc.CallOption) (*ReviewResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReviewResponse)
+	err := c.cc.Invoke(ctx, ContextService_DecideLegalReview_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *contextServiceClient) GetReviewDeadline(ctx context.Context, in *ExecutionRef, opts ...grpc.CallOption) (*ReviewDeadline, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReviewDeadline)
+	err := c.cc.Invoke(ctx, ContextService_GetReviewDeadline_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *contextServiceClient) ExpireReview(ctx context.Context, in *ExecutionRef, opts ...grpc.CallOption) (*ReviewDeadline, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReviewDeadline)
+	err := c.cc.Invoke(ctx, ContextService_ExpireReview_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *contextServiceClient) IngestProcessed(ctx context.Context, in *IngestProcessedRequest, opts ...grpc.CallOption) (*IngestTextResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(IngestTextResponse)
+	err := c.cc.Invoke(ctx, ContextService_IngestProcessed_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *contextServiceClient) IngestText(ctx context.Context, in *IngestTextRequest, opts ...grpc.CallOption) (*IngestTextResponse, error) {
@@ -123,6 +231,15 @@ func (c *contextServiceClient) ListMatterEvents(ctx context.Context, in *ListMat
 // All implementations must embed UnimplementedContextServiceServer
 // for forward compatibility.
 type ContextServiceServer interface {
+	PrepareExecutionContext(context.Context, *ExecutionRef) (*PreparedContext, error)
+	GetTemplate(context.Context, *TemplateDecisionRequest) (*TemplateResponse, error)
+	CreateTemplate(context.Context, *TemplateRequest) (*TemplateResponse, error)
+	DecideTemplate(context.Context, *TemplateDecisionRequest) (*TemplateResponse, error)
+	GetLegalReview(context.Context, *ReviewRequest) (*ReviewResponse, error)
+	DecideLegalReview(context.Context, *ReviewRequest) (*ReviewResponse, error)
+	GetReviewDeadline(context.Context, *ExecutionRef) (*ReviewDeadline, error)
+	ExpireReview(context.Context, *ExecutionRef) (*ReviewDeadline, error)
+	IngestProcessed(context.Context, *IngestProcessedRequest) (*IngestTextResponse, error)
 	IngestText(context.Context, *IngestTextRequest) (*IngestTextResponse, error)
 	DeleteDocument(context.Context, *DeleteDocumentRequest) (*DeleteDocumentResponse, error)
 	BuildContext(context.Context, *BuildContextRequest) (*BuildContextResponse, error)
@@ -140,6 +257,33 @@ type ContextServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedContextServiceServer struct{}
 
+func (UnimplementedContextServiceServer) PrepareExecutionContext(context.Context, *ExecutionRef) (*PreparedContext, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PrepareExecutionContext not implemented")
+}
+func (UnimplementedContextServiceServer) GetTemplate(context.Context, *TemplateDecisionRequest) (*TemplateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTemplate not implemented")
+}
+func (UnimplementedContextServiceServer) CreateTemplate(context.Context, *TemplateRequest) (*TemplateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateTemplate not implemented")
+}
+func (UnimplementedContextServiceServer) DecideTemplate(context.Context, *TemplateDecisionRequest) (*TemplateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DecideTemplate not implemented")
+}
+func (UnimplementedContextServiceServer) GetLegalReview(context.Context, *ReviewRequest) (*ReviewResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLegalReview not implemented")
+}
+func (UnimplementedContextServiceServer) DecideLegalReview(context.Context, *ReviewRequest) (*ReviewResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DecideLegalReview not implemented")
+}
+func (UnimplementedContextServiceServer) GetReviewDeadline(context.Context, *ExecutionRef) (*ReviewDeadline, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReviewDeadline not implemented")
+}
+func (UnimplementedContextServiceServer) ExpireReview(context.Context, *ExecutionRef) (*ReviewDeadline, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExpireReview not implemented")
+}
+func (UnimplementedContextServiceServer) IngestProcessed(context.Context, *IngestProcessedRequest) (*IngestTextResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IngestProcessed not implemented")
+}
 func (UnimplementedContextServiceServer) IngestText(context.Context, *IngestTextRequest) (*IngestTextResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method IngestText not implemented")
 }
@@ -180,6 +324,168 @@ func RegisterContextServiceServer(s grpc.ServiceRegistrar, srv ContextServiceSer
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&ContextService_ServiceDesc, srv)
+}
+
+func _ContextService_PrepareExecutionContext_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExecutionRef)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContextServiceServer).PrepareExecutionContext(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ContextService_PrepareExecutionContext_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContextServiceServer).PrepareExecutionContext(ctx, req.(*ExecutionRef))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ContextService_GetTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TemplateDecisionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContextServiceServer).GetTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ContextService_GetTemplate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContextServiceServer).GetTemplate(ctx, req.(*TemplateDecisionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ContextService_CreateTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TemplateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContextServiceServer).CreateTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ContextService_CreateTemplate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContextServiceServer).CreateTemplate(ctx, req.(*TemplateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ContextService_DecideTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TemplateDecisionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContextServiceServer).DecideTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ContextService_DecideTemplate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContextServiceServer).DecideTemplate(ctx, req.(*TemplateDecisionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ContextService_GetLegalReview_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReviewRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContextServiceServer).GetLegalReview(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ContextService_GetLegalReview_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContextServiceServer).GetLegalReview(ctx, req.(*ReviewRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ContextService_DecideLegalReview_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReviewRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContextServiceServer).DecideLegalReview(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ContextService_DecideLegalReview_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContextServiceServer).DecideLegalReview(ctx, req.(*ReviewRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ContextService_GetReviewDeadline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExecutionRef)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContextServiceServer).GetReviewDeadline(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ContextService_GetReviewDeadline_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContextServiceServer).GetReviewDeadline(ctx, req.(*ExecutionRef))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ContextService_ExpireReview_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExecutionRef)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContextServiceServer).ExpireReview(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ContextService_ExpireReview_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContextServiceServer).ExpireReview(ctx, req.(*ExecutionRef))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ContextService_IngestProcessed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IngestProcessedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContextServiceServer).IngestProcessed(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ContextService_IngestProcessed_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContextServiceServer).IngestProcessed(ctx, req.(*IngestProcessedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _ContextService_IngestText_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -315,6 +621,42 @@ var ContextService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "lawpilot.context.v1.ContextService",
 	HandlerType: (*ContextServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "PrepareExecutionContext",
+			Handler:    _ContextService_PrepareExecutionContext_Handler,
+		},
+		{
+			MethodName: "GetTemplate",
+			Handler:    _ContextService_GetTemplate_Handler,
+		},
+		{
+			MethodName: "CreateTemplate",
+			Handler:    _ContextService_CreateTemplate_Handler,
+		},
+		{
+			MethodName: "DecideTemplate",
+			Handler:    _ContextService_DecideTemplate_Handler,
+		},
+		{
+			MethodName: "GetLegalReview",
+			Handler:    _ContextService_GetLegalReview_Handler,
+		},
+		{
+			MethodName: "DecideLegalReview",
+			Handler:    _ContextService_DecideLegalReview_Handler,
+		},
+		{
+			MethodName: "GetReviewDeadline",
+			Handler:    _ContextService_GetReviewDeadline_Handler,
+		},
+		{
+			MethodName: "ExpireReview",
+			Handler:    _ContextService_ExpireReview_Handler,
+		},
+		{
+			MethodName: "IngestProcessed",
+			Handler:    _ContextService_IngestProcessed_Handler,
+		},
 		{
 			MethodName: "IngestText",
 			Handler:    _ContextService_IngestText_Handler,

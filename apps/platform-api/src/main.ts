@@ -6,6 +6,7 @@ import { Request, Response, json } from 'express';
 import { randomUUID } from 'node:crypto';
 import { AuthService } from './auth.service';
 import { DbService } from './db.service';
+import {IntegrationController,IntegrationClient,LegalReviewController} from './integrations/integrations.controller';
 import {ContextController,ContextClient} from './context/context.controller';
 import {CalendarController,CalendarClient} from './calendar/calendar.controller';
 import { ExecutionsService } from './executions.service';
@@ -29,7 +30,7 @@ export class ApiController {
   async matter(@Param('tenantId') tenantId:string,@Param('matterId') matterId:string,@Req() req:Request){
     const principal=await this.auth.subject(req.headers.authorization);
     return this.access.withAccess(tenantId,principal,undefined,matterId,async c=>{
-      const r=await c.query('SELECT id,title,status FROM matters WHERE tenant_id=$1 AND id=$2',[tenantId,matterId]);
+      const r=await c.query('SELECT id,title,status,revision FROM matters WHERE tenant_id=$1 AND id=$2',[tenantId,matterId]);
       if(!r.rowCount) invalid(404,'Matter not found');
       return {matter:r.rows[0]};
     });
@@ -63,10 +64,10 @@ class TelemetryLifecycle implements OnApplicationShutdown {
   async onApplicationShutdown(): Promise<void> { await shutdownTelemetry(); }
 }
 
-@Module({controllers:[ApiController,CalendarController,ContextController],providers:[AuthService,DbService,AccessService,ExecutionsService,CalendarClient,ContextClient,TelemetryLifecycle]})
+@Module({controllers:[ApiController,CalendarController,ContextController,IntegrationController,LegalReviewController],providers:[AuthService,DbService,AccessService,ExecutionsService,CalendarClient,ContextClient,IntegrationClient,TelemetryLifecycle]})
 class AppModule{}
 async function bootstrap(){
-  if(!process.env.KEYCLOAK_ISSUER||!process.env.KEYCLOAK_AUDIENCE||!process.env.DATABASE_URL){throw new Error('Missing required auth/DB env');}
+  if(!process.env.KEYCLOAK_ISSUER||!process.env.KEYCLOAK_AUDIENCE||(!process.env.DATABASE_URL&&!process.env.DATABASE_URL_FILE)){throw new Error('Missing required auth/DB env');}
   const app=await NestFactory.create(AppModule,{cors:false,bodyParser:false});
   app.use((req: any,res: any,next: () => void)=>withHttpSpan('platform.request',req,res,next));
   app.use((req: any, res: any, next: () => void) => {

@@ -19,13 +19,18 @@
     "lawpilot.ai.queued.v1",
     "lawpilot.ai.running.v1",
     "lawpilot.ai.awaiting_review.v1",
-    "lawpilot.ai.rejected.v1"
+    "lawpilot.ai.rejected.v1",
+    "lawpilot.ai.review_decided.v1"
   ],
   "commandTypes": [
     "lawpilot.ai.accepted.v1",
     "lawpilot.ai.cancelled.v1",
     "calendar.reminder.scheduled.v1",
-    "calendar.reminder.cancelled.v1"
+    "calendar.reminder.cancelled.v1",
+    "file.process.requested.v1",
+    "provider.sync.requested.v1",
+    "provider.update.requested.v1",
+    "legal.review.requested.v1"
   ],
   "consumers": [
     "context-invalidation.v1",

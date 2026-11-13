@@ -15,4 +15,5 @@ COPY contracts contracts
 RUN npm run build -w @lawpilot/telemetry && npm run build -w @lawpilot/contracts && npm run build -w @lawpilot/rpc && npm run build -w @lawpilot/platform-api
 ENV CAPABILITY_REGISTRY_PATH=/workspace/contracts/capabilities/registry.v1.json
 EXPOSE 3000
+USER node
 CMD ["npm","run","start","-w","@lawpilot/platform-api"]

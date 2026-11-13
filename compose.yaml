@@ -1,4 +1,4 @@
-# LOCAL DEV ONLY: ports and placeholder passwords must not be carried to production.
+# Local development only. Production requires TLS databases/Temporal and external secret mounts.
 services:
   postgres:
     image: pgvector/pgvector:0.8.7-pg18-trixie
@@ -6,42 +6,69 @@ services:
       POSTGRES_DB: lawpilot
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-dev-postgres-only}
-    ports: ["127.0.0.1:5432:5432"]
+    ports:
+    - 127.0.0.1:5432:5432
     volumes:
-      - pgdata18:/var/lib/postgresql
-      - ./db/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
-      - ./db/005_durable_executions.sql:/docker-entrypoint-initdb.d/005_durable_executions.sql:ro
-      - ./db/006_execution_input_json.sql:/docker-entrypoint-initdb.d/006_execution_input_json.sql:ro
-      - ./db/007_calendar_domain.sql:/docker-entrypoint-initdb.d/007_calendar_domain.sql:ro
-      - ./db/008_calendar_overlap_policy.sql:/docker-entrypoint-initdb.d/008_calendar_overlap_policy.sql:ro
-      - ./db/009_events_context.sql:/docker-entrypoint-initdb.d/009_events_context.sql:ro
-      - ./db/010_authoritative_evidence.sql:/docker-entrypoint-initdb.d/010_authoritative_evidence.sql:ro
+    - pgdata18:/var/lib/postgresql
+    - ./db/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
+    - ./db/005_durable_executions.sql:/docker-entrypoint-initdb.d/005_durable_executions.sql:ro
+    - ./db/006_execution_input_json.sql:/docker-entrypoint-initdb.d/006_execution_input_json.sql:ro
+    - ./db/007_calendar_domain.sql:/docker-entrypoint-initdb.d/007_calendar_domain.sql:ro
+    - ./db/008_calendar_overlap_policy.sql:/docker-entrypoint-initdb.d/008_calendar_overlap_policy.sql:ro
+    - ./db/009_events_context.sql:/docker-entrypoint-initdb.d/009_events_context.sql:ro
+    - ./db/010_authoritative_evidence.sql:/docker-entrypoint-initdb.d/010_authoritative_evidence.sql:ro
+    - ./db/011_file_provider_integrations.sql:/docker-entrypoint-initdb.d/011_file_provider_integrations.sql:ro
+    - ./db/012_legal_generation_review.sql:/docker-entrypoint-initdb.d/012_legal_generation_review.sql:ro
+    - ./db/013_integration_command_governance.sql:/docker-entrypoint-initdb.d/013_integration_command_governance.sql:ro
+    - ./db/014_page_provenance.sql:/docker-entrypoint-initdb.d/014_page_provenance.sql:ro
+    - ./db/015_operational_controls.sql:/docker-entrypoint-initdb.d/015_operational_controls.sql:ro
+    - ./db/002_tenant_directory_rls.sql:/docker-entrypoint-initdb.d/002_tenant_directory_rls.sql:ro
+    - ./db/003_execution_outbox.sql:/docker-entrypoint-initdb.d/003_execution_outbox.sql:ro
+    - ./db/004_pgvector.sql:/docker-entrypoint-initdb.d/004_pgvector.sql:ro
+    - ./db/099_migration_ledger.sh:/docker-entrypoint-initdb.d/099_migration_ledger.sh:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d lawpilot"]
+      test:
+      - CMD-SHELL
+      - pg_isready -h 127.0.0.1 -U postgres -d lawpilot
       interval: 5s
       timeout: 3s
       retries: 15
-
-  # Local durable Temporal server. Production requires a managed/operated cluster.
   temporal:
     image: temporalio/temporal:1.10.0
     restart: unless-stopped
-    command: ["server", "start-dev", "--ip", "0.0.0.0", "--db-filename", "/home/temporal/temporal.db"]
-    volumes: ["temporaldata:/home/temporal"]
-    ports: ["127.0.0.1:7233:7233", "127.0.0.1:8233:8233"]
+    command:
+    - server
+    - start-dev
+    - --ip
+    - 0.0.0.0
+    - --db-filename
+    - /home/temporal/temporal.db
+    volumes:
+    - temporaldata:/home/temporal
+    ports:
+    - 127.0.0.1:7233:7233
+    - 127.0.0.1:8233:8233
     healthcheck:
-      test: ["CMD", "temporal", "operator", "cluster", "health", "--address", "127.0.0.1:7233"]
+      test:
+      - CMD
+      - temporal
+      - operator
+      - cluster
+      - health
+      - --address
+      - 127.0.0.1:7233
       interval: 5s
       timeout: 5s
       retries: 30
-
   execution-worker:
-    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    user: ${LOCAL_UID:-1000}:${LOCAL_GID:-1000}
     volumes:
-      - ./work/tls/ca.pem:/run/lawpilot/tls/ca.pem:ro
-      - ./work/tls/execution-worker.pem:/run/lawpilot/tls/service.pem:ro
-      - ./work/tls/execution-worker.key:/run/lawpilot/tls/service.key:ro
-    build: { context: ., dockerfile: services/workflow-service/Dockerfile }
+    - ./work/tls/ca.pem:/run/lawpilot/tls/ca.pem:ro
+    - ./work/tls/execution-worker.pem:/run/lawpilot/tls/service.pem:ro
+    - ./work/tls/execution-worker.key:/run/lawpilot/tls/service.key:ro
+    build:
+      context: .
+      dockerfile: services/workflow-service/Dockerfile
     environment:
       WORKFLOW_DATABASE_URL: postgresql://lawpilot_workflow:local-dev-workflow-only@postgres:5432/lawpilot
       TEMPORAL_ADDRESS: temporal:7233
@@ -52,89 +79,160 @@ services:
       GRPC_CA_FILE: /run/lawpilot/tls/ca.pem
       GRPC_CLIENT_CERT_FILE: /run/lawpilot/tls/service.pem
       GRPC_CLIENT_KEY_FILE: /run/lawpilot/tls/service.key
+      APP_ENV: development
+      CONTEXT_GRPC_ADDRESS: context-engine:50054
+      INTEGRATION_GRPC_ADDRESS: integration-service:50055
+      LEGAL_AI_ENABLED: ${LEGAL_AI_ENABLED:-false}
     depends_on:
-      postgres: {condition: service_healthy}
-      temporal: {condition: service_healthy}
-      root-supervisor: {condition: service_started}
+      postgres:
+        condition: service_healthy
+      temporal:
+        condition: service_healthy
+      root-supervisor:
+        condition: service_started
     restart: unless-stopped
-
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 512m
+    tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m
   outbox-dispatcher:
-    build: { context: ., dockerfile: services/workflow-service/Dockerfile }
-    command: ["outbox-dispatcher"]
+    build:
+      context: .
+      dockerfile: services/workflow-service/Dockerfile
+    command:
+    - outbox-dispatcher
     environment:
       DISPATCHER_DATABASE_URL: postgresql://lawpilot_dispatcher:local-dev-dispatcher-only@postgres:5432/lawpilot
       WORKFLOW_DATABASE_URL: postgresql://lawpilot_workflow:local-dev-workflow-only@postgres:5432/lawpilot
       TEMPORAL_ADDRESS: temporal:7233
-      ENABLE_CALENDAR_REMINDERS: "true"
+      ENABLE_CALENDAR_REMINDERS: 'true'
       TEMPORAL_NAMESPACE: default
       TEMPORAL_TASK_QUEUE: lawpilot-executions-v1
+      APP_ENV: development
+      ENABLE_INTEGRATION_JOBS: 'true'
     depends_on:
-      postgres: {condition: service_healthy}
-      temporal: {condition: service_healthy}
+      postgres:
+        condition: service_healthy
+      temporal:
+        condition: service_healthy
     restart: unless-stopped
-
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 512m
+    tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m
   keycloak:
     image: quay.io/keycloak/keycloak:26.8.2
-    command: ["start-dev", "--import-realm"]
+    command:
+    - start-dev
+    - --import-realm
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:-admin}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-local-dev-keycloak-only}
       KC_HOSTNAME: http://localhost:8080
-      KC_HOSTNAME_STRICT: "true"
-    ports: ["127.0.0.1:8080:8080"]
+      KC_HOSTNAME_STRICT: 'true'
+    ports:
+    - 127.0.0.1:8080:8080
     volumes:
-      - ./infra/keycloak:/opt/keycloak/data/import:ro
-      - keycloakdata:/opt/keycloak/data
-
+    - ./infra/keycloak:/opt/keycloak/data/import:ro
+    - keycloakdata:/opt/keycloak/data
   root-supervisor:
-    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    user: ${LOCAL_UID:-1000}:${LOCAL_GID:-1000}
     volumes:
-      - ./work/tls/ca.pem:/run/lawpilot/tls/ca.pem:ro
-      - ./work/tls/root-supervisor.pem:/run/lawpilot/tls/service.pem:ro
-      - ./work/tls/root-supervisor.key:/run/lawpilot/tls/service.key:ro
-    build: { context: ., dockerfile: services/root-supervisor/Dockerfile }
+    - ./work/tls/ca.pem:/run/lawpilot/tls/ca.pem:ro
+    - ./work/tls/root-supervisor.pem:/run/lawpilot/tls/service.pem:ro
+    - ./work/tls/root-supervisor.key:/run/lawpilot/tls/service.key:ro
+    build:
+      context: .
+      dockerfile: services/root-supervisor/Dockerfile
     environment:
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
-      SUPERVISOR_PORT: "3001"
+      SUPERVISOR_PORT: '3001'
       AI_GRPC_ADDRESS: ai-capabilities:50053
       GRPC_CA_FILE: /run/lawpilot/tls/ca.pem
       GRPC_SERVER_CERT_FILE: /run/lawpilot/tls/service.pem
       GRPC_SERVER_KEY_FILE: /run/lawpilot/tls/service.key
       GRPC_CLIENT_CERT_FILE: /run/lawpilot/tls/service.pem
       GRPC_CLIENT_KEY_FILE: /run/lawpilot/tls/service.key
-    depends_on: [ai-capabilities]
-    ports: ["127.0.0.1:3001:3001"]
-
+      APP_ENV: development
+    depends_on:
+    - ai-capabilities
+    ports:
+    - 127.0.0.1:3001:3001
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 512m
+    tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m
   ai-capabilities:
-    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    user: ${LOCAL_UID:-1000}:${LOCAL_GID:-1000}
     volumes:
-      - ./work/tls/ca.pem:/run/lawpilot/tls/ca.pem:ro
-      - ./work/tls/ai-capabilities.pem:/run/lawpilot/tls/service.pem:ro
-      - ./work/tls/ai-capabilities.key:/run/lawpilot/tls/service.key:ro
-    build: { context: ., dockerfile: services/ai-capabilities/Dockerfile }
+    - ./work/tls/ca.pem:/run/lawpilot/tls/ca.pem:ro
+    - ./work/tls/ai-capabilities.pem:/run/lawpilot/tls/service.pem:ro
+    - ./work/tls/ai-capabilities.key:/run/lawpilot/tls/service.key:ro
+    build:
+      context: .
+      dockerfile: services/ai-capabilities/Dockerfile
     environment:
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
       GRPC_CA_FILE: /run/lawpilot/tls/ca.pem
       GRPC_SERVER_CERT_FILE: /run/lawpilot/tls/service.pem
       GRPC_SERVER_KEY_FILE: /run/lawpilot/tls/service.key
-    ports: ["127.0.0.1:8000:8000"]
-
+      APP_ENV: development
+      LEGAL_AI_ENABLED: ${LEGAL_AI_ENABLED:-false}
+      LEGAL_AI_BASE_URL: ${LEGAL_AI_BASE_URL:-}
+      LEGAL_AI_MODEL: ${LEGAL_AI_MODEL:-}
+      LEGAL_AI_REVISION: ${LEGAL_AI_REVISION:-}
+      LEGAL_AI_API_KEY: ${LEGAL_AI_API_KEY:-}
+      LEGAL_AI_MAX_OUTPUT_TOKENS: ${LEGAL_AI_MAX_OUTPUT_TOKENS:-2048}
+      LEGAL_AI_MAX_PROMPT_BYTES: ${LEGAL_AI_MAX_PROMPT_BYTES:-32768}
+      LEGAL_AI_JSON_MODE: ${LEGAL_AI_JSON_MODE:-json_schema}
+    ports:
+    - 127.0.0.1:8000:8000
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 512m
+    tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m
   provider-router:
-    build: { context: ., dockerfile: services/provider-router/Dockerfile }
+    build:
+      context: .
+      dockerfile: services/provider-router/Dockerfile
     environment:
-      INTERNAL_HMAC_KEY: ${INTERNAL_HMAC_KEY:?copy .env.example to .env and set a long secret}
-    ports: ["127.0.0.1:8082:8082"]
-
+      INTERNAL_HMAC_KEY: ${INTERNAL_HMAC_KEY:-legacy-disabled-placeholder-not-for-production}
+    ports:
+    - 127.0.0.1:8082:8082
+    profiles:
+    - legacy-mock
   platform-api:
-    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    user: ${LOCAL_UID:-1000}:${LOCAL_GID:-1000}
     volumes:
-      - ./work/tls/ca.pem:/run/lawpilot/tls/ca.pem:ro
-      - ./work/tls/api-gateway.pem:/run/lawpilot/tls/service.pem:ro
-      - ./work/tls/api-gateway.key:/run/lawpilot/tls/service.key:ro
-    build: { context: ., dockerfile: apps/platform-api/Dockerfile }
+    - ./work/tls/ca.pem:/run/lawpilot/tls/ca.pem:ro
+    - ./work/tls/api-gateway.pem:/run/lawpilot/tls/service.pem:ro
+    - ./work/tls/api-gateway.key:/run/lawpilot/tls/service.key:ro
+    build:
+      context: .
+      dockerfile: apps/platform-api/Dockerfile
     environment:
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
-      API_PORT: "3000"
+      API_PORT: '3000'
       CONTEXT_GRPC_ADDRESS: context-engine:50054
       CALENDAR_GRPC_ADDRESS: calendar-service:50051
       GRPC_CA_FILE: /run/lawpilot/tls/ca.pem
@@ -144,18 +242,33 @@ services:
       KEYCLOAK_ISSUER: http://localhost:8080/realms/lawpilot-dev
       KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/lawpilot-dev/protocol/openid-connect/certs
       KEYCLOAK_AUDIENCE: lawpilot-api
+      APP_ENV: development
+      INTEGRATION_GRPC_ADDRESS: integration-service:50055
     depends_on:
-      postgres: {condition: service_healthy}
-      keycloak: {condition: service_started}
-    ports: ["127.0.0.1:3000:3000"]
-
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    ports:
+    - 127.0.0.1:3000:3000
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 512m
+    tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m
   calendar-service:
-    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    user: ${LOCAL_UID:-1000}:${LOCAL_GID:-1000}
     volumes:
-      - ./work/tls/ca.pem:/run/lawpilot/tls/ca.pem:ro
-      - ./work/tls/calendar-service.pem:/run/lawpilot/tls/service.pem:ro
-      - ./work/tls/calendar-service.key:/run/lawpilot/tls/service.key:ro
-    build: { context: ., dockerfile: services/calendar-service/Dockerfile }
+    - ./work/tls/ca.pem:/run/lawpilot/tls/ca.pem:ro
+    - ./work/tls/calendar-service.pem:/run/lawpilot/tls/service.pem:ro
+    - ./work/tls/calendar-service.key:/run/lawpilot/tls/service.key:ro
+    build:
+      context: .
+      dockerfile: services/calendar-service/Dockerfile
     environment:
       APP_ENV: development
       CALENDAR_DATABASE_URL: postgresql://lawpilot_calendar:local-dev-calendar-only@postgres:5432/lawpilot
@@ -166,13 +279,25 @@ services:
       GRPC_SERVER_CERT_FILE: /run/lawpilot/tls/service.pem
       GRPC_SERVER_KEY_FILE: /run/lawpilot/tls/service.key
     depends_on:
-      postgres: {condition: service_healthy}
-      keycloak: {condition: service_started}
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
     restart: unless-stopped
-
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 512m
+    tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m
   context-engine:
-    build: { context: ., dockerfile: services/context-engine/Dockerfile }
-    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    build:
+      context: .
+      dockerfile: services/context-engine/Dockerfile
+    user: ${LOCAL_UID:-1000}:${LOCAL_GID:-1000}
     environment:
       APP_ENV: development
       CONTEXT_DATABASE_URL: postgresql://lawpilot_context:local-dev-context-only@postgres:5432/lawpilot
@@ -182,36 +307,166 @@ services:
       GRPC_CA_FILE: /run/lawpilot/tls/ca.pem
       GRPC_SERVER_CERT_FILE: /run/lawpilot/tls/service.pem
       GRPC_SERVER_KEY_FILE: /run/lawpilot/tls/service.key
+      CONTEXT_DOCUMENT_MAX_BYTES: ${CONTEXT_DOCUMENT_MAX_BYTES:-}
       EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL:-}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
       EMBEDDING_REVISION: ${EMBEDDING_REVISION:-}
       EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-}
     volumes:
-      - ./work/tls/ca.pem:/run/lawpilot/tls/ca.pem:ro
-      - ./work/tls/context-engine.pem:/run/lawpilot/tls/service.pem:ro
-      - ./work/tls/context-engine.key:/run/lawpilot/tls/service.key:ro
+    - ./work/tls/ca.pem:/run/lawpilot/tls/ca.pem:ro
+    - ./work/tls/context-engine.pem:/run/lawpilot/tls/service.pem:ro
+    - ./work/tls/context-engine.key:/run/lawpilot/tls/service.key:ro
     depends_on:
-      postgres: {condition: service_healthy}
-      keycloak: {condition: service_started}
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
     restart: unless-stopped
-
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 512m
+    tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m
   domain-events:
-    build: { context: ., dockerfile: services/context-engine/Dockerfile }
-    command: ["domain-events"]
+    build:
+      context: .
+      dockerfile: services/context-engine/Dockerfile
+    command:
+    - domain-events
     environment:
       EVENT_DATABASE_URL: postgresql://lawpilot_events:local-dev-events-only@postgres:5432/lawpilot
+      APP_ENV: development
     depends_on:
-      postgres: {condition: service_healthy}
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
-
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 512m
+    tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.134.0
-    command: ["--config=/etc/otelcol/config.yaml"]
+    command:
+    - --config=/etc/otelcol/config.yaml
     volumes:
-      - ./infra/otel-collector.yaml:/etc/otelcol/config.yaml:ro
-    ports: ["127.0.0.1:4317:4317", "127.0.0.1:4318:4318"]
-
+    - ./infra/otel-collector.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+    - 127.0.0.1:4317:4317
+    - 127.0.0.1:4318:4318
+  integration-service:
+    build:
+      context: .
+      dockerfile: services/integration-service/Dockerfile
+    user: ${LOCAL_UID:-1000}:${LOCAL_GID:-1000}
+    volumes:
+    - ./work/tls/ca.pem:/run/lawpilot/tls/ca.pem:ro
+    - ./work/tls/integration-service.pem:/run/lawpilot/tls/service.pem:ro
+    - ./work/tls/integration-service.key:/run/lawpilot/tls/service.key:ro
+    environment:
+      GRPC_CA_FILE: /run/lawpilot/tls/ca.pem
+      GRPC_SERVER_CERT_FILE: /run/lawpilot/tls/service.pem
+      GRPC_SERVER_KEY_FILE: /run/lawpilot/tls/service.key
+      APP_ENV: development
+      INTEGRATION_DATABASE_URL: postgresql://lawpilot_integration:local-dev-integration-only@postgres:5432/lawpilot
+      KEYCLOAK_ISSUER: http://localhost:8080/realms/lawpilot-dev
+      KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/lawpilot-dev/protocol/openid-connect/certs
+      KEYCLOAK_AUDIENCE: lawpilot-api
+      GRPC_CLIENT_CERT_FILE: /run/lawpilot/tls/service.pem
+      GRPC_CLIENT_KEY_FILE: /run/lawpilot/tls/service.key
+      PARSER_GRPC_ADDRESS: document-parser:50056
+      CONTEXT_GRPC_ADDRESS: context-engine:50054
+      OPS_ADDRESS: :9090
+      FILE_STORAGE_ENABLED: ${FILE_STORAGE_ENABLED:-false}
+      S3_BUCKET: ${S3_BUCKET:-}
+      S3_REGION: ${S3_REGION:-}
+      S3_KMS_KEY_ID: ${S3_KMS_KEY_ID:-}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+      S3_SESSION_TOKEN: ${S3_SESSION_TOKEN:-}
+      S3_SKIP_BUCKET_POLICY_CHECK: ${S3_SKIP_BUCKET_POLICY_CHECK:-}
+      CLAMAV_ADDRESS: ${CLAMAV_ADDRESS:-}
+      CLAMAV_SERVER_NAME: ${CLAMAV_SERVER_NAME:-}
+      INTEGRATION_TOKEN_KEYS: ${INTEGRATION_TOKEN_KEYS:-}
+      CLIO_ENABLED: ${CLIO_ENABLED:-false}
+      CLIO_REGION: ${CLIO_REGION:-}
+      CLIO_CLIENT_ID: ${CLIO_CLIENT_ID:-}
+      CLIO_CLIENT_SECRET: ${CLIO_CLIENT_SECRET:-}
+      CLIO_REDIRECT_URI: ${CLIO_REDIRECT_URI:-}
+      CLIO_TIME_ZONE: ${CLIO_TIME_ZONE:-}
+      CLIO_API_VERSION: ${CLIO_API_VERSION:-}
+      GENERIC_PROVIDER_ENABLED: ${GENERIC_PROVIDER_ENABLED:-false}
+      GENERIC_PROVIDER_BASE_URL: ${GENERIC_PROVIDER_BASE_URL:-}
+      GENERIC_PROVIDER_AUTHORIZE_URL: ${GENERIC_PROVIDER_AUTHORIZE_URL:-}
+      GENERIC_PROVIDER_TOKEN_URL: ${GENERIC_PROVIDER_TOKEN_URL:-}
+      GENERIC_PROVIDER_CLIENT_ID: ${GENERIC_PROVIDER_CLIENT_ID:-}
+      GENERIC_PROVIDER_CLIENT_SECRET: ${GENERIC_PROVIDER_CLIENT_SECRET:-}
+      GENERIC_PROVIDER_REDIRECT_URI: ${GENERIC_PROVIDER_REDIRECT_URI:-}
+      GENERIC_PROVIDER_TIME_ZONE: ${GENERIC_PROVIDER_TIME_ZONE:-}
+      GENERIC_PROVIDER_API_VERSION: ${GENERIC_PROVIDER_API_VERSION:-}
+      PROVIDER_WRITES_ENABLED: ${PROVIDER_WRITES_ENABLED:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    networks:
+    - default
+    - parser
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 512m
+    tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m
+  document-parser:
+    profiles:
+    - documents
+    build:
+      context: .
+      dockerfile: services/document-worker/Dockerfile
+    user: ${LOCAL_UID:-1000}:${LOCAL_GID:-1000}
+    volumes:
+    - ./work/tls/ca.pem:/run/lawpilot/tls/ca.pem:ro
+    - ./work/tls/document-parser.pem:/run/lawpilot/tls/service.pem:ro
+    - ./work/tls/document-parser.key:/run/lawpilot/tls/service.key:ro
+    environment:
+      GRPC_CA_FILE: /run/lawpilot/tls/ca.pem
+      GRPC_SERVER_CERT_FILE: /run/lawpilot/tls/service.pem
+      GRPC_SERVER_KEY_FILE: /run/lawpilot/tls/service.key
+      APP_ENV: development
+      OPS_ADDRESS: :9090
+    networks:
+    - parser
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    pids_limit: 32
+    mem_limit: 384m
+    cpus: 1
+    tmpfs:
+    - /tmp:rw,noexec,nosuid,size=32m
+    restart: unless-stopped
 volumes:
-  temporaldata:
-  pgdata18:
-  keycloakdata:
+  temporaldata: null
+  pgdata18: null
+  keycloakdata: null
+networks:
+  parser:
+    internal: true

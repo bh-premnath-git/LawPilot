@@ -10,7 +10,11 @@ import (
 )
 
 func AIExecutionWorkflow(ctx workflow.Context, ref executions.Ref) (string, error) {
-	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{StartToCloseTimeout: 40 * time.Second, ScheduleToCloseTimeout: 30 * time.Minute, RetryPolicy: &temporal.RetryPolicy{InitialInterval: time.Second, BackoffCoefficient: 2, MaximumInterval: time.Minute, MaximumAttempts: 8}})
+	timeout := 40 * time.Second
+	if workflow.GetVersion(ctx, "configured-ai-deadline", workflow.DefaultVersion, 1) != workflow.DefaultVersion {
+		timeout = 120 * time.Second
+	}
+	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{StartToCloseTimeout: timeout, ScheduleToCloseTimeout: 30 * time.Minute, RetryPolicy: &temporal.RetryPolicy{InitialInterval: time.Second, BackoffCoefficient: 2, MaximumInterval: time.Minute, MaximumAttempts: 8}})
 	var status string
 	err := workflow.ExecuteActivity(ctx, "ExecuteAI", ref).Get(ctx, &status)
 	if err == nil {

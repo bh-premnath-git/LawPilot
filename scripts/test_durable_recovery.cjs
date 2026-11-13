@@ -16,7 +16,7 @@ let jwksServer,supervisor,temporal,api,worker,dispatcher,apiPort,temporalPort,to
 const calls=new Map();let blockNext=false,invalidNext=false,blockedResponse;
 function launch(cmd,args,name,extra={}){
  const fd=fs.openSync(path.join(scratch,name+'.log'),'a');
- const child=spawn(cmd,args,{cwd:process.cwd(),env:{...process.env,NODE_ENV:'test',TEMPORAL_NAMESPACE:'default',INTERNAL_HMAC_KEY:secret,OTEL_EXPORTER_OTLP_ENDPOINT:'',...extra},stdio:['ignore',fd,fd]});fs.closeSync(fd);children.push(child);return child;
+ const child=spawn(cmd,args,{cwd:process.cwd(),env:{...process.env,LEGAL_AI_ENABLED:'false',INTEGRATION_GRPC_ADDRESS:'',ENABLE_INTEGRATION_JOBS:'false',NODE_ENV:'test',TEMPORAL_NAMESPACE:'default',INTERNAL_HMAC_KEY:secret,OTEL_EXPORTER_OTLP_ENDPOINT:'',...extra},stdio:['ignore',fd,fd]});fs.closeSync(fd);children.push(child);return child;
 }
 async function stop(child,signal='SIGTERM'){
  if(!child||child.exitCode!==null||child.signalCode!==null)return;
@@ -66,7 +66,7 @@ let integrationLock;
  await startTemporal();startDispatcher();await delivery(accepted);await state(accepted,'queued');
  await stop(dispatcher,'SIGKILL');startDispatcher();startWorker();await state(accepted,'completed');assert.equal(calls.get(accepted.executionId),1);
  console.log('PASS: API crash, offline worker queue, dispatcher restart and stable workflow ID');
- blockNext=true;const mid=await accept('restart-worker-002');await until(()=>calls.get(mid.executionId)===1);await stop(worker,'SIGKILL');blockedResponse();startWorker();await state(mid,'completed',90000);
+ blockNext=true;const mid=await accept('restart-worker-002');await until(()=>calls.get(mid.executionId)===1);await stop(worker,'SIGKILL');blockedResponse();startWorker();await state(mid,'completed',180000);
  const completions=await pool.query("SELECT count(*) FROM audit_events WHERE tenant_id=$1 AND resource_id=$2 AND action='ai.completed'",[tenant,mid.executionId]);assert.equal(Number(completions.rows[0].count),1);
  console.log('PASS: worker killed mid-activity; retried read-only call, one committed result');
  await stop(worker,'SIGKILL');const persisted=await accept('restart-temporal-003');await delivery(persisted);await stop(temporal,'SIGKILL');await startTemporal();startWorker();await state(persisted,'completed');
@@ -88,6 +88,7 @@ let integrationLock;
 })().catch(e=>{console.error(e);console.error('Test logs:',scratch);process.exitCode=1;}).finally(async()=>{
  if(blockedResponse)blockedResponse();for(const child of children.reverse())await stop(child);
  for(const server of [supervisor,jwksServer])if(server){server.closeAllConnections();server.close();}
- for(const table of ['outbox_events','audit_events','ai_executions','principal_capabilities','matter_grants','matters','memberships'])await pool.query(`DELETE FROM ${table} WHERE tenant_id=$1`,[tenant]);
+ await pool.query('DELETE FROM domain_event_deliveries WHERE event_id IN(SELECT id FROM domain_event_journal WHERE tenant_id=$1)',[tenant]);
+ for(const table of ['domain_event_inbox','domain_aggregate_heads','domain_event_journal','outbox_events','audit_events','ai_executions','principal_capabilities','matter_grants','matters','memberships'])await pool.query(`DELETE FROM ${table} WHERE tenant_id=$1`,[tenant]);
  await pool.query('DELETE FROM tenants WHERE id=$1',[tenant]);if(integrationLock){await integrationLock.query("SELECT pg_advisory_unlock(604182701)");integrationLock.release();}await pool.end();
 });

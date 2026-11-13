@@ -7,6 +7,7 @@
 package rpcv1
 
 import (
+	v1 "github.com/bh-premnath-git/LawPilot/contracts/gen/go/lawpilot/context/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	structpb "google.golang.org/protobuf/types/known/structpb"
@@ -24,16 +25,17 @@ const (
 
 // Input/output Struct values are untrusted capability data, never policy or tool commands.
 type ExecuteCapabilityRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ExecutionId   string                 `protobuf:"bytes,1,opt,name=execution_id,json=executionId,proto3" json:"execution_id,omitempty"`
-	TenantId      string                 `protobuf:"bytes,2,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
-	PrincipalId   string                 `protobuf:"bytes,3,opt,name=principal_id,json=principalId,proto3" json:"principal_id,omitempty"`
-	MatterId      string                 `protobuf:"bytes,4,opt,name=matter_id,json=matterId,proto3" json:"matter_id,omitempty"`
-	CapabilityId  string                 `protobuf:"bytes,5,opt,name=capability_id,json=capabilityId,proto3" json:"capability_id,omitempty"`
-	Input         *structpb.Struct       `protobuf:"bytes,6,opt,name=input,proto3" json:"input,omitempty"`
-	TraceId       string                 `protobuf:"bytes,7,opt,name=trace_id,json=traceId,proto3" json:"trace_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	ExecutionId    string                 `protobuf:"bytes,1,opt,name=execution_id,json=executionId,proto3" json:"execution_id,omitempty"`
+	TenantId       string                 `protobuf:"bytes,2,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
+	PrincipalId    string                 `protobuf:"bytes,3,opt,name=principal_id,json=principalId,proto3" json:"principal_id,omitempty"`
+	MatterId       string                 `protobuf:"bytes,4,opt,name=matter_id,json=matterId,proto3" json:"matter_id,omitempty"`
+	CapabilityId   string                 `protobuf:"bytes,5,opt,name=capability_id,json=capabilityId,proto3" json:"capability_id,omitempty"`
+	Input          *structpb.Struct       `protobuf:"bytes,6,opt,name=input,proto3" json:"input,omitempty"`
+	TraceId        string                 `protobuf:"bytes,7,opt,name=trace_id,json=traceId,proto3" json:"trace_id,omitempty"`
+	TrustedContext *v1.PreparedContext    `protobuf:"bytes,8,opt,name=trusted_context,json=trustedContext,proto3" json:"trusted_context,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *ExecuteCapabilityRequest) Reset() {
@@ -113,6 +115,13 @@ func (x *ExecuteCapabilityRequest) GetTraceId() string {
 		return x.TraceId
 	}
 	return ""
+}
+
+func (x *ExecuteCapabilityRequest) GetTrustedContext() *v1.PreparedContext {
+	if x != nil {
+		return x.TrustedContext
+	}
+	return nil
 }
 
 type EvidenceRef struct {
@@ -287,7 +296,7 @@ var File_lawpilot_rpc_v1_capability_proto protoreflect.FileDescriptor
 
 const file_lawpilot_rpc_v1_capability_proto_rawDesc = "" +
 	"\n" +
-	" lawpilot/rpc/v1/capability.proto\x12\x0flawpilot.rpc.v1\x1a\x1cgoogle/protobuf/struct.proto\"\x89\x02\n" +
+	" lawpilot/rpc/v1/capability.proto\x12\x0flawpilot.rpc.v1\x1a\x1cgoogle/protobuf/struct.proto\x1a!lawpilot/context/v1/context.proto\"\xd8\x02\n" +
 	"\x18ExecuteCapabilityRequest\x12!\n" +
 	"\fexecution_id\x18\x01 \x01(\tR\vexecutionId\x12\x1b\n" +
 	"\ttenant_id\x18\x02 \x01(\tR\btenantId\x12!\n" +
@@ -295,7 +304,8 @@ const file_lawpilot_rpc_v1_capability_proto_rawDesc = "" +
 	"\tmatter_id\x18\x04 \x01(\tR\bmatterId\x12#\n" +
 	"\rcapability_id\x18\x05 \x01(\tR\fcapabilityId\x12-\n" +
 	"\x05input\x18\x06 \x01(\v2\x17.google.protobuf.StructR\x05input\x12\x19\n" +
-	"\btrace_id\x18\a \x01(\tR\atraceId\"\xda\x01\n" +
+	"\btrace_id\x18\a \x01(\tR\atraceId\x12M\n" +
+	"\x0ftrusted_context\x18\b \x01(\v2$.lawpilot.context.v1.PreparedContextR\x0etrustedContext\"\xda\x01\n" +
 	"\vEvidenceRef\x12\x1f\n" +
 	"\vdocument_id\x18\x01 \x01(\tR\n" +
 	"documentId\x12.\n" +
@@ -338,20 +348,22 @@ var file_lawpilot_rpc_v1_capability_proto_goTypes = []any{
 	(*EvidenceRef)(nil),               // 1: lawpilot.rpc.v1.EvidenceRef
 	(*ExecuteCapabilityResponse)(nil), // 2: lawpilot.rpc.v1.ExecuteCapabilityResponse
 	(*structpb.Struct)(nil),           // 3: google.protobuf.Struct
+	(*v1.PreparedContext)(nil),        // 4: lawpilot.context.v1.PreparedContext
 }
 var file_lawpilot_rpc_v1_capability_proto_depIdxs = []int32{
 	3, // 0: lawpilot.rpc.v1.ExecuteCapabilityRequest.input:type_name -> google.protobuf.Struct
-	3, // 1: lawpilot.rpc.v1.ExecuteCapabilityResponse.output:type_name -> google.protobuf.Struct
-	1, // 2: lawpilot.rpc.v1.ExecuteCapabilityResponse.evidence:type_name -> lawpilot.rpc.v1.EvidenceRef
-	0, // 3: lawpilot.rpc.v1.SupervisorService.ExecuteCapability:input_type -> lawpilot.rpc.v1.ExecuteCapabilityRequest
-	0, // 4: lawpilot.rpc.v1.CapabilityService.ExecuteCapability:input_type -> lawpilot.rpc.v1.ExecuteCapabilityRequest
-	2, // 5: lawpilot.rpc.v1.SupervisorService.ExecuteCapability:output_type -> lawpilot.rpc.v1.ExecuteCapabilityResponse
-	2, // 6: lawpilot.rpc.v1.CapabilityService.ExecuteCapability:output_type -> lawpilot.rpc.v1.ExecuteCapabilityResponse
-	5, // [5:7] is the sub-list for method output_type
-	3, // [3:5] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	4, // 1: lawpilot.rpc.v1.ExecuteCapabilityRequest.trusted_context:type_name -> lawpilot.context.v1.PreparedContext
+	3, // 2: lawpilot.rpc.v1.ExecuteCapabilityResponse.output:type_name -> google.protobuf.Struct
+	1, // 3: lawpilot.rpc.v1.ExecuteCapabilityResponse.evidence:type_name -> lawpilot.rpc.v1.EvidenceRef
+	0, // 4: lawpilot.rpc.v1.SupervisorService.ExecuteCapability:input_type -> lawpilot.rpc.v1.ExecuteCapabilityRequest
+	0, // 5: lawpilot.rpc.v1.CapabilityService.ExecuteCapability:input_type -> lawpilot.rpc.v1.ExecuteCapabilityRequest
+	2, // 6: lawpilot.rpc.v1.SupervisorService.ExecuteCapability:output_type -> lawpilot.rpc.v1.ExecuteCapabilityResponse
+	2, // 7: lawpilot.rpc.v1.CapabilityService.ExecuteCapability:output_type -> lawpilot.rpc.v1.ExecuteCapabilityResponse
+	6, // [6:8] is the sub-list for method output_type
+	4, // [4:6] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_lawpilot_rpc_v1_capability_proto_init() }

@@ -7,3 +7,5 @@ export * from "./tracing";
 export * as Context from "./generated/lawpilot/context/v1/context";
 
 export * as Events from "./generated/lawpilot/events/v1/events";
+
+export * as Integrations from "./generated/lawpilot/integrations/v1/integrations";

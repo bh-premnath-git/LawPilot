@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"github.com/bh-premnath-git/LawPilot/packages/workload"
+	"google.golang.org/grpc/keepalive"
 	"log"
 	"net"
 	"os"
@@ -27,11 +29,18 @@ func required(name string) string {
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	pool, err := pgxpool.New(ctx, required("CONTEXT_DATABASE_URL"))
+	database := workload.Secret("CONTEXT_DATABASE_URL")
+	if database == "" || workload.DatabaseURL(database) != nil {
+		log.Fatal("database TLS/configuration invalid")
+	}
+	pool, err := pgxpool.New(ctx, database)
 	if err != nil {
 		log.Fatal("invalid database configuration")
 	}
 	defer pool.Close()
+	if err = workload.CheckDatabaseRole(ctx, pool); err != nil {
+		log.Fatal("runtime database role is unsafe")
+	}
 	if err = pool.Ping(ctx); err != nil {
 		log.Fatal("database unavailable")
 	}
@@ -39,7 +48,7 @@ func main() {
 		log.Fatal("context migration required")
 	}
 	var evidenceReady bool
-	if err = pool.QueryRow(ctx, "SELECT to_regprocedure('verify_execution_result(uuid,uuid,jsonb)') IS NOT NULL").Scan(&evidenceReady); err != nil || !evidenceReady {
+	if err = pool.QueryRow(ctx, "SELECT to_regprocedure('verify_ai_execution_result(uuid,uuid,jsonb)') IS NOT NULL").Scan(&evidenceReady); err != nil || !evidenceReady {
 		log.Fatal("evidence migration required")
 	}
 	tls, err := engine.Credentials(required("GRPC_CA_FILE"), required("GRPC_SERVER_CERT_FILE"), required("GRPC_SERVER_KEY_FILE"))
@@ -50,7 +59,7 @@ func main() {
 	if err != nil {
 		log.Fatal("identity configuration invalid")
 	}
-	server := grpc.NewServer(grpc.Creds(tls), grpc.UnaryInterceptor(auth), grpc.MaxRecvMsgSize(65536), grpc.MaxSendMsgSize(1048576))
+	server := grpc.NewServer(grpc.Creds(tls), grpc.ChainUnaryInterceptor(workload.Guard(32, 5*time.Minute), auth), grpc.KeepaliveParams(keepalive.ServerParameters{MaxConnectionAge: 5 * time.Minute, MaxConnectionAgeGrace: 30 * time.Second}), grpc.MaxRecvMsgSize(1048576), grpc.MaxSendMsgSize(1048576))
 	service, err := engine.New(pool)
 	if err != nil {
 		log.Fatal("context/embedding configuration invalid")
@@ -78,6 +87,9 @@ func main() {
 			server.Stop()
 		}
 	}()
+	if err = workload.StartOperations(ctx, os.Getenv("OPS_ADDRESS"), pool.Ping); err != nil {
+		log.Fatal("operations listener invalid")
+	}
 	log.Println("context gRPC service started (mTLS required)")
 	if err = server.Serve(listener); err != nil {
 		log.Fatal("context gRPC server stopped")

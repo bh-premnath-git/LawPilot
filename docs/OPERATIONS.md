@@ -1,5 +1,7 @@
 # Observability and operations contract
 
+Current extension: see [configured integrations and operations](CONFIGURED_INTEGRATIONS.md) for implemented file processing, OAuth/polling adapters, configured legal generation, authoritative review, migrations 011–015 and current limitations. Earlier gap lists below describe the preceding baseline.
+
 Required span attributes (privacy-safe only): `service.name`, `request_id`, `trace_id`, `workflow_id`, `agent_capability`, `agent_version`, `provider_id`, `provider_operation`, `decision_code` (non-sensitive). Tenant IDs are high-cardinality and must NOT become metrics labels.
 
 - Propagate W3C traceparent/tracestate across HTTP, gRPC, Temporal activity and messaging boundaries.

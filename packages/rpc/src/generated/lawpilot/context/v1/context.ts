@@ -18,6 +18,7 @@ import {
   type ServiceError,
   type UntypedServiceImplementation,
 } from "@grpc/grpc-js";
+import { Struct } from "../../../google/protobuf/struct";
 import { Timestamp } from "../../../google/protobuf/timestamp";
 
 export const protobufPackage = "lawpilot.context.v1";
@@ -34,6 +35,7 @@ export interface Citation {
   contentSha256: string;
   byteStart: number;
   byteEnd: number;
+  pageNumber?: number | undefined;
 }
 
 export interface IngestTextRequest {
@@ -168,6 +170,76 @@ export interface ListMatterEventsResponse {
   nextPosition: number;
 }
 
+export interface ProcessedPage {
+  number: number;
+  text: string;
+}
+
+export interface IngestProcessedRequest {
+  tenantId: string;
+  fileId: string;
+  pages: ProcessedPage[];
+  parserVersion: string;
+}
+
+export interface ExecutionRef {
+  tenantId: string;
+  executionId: string;
+}
+
+export interface ApprovedTemplate {
+  id: string;
+  sha256: string;
+  body: string;
+}
+
+export interface PreparedContext {
+  executionId: string;
+  grantId: string;
+  package: ContextPackage | undefined;
+  approvedTemplate: ApprovedTemplate | undefined;
+}
+
+export interface TemplateRequest {
+  scope: Scope | undefined;
+  name: string;
+  version: number;
+  body: string;
+  idempotencyKey: string;
+}
+
+export interface TemplateDecisionRequest {
+  scope: Scope | undefined;
+  templateId: string;
+  expectedSha256: string;
+  decision: string;
+}
+
+export interface TemplateResponse {
+  template: ApprovedTemplate | undefined;
+  state: string;
+}
+
+export interface ReviewRequest {
+  scope: Scope | undefined;
+  executionId: string;
+  expectedSha256: string;
+  decision: string;
+}
+
+export interface ReviewResponse {
+  executionId: string;
+  state: string;
+  artifactSha256: string;
+  draft: string;
+  artifact: { [key: string]: any } | undefined;
+}
+
+export interface ReviewDeadline {
+  state: string;
+  deadline: Date | undefined;
+}
+
 function createBaseScope(): Scope {
   return { tenantId: "", requestId: "" };
 }
@@ -253,7 +325,15 @@ export const Scope: MessageFns<Scope> = {
 };
 
 function createBaseCitation(): Citation {
-  return { documentId: "", versionId: "", passageId: "", contentSha256: "", byteStart: 0, byteEnd: 0 };
+  return {
+    documentId: "",
+    versionId: "",
+    passageId: "",
+    contentSha256: "",
+    byteStart: 0,
+    byteEnd: 0,
+    pageNumber: undefined,
+  };
 }
 
 export const Citation: MessageFns<Citation> = {
@@ -275,6 +355,9 @@ export const Citation: MessageFns<Citation> = {
     }
     if (message.byteEnd !== 0) {
       writer.uint32(48).int32(message.byteEnd);
+    }
+    if (message.pageNumber !== undefined) {
+      writer.uint32(56).int32(message.pageNumber);
     }
     return writer;
   },
@@ -334,6 +417,14 @@ export const Citation: MessageFns<Citation> = {
           message.byteEnd = reader.int32();
           continue;
         }
+        case 7: {
+          if (tag !== 56) {
+            break;
+          }
+
+          message.pageNumber = reader.int32();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -375,6 +466,11 @@ export const Citation: MessageFns<Citation> = {
         : isSet(object.byte_end)
         ? globalThis.Number(object.byte_end)
         : 0,
+      pageNumber: isSet(object.pageNumber)
+        ? globalThis.Number(object.pageNumber)
+        : isSet(object.page_number)
+        ? globalThis.Number(object.page_number)
+        : undefined,
     };
   },
 
@@ -398,6 +494,9 @@ export const Citation: MessageFns<Citation> = {
     if (message.byteEnd !== undefined) {
       obj.byteEnd = Math.round(message.byteEnd);
     }
+    if (message.pageNumber !== undefined) {
+      obj.pageNumber = Math.round(message.pageNumber);
+    }
     return obj;
   },
 
@@ -412,6 +511,7 @@ export const Citation: MessageFns<Citation> = {
     message.contentSha256 = object.contentSha256 ?? "";
     message.byteStart = object.byteStart ?? 0;
     message.byteEnd = object.byteEnd ?? 0;
+    message.pageNumber = object.pageNumber ?? undefined;
     return message;
   },
 };
@@ -2614,8 +2714,1234 @@ export const ListMatterEventsResponse: MessageFns<ListMatterEventsResponse> = {
   },
 };
 
+function createBaseProcessedPage(): ProcessedPage {
+  return { number: 0, text: "" };
+}
+
+export const ProcessedPage: MessageFns<ProcessedPage> = {
+  encode(message: ProcessedPage, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.number !== 0) {
+      writer.uint32(8).int32(message.number);
+    }
+    if (message.text !== "") {
+      writer.uint32(18).string(message.text);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ProcessedPage {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseProcessedPage();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.number = reader.int32();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.text = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ProcessedPage {
+    return {
+      number: isSet(object.number) ? globalThis.Number(object.number) : 0,
+      text: isSet(object.text) ? globalThis.String(object.text) : "",
+    };
+  },
+
+  toJSON(message: ProcessedPage): unknown {
+    const obj: any = {};
+    if (message.number !== undefined) {
+      obj.number = Math.round(message.number);
+    }
+    if (message.text !== undefined) {
+      obj.text = message.text;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ProcessedPage>): ProcessedPage {
+    return ProcessedPage.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ProcessedPage>): ProcessedPage {
+    const message = createBaseProcessedPage();
+    message.number = object.number ?? 0;
+    message.text = object.text ?? "";
+    return message;
+  },
+};
+
+function createBaseIngestProcessedRequest(): IngestProcessedRequest {
+  return { tenantId: "", fileId: "", pages: [], parserVersion: "" };
+}
+
+export const IngestProcessedRequest: MessageFns<IngestProcessedRequest> = {
+  encode(message: IngestProcessedRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.tenantId !== "") {
+      writer.uint32(10).string(message.tenantId);
+    }
+    if (message.fileId !== "") {
+      writer.uint32(18).string(message.fileId);
+    }
+    for (const v of message.pages) {
+      ProcessedPage.encode(v!, writer.uint32(26).fork()).join();
+    }
+    if (message.parserVersion !== "") {
+      writer.uint32(34).string(message.parserVersion);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): IngestProcessedRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseIngestProcessedRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.tenantId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.fileId = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.pages.push(ProcessedPage.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.parserVersion = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): IngestProcessedRequest {
+    return {
+      tenantId: isSet(object.tenantId)
+        ? globalThis.String(object.tenantId)
+        : isSet(object.tenant_id)
+        ? globalThis.String(object.tenant_id)
+        : "",
+      fileId: isSet(object.fileId)
+        ? globalThis.String(object.fileId)
+        : isSet(object.file_id)
+        ? globalThis.String(object.file_id)
+        : "",
+      pages: globalThis.Array.isArray(object?.pages) ? object.pages.map((e: any) => ProcessedPage.fromJSON(e)) : [],
+      parserVersion: isSet(object.parserVersion)
+        ? globalThis.String(object.parserVersion)
+        : isSet(object.parser_version)
+        ? globalThis.String(object.parser_version)
+        : "",
+    };
+  },
+
+  toJSON(message: IngestProcessedRequest): unknown {
+    const obj: any = {};
+    if (message.tenantId !== undefined) {
+      obj.tenantId = message.tenantId;
+    }
+    if (message.fileId !== undefined) {
+      obj.fileId = message.fileId;
+    }
+    if (message.pages?.length) {
+      obj.pages = message.pages.map((e) => ProcessedPage.toJSON(e));
+    }
+    if (message.parserVersion !== undefined) {
+      obj.parserVersion = message.parserVersion;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<IngestProcessedRequest>): IngestProcessedRequest {
+    return IngestProcessedRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<IngestProcessedRequest>): IngestProcessedRequest {
+    const message = createBaseIngestProcessedRequest();
+    message.tenantId = object.tenantId ?? "";
+    message.fileId = object.fileId ?? "";
+    message.pages = object.pages?.map((e) => ProcessedPage.fromPartial(e)) || [];
+    message.parserVersion = object.parserVersion ?? "";
+    return message;
+  },
+};
+
+function createBaseExecutionRef(): ExecutionRef {
+  return { tenantId: "", executionId: "" };
+}
+
+export const ExecutionRef: MessageFns<ExecutionRef> = {
+  encode(message: ExecutionRef, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.tenantId !== "") {
+      writer.uint32(10).string(message.tenantId);
+    }
+    if (message.executionId !== "") {
+      writer.uint32(18).string(message.executionId);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ExecutionRef {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseExecutionRef();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.tenantId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.executionId = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ExecutionRef {
+    return {
+      tenantId: isSet(object.tenantId)
+        ? globalThis.String(object.tenantId)
+        : isSet(object.tenant_id)
+        ? globalThis.String(object.tenant_id)
+        : "",
+      executionId: isSet(object.executionId)
+        ? globalThis.String(object.executionId)
+        : isSet(object.execution_id)
+        ? globalThis.String(object.execution_id)
+        : "",
+    };
+  },
+
+  toJSON(message: ExecutionRef): unknown {
+    const obj: any = {};
+    if (message.tenantId !== undefined) {
+      obj.tenantId = message.tenantId;
+    }
+    if (message.executionId !== undefined) {
+      obj.executionId = message.executionId;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ExecutionRef>): ExecutionRef {
+    return ExecutionRef.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ExecutionRef>): ExecutionRef {
+    const message = createBaseExecutionRef();
+    message.tenantId = object.tenantId ?? "";
+    message.executionId = object.executionId ?? "";
+    return message;
+  },
+};
+
+function createBaseApprovedTemplate(): ApprovedTemplate {
+  return { id: "", sha256: "", body: "" };
+}
+
+export const ApprovedTemplate: MessageFns<ApprovedTemplate> = {
+  encode(message: ApprovedTemplate, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== "") {
+      writer.uint32(10).string(message.id);
+    }
+    if (message.sha256 !== "") {
+      writer.uint32(18).string(message.sha256);
+    }
+    if (message.body !== "") {
+      writer.uint32(26).string(message.body);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ApprovedTemplate {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseApprovedTemplate();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.sha256 = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.body = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ApprovedTemplate {
+    return {
+      id: isSet(object.id) ? globalThis.String(object.id) : "",
+      sha256: isSet(object.sha256) ? globalThis.String(object.sha256) : "",
+      body: isSet(object.body) ? globalThis.String(object.body) : "",
+    };
+  },
+
+  toJSON(message: ApprovedTemplate): unknown {
+    const obj: any = {};
+    if (message.id !== undefined) {
+      obj.id = message.id;
+    }
+    if (message.sha256 !== undefined) {
+      obj.sha256 = message.sha256;
+    }
+    if (message.body !== undefined) {
+      obj.body = message.body;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ApprovedTemplate>): ApprovedTemplate {
+    return ApprovedTemplate.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ApprovedTemplate>): ApprovedTemplate {
+    const message = createBaseApprovedTemplate();
+    message.id = object.id ?? "";
+    message.sha256 = object.sha256 ?? "";
+    message.body = object.body ?? "";
+    return message;
+  },
+};
+
+function createBasePreparedContext(): PreparedContext {
+  return { executionId: "", grantId: "", package: undefined, approvedTemplate: undefined };
+}
+
+export const PreparedContext: MessageFns<PreparedContext> = {
+  encode(message: PreparedContext, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.executionId !== "") {
+      writer.uint32(10).string(message.executionId);
+    }
+    if (message.grantId !== "") {
+      writer.uint32(18).string(message.grantId);
+    }
+    if (message.package !== undefined) {
+      ContextPackage.encode(message.package, writer.uint32(26).fork()).join();
+    }
+    if (message.approvedTemplate !== undefined) {
+      ApprovedTemplate.encode(message.approvedTemplate, writer.uint32(34).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): PreparedContext {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePreparedContext();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.executionId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.grantId = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.package = ContextPackage.decode(reader, reader.uint32());
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.approvedTemplate = ApprovedTemplate.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PreparedContext {
+    return {
+      executionId: isSet(object.executionId)
+        ? globalThis.String(object.executionId)
+        : isSet(object.execution_id)
+        ? globalThis.String(object.execution_id)
+        : "",
+      grantId: isSet(object.grantId)
+        ? globalThis.String(object.grantId)
+        : isSet(object.grant_id)
+        ? globalThis.String(object.grant_id)
+        : "",
+      package: isSet(object.package) ? ContextPackage.fromJSON(object.package) : undefined,
+      approvedTemplate: isSet(object.approvedTemplate)
+        ? ApprovedTemplate.fromJSON(object.approvedTemplate)
+        : isSet(object.approved_template)
+        ? ApprovedTemplate.fromJSON(object.approved_template)
+        : undefined,
+    };
+  },
+
+  toJSON(message: PreparedContext): unknown {
+    const obj: any = {};
+    if (message.executionId !== undefined) {
+      obj.executionId = message.executionId;
+    }
+    if (message.grantId !== undefined) {
+      obj.grantId = message.grantId;
+    }
+    if (message.package !== undefined) {
+      obj.package = ContextPackage.toJSON(message.package);
+    }
+    if (message.approvedTemplate !== undefined) {
+      obj.approvedTemplate = ApprovedTemplate.toJSON(message.approvedTemplate);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<PreparedContext>): PreparedContext {
+    return PreparedContext.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<PreparedContext>): PreparedContext {
+    const message = createBasePreparedContext();
+    message.executionId = object.executionId ?? "";
+    message.grantId = object.grantId ?? "";
+    message.package = (object.package !== undefined && object.package !== null)
+      ? ContextPackage.fromPartial(object.package)
+      : undefined;
+    message.approvedTemplate = (object.approvedTemplate !== undefined && object.approvedTemplate !== null)
+      ? ApprovedTemplate.fromPartial(object.approvedTemplate)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseTemplateRequest(): TemplateRequest {
+  return { scope: undefined, name: "", version: 0, body: "", idempotencyKey: "" };
+}
+
+export const TemplateRequest: MessageFns<TemplateRequest> = {
+  encode(message: TemplateRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.scope !== undefined) {
+      Scope.encode(message.scope, writer.uint32(10).fork()).join();
+    }
+    if (message.name !== "") {
+      writer.uint32(18).string(message.name);
+    }
+    if (message.version !== 0) {
+      writer.uint32(24).int32(message.version);
+    }
+    if (message.body !== "") {
+      writer.uint32(34).string(message.body);
+    }
+    if (message.idempotencyKey !== "") {
+      writer.uint32(42).string(message.idempotencyKey);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): TemplateRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseTemplateRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.scope = Scope.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.name = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.version = reader.int32();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.body = reader.string();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.idempotencyKey = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): TemplateRequest {
+    return {
+      scope: isSet(object.scope) ? Scope.fromJSON(object.scope) : undefined,
+      name: isSet(object.name) ? globalThis.String(object.name) : "",
+      version: isSet(object.version) ? globalThis.Number(object.version) : 0,
+      body: isSet(object.body) ? globalThis.String(object.body) : "",
+      idempotencyKey: isSet(object.idempotencyKey)
+        ? globalThis.String(object.idempotencyKey)
+        : isSet(object.idempotency_key)
+        ? globalThis.String(object.idempotency_key)
+        : "",
+    };
+  },
+
+  toJSON(message: TemplateRequest): unknown {
+    const obj: any = {};
+    if (message.scope !== undefined) {
+      obj.scope = Scope.toJSON(message.scope);
+    }
+    if (message.name !== undefined) {
+      obj.name = message.name;
+    }
+    if (message.version !== undefined) {
+      obj.version = Math.round(message.version);
+    }
+    if (message.body !== undefined) {
+      obj.body = message.body;
+    }
+    if (message.idempotencyKey !== undefined) {
+      obj.idempotencyKey = message.idempotencyKey;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<TemplateRequest>): TemplateRequest {
+    return TemplateRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<TemplateRequest>): TemplateRequest {
+    const message = createBaseTemplateRequest();
+    message.scope = (object.scope !== undefined && object.scope !== null) ? Scope.fromPartial(object.scope) : undefined;
+    message.name = object.name ?? "";
+    message.version = object.version ?? 0;
+    message.body = object.body ?? "";
+    message.idempotencyKey = object.idempotencyKey ?? "";
+    return message;
+  },
+};
+
+function createBaseTemplateDecisionRequest(): TemplateDecisionRequest {
+  return { scope: undefined, templateId: "", expectedSha256: "", decision: "" };
+}
+
+export const TemplateDecisionRequest: MessageFns<TemplateDecisionRequest> = {
+  encode(message: TemplateDecisionRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.scope !== undefined) {
+      Scope.encode(message.scope, writer.uint32(10).fork()).join();
+    }
+    if (message.templateId !== "") {
+      writer.uint32(18).string(message.templateId);
+    }
+    if (message.expectedSha256 !== "") {
+      writer.uint32(26).string(message.expectedSha256);
+    }
+    if (message.decision !== "") {
+      writer.uint32(34).string(message.decision);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): TemplateDecisionRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseTemplateDecisionRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.scope = Scope.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.templateId = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.expectedSha256 = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.decision = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): TemplateDecisionRequest {
+    return {
+      scope: isSet(object.scope) ? Scope.fromJSON(object.scope) : undefined,
+      templateId: isSet(object.templateId)
+        ? globalThis.String(object.templateId)
+        : isSet(object.template_id)
+        ? globalThis.String(object.template_id)
+        : "",
+      expectedSha256: isSet(object.expectedSha256)
+        ? globalThis.String(object.expectedSha256)
+        : isSet(object.expected_sha256)
+        ? globalThis.String(object.expected_sha256)
+        : "",
+      decision: isSet(object.decision) ? globalThis.String(object.decision) : "",
+    };
+  },
+
+  toJSON(message: TemplateDecisionRequest): unknown {
+    const obj: any = {};
+    if (message.scope !== undefined) {
+      obj.scope = Scope.toJSON(message.scope);
+    }
+    if (message.templateId !== undefined) {
+      obj.templateId = message.templateId;
+    }
+    if (message.expectedSha256 !== undefined) {
+      obj.expectedSha256 = message.expectedSha256;
+    }
+    if (message.decision !== undefined) {
+      obj.decision = message.decision;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<TemplateDecisionRequest>): TemplateDecisionRequest {
+    return TemplateDecisionRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<TemplateDecisionRequest>): TemplateDecisionRequest {
+    const message = createBaseTemplateDecisionRequest();
+    message.scope = (object.scope !== undefined && object.scope !== null) ? Scope.fromPartial(object.scope) : undefined;
+    message.templateId = object.templateId ?? "";
+    message.expectedSha256 = object.expectedSha256 ?? "";
+    message.decision = object.decision ?? "";
+    return message;
+  },
+};
+
+function createBaseTemplateResponse(): TemplateResponse {
+  return { template: undefined, state: "" };
+}
+
+export const TemplateResponse: MessageFns<TemplateResponse> = {
+  encode(message: TemplateResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.template !== undefined) {
+      ApprovedTemplate.encode(message.template, writer.uint32(10).fork()).join();
+    }
+    if (message.state !== "") {
+      writer.uint32(18).string(message.state);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): TemplateResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseTemplateResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.template = ApprovedTemplate.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.state = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): TemplateResponse {
+    return {
+      template: isSet(object.template) ? ApprovedTemplate.fromJSON(object.template) : undefined,
+      state: isSet(object.state) ? globalThis.String(object.state) : "",
+    };
+  },
+
+  toJSON(message: TemplateResponse): unknown {
+    const obj: any = {};
+    if (message.template !== undefined) {
+      obj.template = ApprovedTemplate.toJSON(message.template);
+    }
+    if (message.state !== undefined) {
+      obj.state = message.state;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<TemplateResponse>): TemplateResponse {
+    return TemplateResponse.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<TemplateResponse>): TemplateResponse {
+    const message = createBaseTemplateResponse();
+    message.template = (object.template !== undefined && object.template !== null)
+      ? ApprovedTemplate.fromPartial(object.template)
+      : undefined;
+    message.state = object.state ?? "";
+    return message;
+  },
+};
+
+function createBaseReviewRequest(): ReviewRequest {
+  return { scope: undefined, executionId: "", expectedSha256: "", decision: "" };
+}
+
+export const ReviewRequest: MessageFns<ReviewRequest> = {
+  encode(message: ReviewRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.scope !== undefined) {
+      Scope.encode(message.scope, writer.uint32(10).fork()).join();
+    }
+    if (message.executionId !== "") {
+      writer.uint32(18).string(message.executionId);
+    }
+    if (message.expectedSha256 !== "") {
+      writer.uint32(26).string(message.expectedSha256);
+    }
+    if (message.decision !== "") {
+      writer.uint32(34).string(message.decision);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ReviewRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseReviewRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.scope = Scope.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.executionId = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.expectedSha256 = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.decision = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ReviewRequest {
+    return {
+      scope: isSet(object.scope) ? Scope.fromJSON(object.scope) : undefined,
+      executionId: isSet(object.executionId)
+        ? globalThis.String(object.executionId)
+        : isSet(object.execution_id)
+        ? globalThis.String(object.execution_id)
+        : "",
+      expectedSha256: isSet(object.expectedSha256)
+        ? globalThis.String(object.expectedSha256)
+        : isSet(object.expected_sha256)
+        ? globalThis.String(object.expected_sha256)
+        : "",
+      decision: isSet(object.decision) ? globalThis.String(object.decision) : "",
+    };
+  },
+
+  toJSON(message: ReviewRequest): unknown {
+    const obj: any = {};
+    if (message.scope !== undefined) {
+      obj.scope = Scope.toJSON(message.scope);
+    }
+    if (message.executionId !== undefined) {
+      obj.executionId = message.executionId;
+    }
+    if (message.expectedSha256 !== undefined) {
+      obj.expectedSha256 = message.expectedSha256;
+    }
+    if (message.decision !== undefined) {
+      obj.decision = message.decision;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ReviewRequest>): ReviewRequest {
+    return ReviewRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ReviewRequest>): ReviewRequest {
+    const message = createBaseReviewRequest();
+    message.scope = (object.scope !== undefined && object.scope !== null) ? Scope.fromPartial(object.scope) : undefined;
+    message.executionId = object.executionId ?? "";
+    message.expectedSha256 = object.expectedSha256 ?? "";
+    message.decision = object.decision ?? "";
+    return message;
+  },
+};
+
+function createBaseReviewResponse(): ReviewResponse {
+  return { executionId: "", state: "", artifactSha256: "", draft: "", artifact: undefined };
+}
+
+export const ReviewResponse: MessageFns<ReviewResponse> = {
+  encode(message: ReviewResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.executionId !== "") {
+      writer.uint32(10).string(message.executionId);
+    }
+    if (message.state !== "") {
+      writer.uint32(18).string(message.state);
+    }
+    if (message.artifactSha256 !== "") {
+      writer.uint32(26).string(message.artifactSha256);
+    }
+    if (message.draft !== "") {
+      writer.uint32(34).string(message.draft);
+    }
+    if (message.artifact !== undefined) {
+      Struct.encode(Struct.wrap(message.artifact), writer.uint32(42).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ReviewResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseReviewResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.executionId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.state = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.artifactSha256 = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.draft = reader.string();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.artifact = Struct.unwrap(Struct.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ReviewResponse {
+    return {
+      executionId: isSet(object.executionId)
+        ? globalThis.String(object.executionId)
+        : isSet(object.execution_id)
+        ? globalThis.String(object.execution_id)
+        : "",
+      state: isSet(object.state) ? globalThis.String(object.state) : "",
+      artifactSha256: isSet(object.artifactSha256)
+        ? globalThis.String(object.artifactSha256)
+        : isSet(object.artifact_sha256)
+        ? globalThis.String(object.artifact_sha256)
+        : "",
+      draft: isSet(object.draft) ? globalThis.String(object.draft) : "",
+      artifact: isObject(object.artifact) ? object.artifact : undefined,
+    };
+  },
+
+  toJSON(message: ReviewResponse): unknown {
+    const obj: any = {};
+    if (message.executionId !== undefined) {
+      obj.executionId = message.executionId;
+    }
+    if (message.state !== undefined) {
+      obj.state = message.state;
+    }
+    if (message.artifactSha256 !== undefined) {
+      obj.artifactSha256 = message.artifactSha256;
+    }
+    if (message.draft !== undefined) {
+      obj.draft = message.draft;
+    }
+    if (message.artifact !== undefined) {
+      obj.artifact = message.artifact;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ReviewResponse>): ReviewResponse {
+    return ReviewResponse.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ReviewResponse>): ReviewResponse {
+    const message = createBaseReviewResponse();
+    message.executionId = object.executionId ?? "";
+    message.state = object.state ?? "";
+    message.artifactSha256 = object.artifactSha256 ?? "";
+    message.draft = object.draft ?? "";
+    message.artifact = object.artifact ?? undefined;
+    return message;
+  },
+};
+
+function createBaseReviewDeadline(): ReviewDeadline {
+  return { state: "", deadline: undefined };
+}
+
+export const ReviewDeadline: MessageFns<ReviewDeadline> = {
+  encode(message: ReviewDeadline, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.state !== "") {
+      writer.uint32(10).string(message.state);
+    }
+    if (message.deadline !== undefined) {
+      Timestamp.encode(toTimestamp(message.deadline), writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ReviewDeadline {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseReviewDeadline();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.state = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.deadline = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ReviewDeadline {
+    return {
+      state: isSet(object.state) ? globalThis.String(object.state) : "",
+      deadline: isSet(object.deadline) ? fromJsonTimestamp(object.deadline) : undefined,
+    };
+  },
+
+  toJSON(message: ReviewDeadline): unknown {
+    const obj: any = {};
+    if (message.state !== undefined) {
+      obj.state = message.state;
+    }
+    if (message.deadline !== undefined) {
+      obj.deadline = message.deadline.toISOString();
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ReviewDeadline>): ReviewDeadline {
+    return ReviewDeadline.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ReviewDeadline>): ReviewDeadline {
+    const message = createBaseReviewDeadline();
+    message.state = object.state ?? "";
+    message.deadline = object.deadline ?? undefined;
+    return message;
+  },
+};
+
 export type ContextServiceService = typeof ContextServiceService;
 export const ContextServiceService = {
+  prepareExecutionContext: {
+    path: "/lawpilot.context.v1.ContextService/PrepareExecutionContext",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: ExecutionRef): Buffer => Buffer.from(ExecutionRef.encode(value).finish()),
+    requestDeserialize: (value: Buffer): ExecutionRef => ExecutionRef.decode(value),
+    responseSerialize: (value: PreparedContext): Buffer => Buffer.from(PreparedContext.encode(value).finish()),
+    responseDeserialize: (value: Buffer): PreparedContext => PreparedContext.decode(value),
+  },
+  getTemplate: {
+    path: "/lawpilot.context.v1.ContextService/GetTemplate",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: TemplateDecisionRequest): Buffer =>
+      Buffer.from(TemplateDecisionRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): TemplateDecisionRequest => TemplateDecisionRequest.decode(value),
+    responseSerialize: (value: TemplateResponse): Buffer => Buffer.from(TemplateResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): TemplateResponse => TemplateResponse.decode(value),
+  },
+  createTemplate: {
+    path: "/lawpilot.context.v1.ContextService/CreateTemplate",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: TemplateRequest): Buffer => Buffer.from(TemplateRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): TemplateRequest => TemplateRequest.decode(value),
+    responseSerialize: (value: TemplateResponse): Buffer => Buffer.from(TemplateResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): TemplateResponse => TemplateResponse.decode(value),
+  },
+  decideTemplate: {
+    path: "/lawpilot.context.v1.ContextService/DecideTemplate",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: TemplateDecisionRequest): Buffer =>
+      Buffer.from(TemplateDecisionRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): TemplateDecisionRequest => TemplateDecisionRequest.decode(value),
+    responseSerialize: (value: TemplateResponse): Buffer => Buffer.from(TemplateResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): TemplateResponse => TemplateResponse.decode(value),
+  },
+  getLegalReview: {
+    path: "/lawpilot.context.v1.ContextService/GetLegalReview",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: ReviewRequest): Buffer => Buffer.from(ReviewRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): ReviewRequest => ReviewRequest.decode(value),
+    responseSerialize: (value: ReviewResponse): Buffer => Buffer.from(ReviewResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): ReviewResponse => ReviewResponse.decode(value),
+  },
+  decideLegalReview: {
+    path: "/lawpilot.context.v1.ContextService/DecideLegalReview",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: ReviewRequest): Buffer => Buffer.from(ReviewRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): ReviewRequest => ReviewRequest.decode(value),
+    responseSerialize: (value: ReviewResponse): Buffer => Buffer.from(ReviewResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): ReviewResponse => ReviewResponse.decode(value),
+  },
+  getReviewDeadline: {
+    path: "/lawpilot.context.v1.ContextService/GetReviewDeadline",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: ExecutionRef): Buffer => Buffer.from(ExecutionRef.encode(value).finish()),
+    requestDeserialize: (value: Buffer): ExecutionRef => ExecutionRef.decode(value),
+    responseSerialize: (value: ReviewDeadline): Buffer => Buffer.from(ReviewDeadline.encode(value).finish()),
+    responseDeserialize: (value: Buffer): ReviewDeadline => ReviewDeadline.decode(value),
+  },
+  expireReview: {
+    path: "/lawpilot.context.v1.ContextService/ExpireReview",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: ExecutionRef): Buffer => Buffer.from(ExecutionRef.encode(value).finish()),
+    requestDeserialize: (value: Buffer): ExecutionRef => ExecutionRef.decode(value),
+    responseSerialize: (value: ReviewDeadline): Buffer => Buffer.from(ReviewDeadline.encode(value).finish()),
+    responseDeserialize: (value: Buffer): ReviewDeadline => ReviewDeadline.decode(value),
+  },
+  ingestProcessed: {
+    path: "/lawpilot.context.v1.ContextService/IngestProcessed",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: IngestProcessedRequest): Buffer =>
+      Buffer.from(IngestProcessedRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): IngestProcessedRequest => IngestProcessedRequest.decode(value),
+    responseSerialize: (value: IngestTextResponse): Buffer => Buffer.from(IngestTextResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): IngestTextResponse => IngestTextResponse.decode(value),
+  },
   ingestText: {
     path: "/lawpilot.context.v1.ContextService/IngestText",
     requestStream: false,
@@ -2692,6 +4018,15 @@ export const ContextServiceService = {
 } as const;
 
 export interface ContextServiceServer extends UntypedServiceImplementation {
+  prepareExecutionContext: handleUnaryCall<ExecutionRef, PreparedContext>;
+  getTemplate: handleUnaryCall<TemplateDecisionRequest, TemplateResponse>;
+  createTemplate: handleUnaryCall<TemplateRequest, TemplateResponse>;
+  decideTemplate: handleUnaryCall<TemplateDecisionRequest, TemplateResponse>;
+  getLegalReview: handleUnaryCall<ReviewRequest, ReviewResponse>;
+  decideLegalReview: handleUnaryCall<ReviewRequest, ReviewResponse>;
+  getReviewDeadline: handleUnaryCall<ExecutionRef, ReviewDeadline>;
+  expireReview: handleUnaryCall<ExecutionRef, ReviewDeadline>;
+  ingestProcessed: handleUnaryCall<IngestProcessedRequest, IngestTextResponse>;
   ingestText: handleUnaryCall<IngestTextRequest, IngestTextResponse>;
   deleteDocument: handleUnaryCall<DeleteDocumentRequest, DeleteDocumentResponse>;
   buildContext: handleUnaryCall<BuildContextRequest, BuildContextResponse>;
@@ -2702,6 +4037,141 @@ export interface ContextServiceServer extends UntypedServiceImplementation {
 }
 
 export interface ContextServiceClient extends Client {
+  prepareExecutionContext(
+    request: ExecutionRef,
+    callback: (error: ServiceError | null, response: PreparedContext) => void,
+  ): ClientUnaryCall;
+  prepareExecutionContext(
+    request: ExecutionRef,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: PreparedContext) => void,
+  ): ClientUnaryCall;
+  prepareExecutionContext(
+    request: ExecutionRef,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: PreparedContext) => void,
+  ): ClientUnaryCall;
+  getTemplate(
+    request: TemplateDecisionRequest,
+    callback: (error: ServiceError | null, response: TemplateResponse) => void,
+  ): ClientUnaryCall;
+  getTemplate(
+    request: TemplateDecisionRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: TemplateResponse) => void,
+  ): ClientUnaryCall;
+  getTemplate(
+    request: TemplateDecisionRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: TemplateResponse) => void,
+  ): ClientUnaryCall;
+  createTemplate(
+    request: TemplateRequest,
+    callback: (error: ServiceError | null, response: TemplateResponse) => void,
+  ): ClientUnaryCall;
+  createTemplate(
+    request: TemplateRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: TemplateResponse) => void,
+  ): ClientUnaryCall;
+  createTemplate(
+    request: TemplateRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: TemplateResponse) => void,
+  ): ClientUnaryCall;
+  decideTemplate(
+    request: TemplateDecisionRequest,
+    callback: (error: ServiceError | null, response: TemplateResponse) => void,
+  ): ClientUnaryCall;
+  decideTemplate(
+    request: TemplateDecisionRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: TemplateResponse) => void,
+  ): ClientUnaryCall;
+  decideTemplate(
+    request: TemplateDecisionRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: TemplateResponse) => void,
+  ): ClientUnaryCall;
+  getLegalReview(
+    request: ReviewRequest,
+    callback: (error: ServiceError | null, response: ReviewResponse) => void,
+  ): ClientUnaryCall;
+  getLegalReview(
+    request: ReviewRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: ReviewResponse) => void,
+  ): ClientUnaryCall;
+  getLegalReview(
+    request: ReviewRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: ReviewResponse) => void,
+  ): ClientUnaryCall;
+  decideLegalReview(
+    request: ReviewRequest,
+    callback: (error: ServiceError | null, response: ReviewResponse) => void,
+  ): ClientUnaryCall;
+  decideLegalReview(
+    request: ReviewRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: ReviewResponse) => void,
+  ): ClientUnaryCall;
+  decideLegalReview(
+    request: ReviewRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: ReviewResponse) => void,
+  ): ClientUnaryCall;
+  getReviewDeadline(
+    request: ExecutionRef,
+    callback: (error: ServiceError | null, response: ReviewDeadline) => void,
+  ): ClientUnaryCall;
+  getReviewDeadline(
+    request: ExecutionRef,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: ReviewDeadline) => void,
+  ): ClientUnaryCall;
+  getReviewDeadline(
+    request: ExecutionRef,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: ReviewDeadline) => void,
+  ): ClientUnaryCall;
+  expireReview(
+    request: ExecutionRef,
+    callback: (error: ServiceError | null, response: ReviewDeadline) => void,
+  ): ClientUnaryCall;
+  expireReview(
+    request: ExecutionRef,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: ReviewDeadline) => void,
+  ): ClientUnaryCall;
+  expireReview(
+    request: ExecutionRef,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: ReviewDeadline) => void,
+  ): ClientUnaryCall;
+  ingestProcessed(
+    request: IngestProcessedRequest,
+    callback: (error: ServiceError | null, response: IngestTextResponse) => void,
+  ): ClientUnaryCall;
+  ingestProcessed(
+    request: IngestProcessedRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: IngestTextResponse) => void,
+  ): ClientUnaryCall;
+  ingestProcessed(
+    request: IngestProcessedRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: IngestTextResponse) => void,
+  ): ClientUnaryCall;
   ingestText(
     request: IngestTextRequest,
     callback: (error: ServiceError | null, response: IngestTextResponse) => void,
@@ -2857,6 +4327,10 @@ function longToNumber(int64: { toString(): string }): number {
     throw new globalThis.Error("Value is smaller than Number.MIN_SAFE_INTEGER");
   }
   return num;
+}
+
+function isObject(value: any): boolean {
+  return typeof value === "object" && value !== null;
 }
 
 function isSet(value: any): boolean {

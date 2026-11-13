@@ -218,9 +218,15 @@ func (s *Service) SyncStatus(ctx context.Context, r *pb.SyncStatusRequest) (*pb.
 	if err != nil {
 		return nil, err
 	}
-	reply := &pb.SyncStatusResponse{Authority: "lawpilot-native", State: "native_only", Coverage: "native_only", Warnings: []string{"No Clio or external calendar connection is implemented."}}
+	reply := &pb.SyncStatusResponse{Authority: "lawpilot-native", State: "native_only", Coverage: "native_only", Warnings: []string{"This is a native calendar. Provider polling jobs are managed through provider-connections."}}
 	err = s.tx(ctx, tenant, r.CalendarId, false, func(tx pgx.Tx) error {
-		_, _, err := authorize(ctx, tx, tenant, r.CalendarId, actor(ctx), "read")
+		calendar, _, err := authorize(ctx, tx, tenant, r.CalendarId, actor(ctx), "read")
+		if err == nil && calendar.Authority != "lawpilot-native" {
+			reply.Authority = calendar.Authority
+			reply.State = "provider_polling"
+			reply.Coverage = "imported_snapshot"
+			reply.Warnings = []string{"Read-only imported snapshot; check the provider synchronization job for freshness. Remote deletions, recurrence reconciliation and webhooks are not synchronized."}
+		}
 		return err
 	})
 	return reply, err

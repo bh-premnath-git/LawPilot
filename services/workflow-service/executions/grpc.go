@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	ctxpb "github.com/bh-premnath-git/LawPilot/contracts/gen/go/lawpilot/context/v1"
 	pb "github.com/bh-premnath-git/LawPilot/contracts/gen/go/lawpilot/rpc/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -23,6 +24,19 @@ func (a *Activities) invokeRPC(ctx context.Context, e Execution) ([]byte, error)
 	request := &pb.ExecuteCapabilityRequest{ExecutionId: e.ExecutionID, TenantId: e.TenantID, PrincipalId: e.PrincipalID, CapabilityId: e.CapabilityID, Input: data, TraceId: e.ExecutionID}
 	if e.MatterID != nil {
 		request.MatterId = *e.MatterID
+	}
+	if a.LegalAI && a.Registry[e.CapabilityID].RequiresMatter {
+		if a.ContextRPC == nil {
+			return nil, permanent("TRUSTED_CONTEXT_REQUIRED")
+		}
+		prepared, err := a.ContextRPC.PrepareExecutionContext(ctx, &ctxpb.ExecutionRef{TenantId: e.TenantID, ExecutionId: e.ExecutionID})
+		if err != nil {
+			if status.Code(err) == codes.Unavailable || status.Code(err) == codes.DeadlineExceeded {
+				return nil, errors.New("CONTEXT_UNAVAILABLE")
+			}
+			return nil, permanent("TRUSTED_CONTEXT_REJECTED")
+		}
+		request.TrustedContext = prepared
 	}
 	reply, err := a.RPC.ExecuteCapability(ctx, request)
 	if err != nil {

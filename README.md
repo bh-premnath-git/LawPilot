@@ -8,17 +8,17 @@
 |---|---|---|
 | NestJS platform API | Durable mock execution API | Keycloak identity/grants, atomic 202 acceptance, owner-only polling/cancel/requeue and database readiness |
 | TypeScript Root Supervisor | Runnable starter | mTLS gRPC, versioned capability discovery and bounded delegation to Python |
-| Python AI capability service | Runnable **safe mock** | Four registered capabilities, schema-checked requests, explicit abstention for unsupported evidence |
-| Go provider router | Runnable starter | Capability discovery, mock legal provider and explicit non-implemented Clio adapter |
+| Python AI capability service | Configured model adapter; disabled by default | Structured generation from authorized snapshots; exact quotes, no tools, mandatory distinct attorney review |
+| Go integration service | Configured adapters; disabled by default | Clio Manage + generic OAuth, encrypted tokens, durable polling imports and approved conditional matter-title updates |
 | Go context engine + domain events | Runnable native text path | Versioned text, authorized lexical/configured vector retrieval, expiring context snapshots, exact-quote evidence checks, leased journal/consumer inboxes and authorized SSE |
-| Go native calendar | Runnable native domain | Tenant/matter ACLs, typed time/recurrence, explicit shared/exclusive overlap policy, revisions, approval proposals, calendar occupancy and Temporal in-app reminder state; external sync pending |
+| Go native calendar | Runnable native domain | Tenant/matter ACLs, typed time/recurrence, explicit shared/exclusive overlap policy, revisions, approval proposals, calendar occupancy and Temporal in-app reminder state; configured provider polling imports |
 | PostgreSQL + pgvector | PostgreSQL 18 / pgvector 0.8.7 | Canonical records, permissions, audit/outbox, tenant RLS and vector similarity primitives |
 | Keycloak | Dev infrastructure | Importable demo realm, OIDC/JWKS boundary; no production users provisioned |
-| Go Temporal worker + dispatcher | Runnable local mock path | Leased/fenced command delivery, persistent Temporal workflows, bounded activity retries and recovery; authoritative approvals pending |
-| Rust document worker | Source scaffold | SHA-256/metadata processor; **no legal PDF extraction** |
+| Go Temporal worker + dispatcher | Runnable local mock path | Leased/fenced command delivery, persistent Temporal workflows, bounded activity retries and recovery, authoritative legal review and durable integration jobs |
+| Rust document worker | Isolated PDF/DOCX text parser | Bounded extraction, scanned private uploads, PDF page provenance and immutable source hashes |
 | OpenTelemetry | AI request-path instrumentation | API spans and Supervisor → Python traces; durable Go/Temporal trace propagation pending |
-| Clio OAuth + webhooks | **NOT IMPLEMENTED** | Exact API boundaries and handshake/security checklist, no credentials or pretend success |
-| Legal drafting / real LLM | **NOT IMPLEMENTED** | Retrieval context and exact quotation are implemented separately; AI capabilities remain safe mocks |
+| Clio OAuth + synchronization | Configured implementation | Single-use OAuth state and paged imports; live account validation, webhooks/deletion/recurrence reconciliation remain pending |
+| Legal drafting / real LLM | Configured implementation | Approved templates, input-bound context grants and full artifact review; credentials supplied later |
 
 ## Backend layers and implementation order
 
@@ -39,6 +39,8 @@ See [layer status and upgrade steps](docs/LAYER_STATUS.md) for the fixes, tests 
 See [calendar and gRPC setup, contracts, endpoints and limitations](docs/CALENDAR_GRPC.md). Apply missing migrations 007 and 008 to an existing PostgreSQL 18 database before starting the new calendar service.
 
 See [general events and secure context setup, APIs and scope](docs/EVENTS_CONTEXT.md). Apply missing migrations **009 and 010** and regenerate development workload certificates to add the context-engine identity. Embedding settings are optional; unset means explicitly lexical retrieval.
+
+See [configured file storage, Clio/multi-provider sync, real AI and operations](docs/CONFIGURED_INTEGRATIONS.md) for migrations **011–015**, exact environment variables, API routes and supported scope. All external features default off; the environment sample contains blank credential fields for future values.
 
 ## Architecture rules
 
@@ -93,7 +95,7 @@ docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -c 
 docker compose --env-file .env exec -T postgres psql -U postgres -d lawpilot -v ON_ERROR_STOP=1 < db/tests/pgvector.sql
 ```
 
-pgvector is enabled as infrastructure. Embedding generation, matter-scoped retrieval and verified citation/RAG workflows are still pending; no model-specific vector columns are created by this change.
+pgvector supports permission-scoped hybrid retrieval with optional configured embeddings. Without embedding credentials retrieval is explicitly lexical; citation and source-version checks still apply.
 
 ### Local environment variables
 

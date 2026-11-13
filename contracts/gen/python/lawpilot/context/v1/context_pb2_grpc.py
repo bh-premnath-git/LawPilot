@@ -34,6 +34,51 @@ class ContextServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
+        self.PrepareExecutionContext = channel.unary_unary(
+                '/lawpilot.context.v1.ContextService/PrepareExecutionContext',
+                request_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.ExecutionRef.SerializeToString,
+                response_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.PreparedContext.FromString,
+                _registered_method=True)
+        self.GetTemplate = channel.unary_unary(
+                '/lawpilot.context.v1.ContextService/GetTemplate',
+                request_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.TemplateDecisionRequest.SerializeToString,
+                response_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.TemplateResponse.FromString,
+                _registered_method=True)
+        self.CreateTemplate = channel.unary_unary(
+                '/lawpilot.context.v1.ContextService/CreateTemplate',
+                request_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.TemplateRequest.SerializeToString,
+                response_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.TemplateResponse.FromString,
+                _registered_method=True)
+        self.DecideTemplate = channel.unary_unary(
+                '/lawpilot.context.v1.ContextService/DecideTemplate',
+                request_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.TemplateDecisionRequest.SerializeToString,
+                response_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.TemplateResponse.FromString,
+                _registered_method=True)
+        self.GetLegalReview = channel.unary_unary(
+                '/lawpilot.context.v1.ContextService/GetLegalReview',
+                request_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.ReviewRequest.SerializeToString,
+                response_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.ReviewResponse.FromString,
+                _registered_method=True)
+        self.DecideLegalReview = channel.unary_unary(
+                '/lawpilot.context.v1.ContextService/DecideLegalReview',
+                request_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.ReviewRequest.SerializeToString,
+                response_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.ReviewResponse.FromString,
+                _registered_method=True)
+        self.GetReviewDeadline = channel.unary_unary(
+                '/lawpilot.context.v1.ContextService/GetReviewDeadline',
+                request_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.ExecutionRef.SerializeToString,
+                response_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.ReviewDeadline.FromString,
+                _registered_method=True)
+        self.ExpireReview = channel.unary_unary(
+                '/lawpilot.context.v1.ContextService/ExpireReview',
+                request_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.ExecutionRef.SerializeToString,
+                response_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.ReviewDeadline.FromString,
+                _registered_method=True)
+        self.IngestProcessed = channel.unary_unary(
+                '/lawpilot.context.v1.ContextService/IngestProcessed',
+                request_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.IngestProcessedRequest.SerializeToString,
+                response_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.IngestTextResponse.FromString,
+                _registered_method=True)
         self.IngestText = channel.unary_unary(
                 '/lawpilot.context.v1.ContextService/IngestText',
                 request_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.IngestTextRequest.SerializeToString,
@@ -73,6 +118,60 @@ class ContextServiceStub(object):
 
 class ContextServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
+
+    def PrepareExecutionContext(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetTemplate(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CreateTemplate(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DecideTemplate(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetLegalReview(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DecideLegalReview(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetReviewDeadline(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ExpireReview(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def IngestProcessed(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def IngestText(self, request, context):
         """Missing associated documentation comment in .proto file."""
@@ -119,6 +218,51 @@ class ContextServiceServicer(object):
 
 def add_ContextServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
+            'PrepareExecutionContext': grpc.unary_unary_rpc_method_handler(
+                    servicer.PrepareExecutionContext,
+                    request_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.ExecutionRef.FromString,
+                    response_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.PreparedContext.SerializeToString,
+            ),
+            'GetTemplate': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetTemplate,
+                    request_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.TemplateDecisionRequest.FromString,
+                    response_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.TemplateResponse.SerializeToString,
+            ),
+            'CreateTemplate': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateTemplate,
+                    request_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.TemplateRequest.FromString,
+                    response_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.TemplateResponse.SerializeToString,
+            ),
+            'DecideTemplate': grpc.unary_unary_rpc_method_handler(
+                    servicer.DecideTemplate,
+                    request_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.TemplateDecisionRequest.FromString,
+                    response_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.TemplateResponse.SerializeToString,
+            ),
+            'GetLegalReview': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetLegalReview,
+                    request_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.ReviewRequest.FromString,
+                    response_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.ReviewResponse.SerializeToString,
+            ),
+            'DecideLegalReview': grpc.unary_unary_rpc_method_handler(
+                    servicer.DecideLegalReview,
+                    request_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.ReviewRequest.FromString,
+                    response_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.ReviewResponse.SerializeToString,
+            ),
+            'GetReviewDeadline': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetReviewDeadline,
+                    request_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.ExecutionRef.FromString,
+                    response_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.ReviewDeadline.SerializeToString,
+            ),
+            'ExpireReview': grpc.unary_unary_rpc_method_handler(
+                    servicer.ExpireReview,
+                    request_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.ExecutionRef.FromString,
+                    response_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.ReviewDeadline.SerializeToString,
+            ),
+            'IngestProcessed': grpc.unary_unary_rpc_method_handler(
+                    servicer.IngestProcessed,
+                    request_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.IngestProcessedRequest.FromString,
+                    response_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.IngestTextResponse.SerializeToString,
+            ),
             'IngestText': grpc.unary_unary_rpc_method_handler(
                     servicer.IngestText,
                     request_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.IngestTextRequest.FromString,
@@ -164,6 +308,249 @@ def add_ContextServiceServicer_to_server(servicer, server):
  # This class is part of an EXPERIMENTAL API.
 class ContextService(object):
     """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def PrepareExecutionContext(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/lawpilot.context.v1.ContextService/PrepareExecutionContext',
+            lawpilot_dot_context_dot_v1_dot_context__pb2.ExecutionRef.SerializeToString,
+            lawpilot_dot_context_dot_v1_dot_context__pb2.PreparedContext.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetTemplate(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/lawpilot.context.v1.ContextService/GetTemplate',
+            lawpilot_dot_context_dot_v1_dot_context__pb2.TemplateDecisionRequest.SerializeToString,
+            lawpilot_dot_context_dot_v1_dot_context__pb2.TemplateResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CreateTemplate(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/lawpilot.context.v1.ContextService/CreateTemplate',
+            lawpilot_dot_context_dot_v1_dot_context__pb2.TemplateRequest.SerializeToString,
+            lawpilot_dot_context_dot_v1_dot_context__pb2.TemplateResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DecideTemplate(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/lawpilot.context.v1.ContextService/DecideTemplate',
+            lawpilot_dot_context_dot_v1_dot_context__pb2.TemplateDecisionRequest.SerializeToString,
+            lawpilot_dot_context_dot_v1_dot_context__pb2.TemplateResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetLegalReview(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/lawpilot.context.v1.ContextService/GetLegalReview',
+            lawpilot_dot_context_dot_v1_dot_context__pb2.ReviewRequest.SerializeToString,
+            lawpilot_dot_context_dot_v1_dot_context__pb2.ReviewResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DecideLegalReview(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/lawpilot.context.v1.ContextService/DecideLegalReview',
+            lawpilot_dot_context_dot_v1_dot_context__pb2.ReviewRequest.SerializeToString,
+            lawpilot_dot_context_dot_v1_dot_context__pb2.ReviewResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetReviewDeadline(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/lawpilot.context.v1.ContextService/GetReviewDeadline',
+            lawpilot_dot_context_dot_v1_dot_context__pb2.ExecutionRef.SerializeToString,
+            lawpilot_dot_context_dot_v1_dot_context__pb2.ReviewDeadline.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ExpireReview(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/lawpilot.context.v1.ContextService/ExpireReview',
+            lawpilot_dot_context_dot_v1_dot_context__pb2.ExecutionRef.SerializeToString,
+            lawpilot_dot_context_dot_v1_dot_context__pb2.ReviewDeadline.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def IngestProcessed(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/lawpilot.context.v1.ContextService/IngestProcessed',
+            lawpilot_dot_context_dot_v1_dot_context__pb2.IngestProcessedRequest.SerializeToString,
+            lawpilot_dot_context_dot_v1_dot_context__pb2.IngestTextResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
 
     @staticmethod
     def IngestText(request,

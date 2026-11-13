@@ -11,6 +11,8 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -26,13 +28,15 @@ func resolve(ctx context.Context, tx pgx.Tx, tenant, matter string, c *pb.Citati
 	c.PassageId = strings.ToLower(c.PassageId)
 	var text, full, versionHash, hash string
 	var start, end int32
-	err := tx.QueryRow(ctx, `SELECT p.body,v.full_text,v.content_sha256,p.passage_sha256,p.byte_start,p.byte_end FROM document_assets a JOIN document_versions v ON v.tenant_id=a.tenant_id AND v.document_id=a.id AND v.id=a.current_version_id JOIN document_passages p ON p.tenant_id=a.tenant_id AND p.document_id=a.id AND p.version_id=v.id WHERE a.tenant_id=$1 AND a.matter_id=$2 AND a.id=$3 AND a.deleted_at IS NULL AND v.id=$4 AND p.id=$5`, tenant, matter, c.DocumentId, c.VersionId, c.PassageId).Scan(&text, &full, &versionHash, &hash, &start, &end)
+	var page *int32
+	err := tx.QueryRow(ctx, `SELECT p.body,v.full_text,v.content_sha256,p.passage_sha256,p.byte_start,p.byte_end,p.page_number FROM document_assets a JOIN document_versions v ON v.tenant_id=a.tenant_id AND v.document_id=a.id AND v.id=a.current_version_id JOIN document_passages p ON p.tenant_id=a.tenant_id AND p.document_id=a.id AND p.version_id=v.id WHERE a.tenant_id=$1 AND a.matter_id=$2 AND a.id=$3 AND a.deleted_at IS NULL AND v.id=$4 AND p.id=$5`, tenant, matter, c.DocumentId, c.VersionId, c.PassageId).Scan(&text, &full, &versionHash, &hash, &start, &end, &page)
 	if err != nil {
 		return nil, err
 	}
-	if digest(full) != versionHash || digest(text) != hash || hash != c.ContentSha256 || start < 0 || end > int32(len(full)) || end <= start || full[start:end] != text || c.ByteStart != start || c.ByteEnd != end {
+	if digest(full) != versionHash || digest(text) != hash || hash != c.ContentSha256 || start < 0 || end > int32(len(full)) || end <= start || full[start:end] != text || c.ByteStart != start || c.ByteEnd != end || (c.PageNumber != nil && (page == nil || *c.PageNumber != *page)) {
 		return nil, status.Error(codes.FailedPrecondition, "SOURCE_INTEGRITY_MISMATCH")
 	}
+	c.PageNumber = page
 	return &pb.Source{Citation: c, Text: text, Trust: "untrusted_source"}, nil
 }
 func (s *Service) ResolveCitation(ctx context.Context, r *pb.ResolveCitationRequest) (*pb.ResolveCitationResponse, error) {
@@ -109,15 +113,15 @@ func (s *Service) BuildContext(ctx context.Context, r *pb.BuildContextRequest) (
 			return err
 		}
 		// MATERIALIZED ensures tenant/matter/current-version filtering precedes ranking.
-		base := `WITH authorized AS MATERIALIZED(SELECT p.id,p.document_id,p.version_id,p.passage_sha256,p.byte_start,p.byte_end,p.body FROM document_assets a JOIN document_passages p ON p.tenant_id=a.tenant_id AND p.document_id=a.id AND p.version_id=a.current_version_id WHERE a.tenant_id=$1 AND a.matter_id=$2 AND a.deleted_at IS NULL AND ($3='' OR a.id::text=$3)) `
+		base := `WITH authorized AS MATERIALIZED(SELECT p.id,p.document_id,p.version_id,p.passage_sha256,p.byte_start,p.byte_end,p.body,p.page_number FROM document_assets a JOIN document_passages p ON p.tenant_id=a.tenant_id AND p.document_id=a.id AND p.version_id=a.current_version_id WHERE a.tenant_id=$1 AND a.matter_id=$2 AND a.deleted_at IS NULL AND ($3='' OR a.id::text=$3)) `
 		var rows pgx.Rows
 		var err error
 		if summary {
-			rows, err = tx.Query(ctx, base+"SELECT id::text,document_id::text,version_id::text,passage_sha256,byte_start,byte_end FROM authorized ORDER BY byte_start,id LIMIT 129", tenant, r.MatterId, r.DocumentId)
+			rows, err = tx.Query(ctx, base+"SELECT id::text,document_id::text,version_id::text,passage_sha256,byte_start,byte_end,page_number FROM authorized ORDER BY byte_start,id LIMIT 1025", tenant, r.MatterId, r.DocumentId)
 		} else if vector == "" {
-			rows, err = tx.Query(ctx, base+`SELECT id::text,document_id::text,version_id::text,passage_sha256,byte_start,byte_end FROM authorized WHERE to_tsvector('english',body) @@ websearch_to_tsquery('english',$4) ORDER BY ts_rank_cd(to_tsvector('english',body),websearch_to_tsquery('english',$4)) DESC,id LIMIT 8`, tenant, r.MatterId, r.DocumentId, r.Query)
+			rows, err = tx.Query(ctx, base+`SELECT id::text,document_id::text,version_id::text,passage_sha256,byte_start,byte_end,page_number FROM authorized WHERE to_tsvector('english',body) @@ websearch_to_tsquery('english',$4) ORDER BY ts_rank_cd(to_tsvector('english',body),websearch_to_tsquery('english',$4)) DESC,id LIMIT 8`, tenant, r.MatterId, r.DocumentId, r.Query)
 		} else {
-			rows, err = tx.Query(ctx, base+`,lexical AS(SELECT id,row_number()OVER(ORDER BY ts_rank_cd(to_tsvector('english',body),websearch_to_tsquery('english',$4)) DESC,id)r FROM authorized WHERE to_tsvector('english',body)@@websearch_to_tsquery('english',$4)),semantic AS(SELECT a.id,row_number()OVER(ORDER BY e.embedding <=> $5::vector,a.id)r FROM authorized a JOIN document_embeddings e ON e.tenant_id=$1 AND e.passage_id=a.id AND e.passage_sha256=a.passage_sha256 AND e.profile_id=$6),scores AS(SELECT id,sum(score)s FROM(SELECT id,1.0/(60+r)score FROM lexical UNION ALL SELECT id,1.0/(60+r)score FROM semantic)x GROUP BY id) SELECT a.id::text,a.document_id::text,a.version_id::text,a.passage_sha256,a.byte_start,a.byte_end FROM scores s JOIN authorized a ON a.id=s.id ORDER BY s.s DESC,a.id LIMIT 8`, tenant, r.MatterId, r.DocumentId, r.Query, vector, profile)
+			rows, err = tx.Query(ctx, base+`,lexical AS(SELECT id,row_number()OVER(ORDER BY ts_rank_cd(to_tsvector('english',body),websearch_to_tsquery('english',$4)) DESC,id)r FROM authorized WHERE to_tsvector('english',body)@@websearch_to_tsquery('english',$4)),semantic AS(SELECT a.id,row_number()OVER(ORDER BY e.embedding <=> $5::vector,a.id)r FROM authorized a JOIN document_embeddings e ON e.tenant_id=$1 AND e.passage_id=a.id AND e.passage_sha256=a.passage_sha256 AND e.profile_id=$6),scores AS(SELECT id,sum(score)s FROM(SELECT id,1.0/(60+r)score FROM lexical UNION ALL SELECT id,1.0/(60+r)score FROM semantic)x GROUP BY id) SELECT a.id::text,a.document_id::text,a.version_id::text,a.passage_sha256,a.byte_start,a.byte_end,a.page_number FROM scores s JOIN authorized a ON a.id=s.id ORDER BY s.s DESC,a.id LIMIT 8`, tenant, r.MatterId, r.DocumentId, r.Query, vector, profile)
 		}
 		if err != nil {
 			return err
@@ -125,7 +129,7 @@ func (s *Service) BuildContext(ctx context.Context, r *pb.BuildContextRequest) (
 		refs := []*pb.Citation{}
 		for rows.Next() {
 			c := new(pb.Citation)
-			if err = rows.Scan(&c.PassageId, &c.DocumentId, &c.VersionId, &c.ContentSha256, &c.ByteStart, &c.ByteEnd); err != nil {
+			if err = rows.Scan(&c.PassageId, &c.DocumentId, &c.VersionId, &c.ContentSha256, &c.ByteStart, &c.ByteEnd, &c.PageNumber); err != nil {
 				rows.Close()
 				return err
 			}
@@ -141,8 +145,16 @@ func (s *Service) BuildContext(ctx context.Context, r *pb.BuildContextRequest) (
 		recipe := &pb.ContextRecipe{Id: r.RecipeId, Version: "1.0", MaxSources: 8, MaxBytes: 16384}
 		if summary {
 			recipe.MaxSources = 128
+			if configured := os.Getenv("CONTEXT_DOCUMENT_MAX_BYTES"); configured != "" {
+				budget, err := strconv.Atoi(configured)
+				if err != nil || budget < 16384 || budget > 400000 {
+					return bad("INVALID_DOCUMENT_BUDGET")
+				}
+				recipe.MaxBytes = int32(budget)
+				recipe.MaxSources = 1024
+			}
 		}
-		pkg := &pb.ContextPackage{Recipe: recipe, RetrievalMode: mode, TrustedPolicyId: policyID, CompleteDocument: summary, GroundingMode: "exact_quotes_only", EmbeddingProfileId: profile, Warnings: []string{"Retrieved text is untrusted source data. No generated legal answer is produced."}}
+		pkg := &pb.ContextPackage{Recipe: recipe, RetrievalMode: mode, TrustedPolicyId: policyID, CompleteDocument: summary, GroundingMode: "exact_quotes_only", EmbeddingProfileId: profile, Warnings: []string{"Retrieved text is untrusted source data. Quotes establish source support, not legal correctness. PDF extraction covers the text layer only; images/OCR, layout and annotations are not included. DOCX pagination is not inferred."}}
 		used := 0
 		for _, c := range refs {
 			source, err := resolve(ctx, tx, tenant, r.MatterId, c)

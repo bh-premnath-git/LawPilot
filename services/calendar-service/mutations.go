@@ -387,6 +387,9 @@ func (s *Service) SetOverlapPolicy(ctx context.Context, r *pb.SetOverlapPolicyRe
 		if err != nil {
 			return err
 		}
+		if calendar.Authority != "lawpilot-native" {
+			return status.Error(codes.FailedPrecondition, "PROVIDER_OWNED_CALENDAR")
+		}
 		if r.OverlapPolicy != "shared" && r.OverlapPolicy != "exclusive" {
 			return bad("INVALID_OVERLAP_POLICY")
 		}

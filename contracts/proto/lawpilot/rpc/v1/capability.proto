@@ -2,10 +2,11 @@ syntax = "proto3";
 package lawpilot.rpc.v1;
 option go_package = "github.com/bh-premnath-git/LawPilot/contracts/gen/go/lawpilot/rpc/v1;rpcv1";
 import "google/protobuf/struct.proto";
+import "lawpilot/context/v1/context.proto";
 // Input/output Struct values are untrusted capability data, never policy or tool commands.
 message ExecuteCapabilityRequest {
  string execution_id = 1; string tenant_id = 2; string principal_id = 3; string matter_id = 4;
- string capability_id = 5; google.protobuf.Struct input = 6; string trace_id = 7;
+ string capability_id = 5; google.protobuf.Struct input = 6; string trace_id = 7; lawpilot.context.v1.PreparedContext trusted_context = 8;
 }
 message EvidenceRef { string document_id = 1; string document_version_id = 2; string passage_id = 3; optional int32 page_number = 4; string content_sha256 = 5; }
 message ExecuteCapabilityResponse {

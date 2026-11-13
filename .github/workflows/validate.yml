@@ -154,6 +154,7 @@ jobs:
           docker run --rm --entrypoint sh lawpilot-integration:ci -c 'test "$(id -u)" = 10001'
           docker build -f services/document-worker/Dockerfile -t lawpilot-parser:ci .
           docker run --rm --entrypoint sh lawpilot-parser:ci -c 'test "$(id -u)" = 10001 && command -v pdftotext && test -x /usr/local/bin/lawpilot-document-worker'
+          python scripts/test_parser_image.py lawpilot-parser:ci
       - name: Build non-root execution image
         run: |
           docker build -f services/workflow-service/Dockerfile -t lawpilot-execution-worker:ci .

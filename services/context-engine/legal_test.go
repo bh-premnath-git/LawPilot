@@ -68,6 +68,11 @@ func TestConfiguredDraftRequiresDistinctReviewAndCurrentSources(t *testing.T) {
 	if err != nil || decision.State != "completed" {
 		t.Fatal("distinct approval", err)
 	}
+	exec("DELETE FROM principal_capabilities WHERE tenant_id=$1 AND principal_id=$2 AND capability_id='context.read'", f.tenant, reviewer)
+	if _, err = f.s.GetLegalReview(f.ctx(), &pb.ReviewRequest{Scope: f.scope(), ExecutionId: id}); err == nil {
+		t.Fatal("approval survived reviewer context revocation")
+	}
+	exec("INSERT INTO principal_capabilities VALUES($1,$2,'context.read')", f.tenant, reviewer)
 	if _, err = f.s.IngestText(f.ctx(), &pb.IngestTextRequest{Scope: f.scope(), MatterId: f.matter, DocumentId: doc.Id, ExpectedRevision: 1, Title: "Changed", Text: "Lease superseded.", IdempotencyKey: uuid.NewString()}); err != nil {
 		t.Fatal(err)
 	}

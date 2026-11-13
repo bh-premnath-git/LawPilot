@@ -9,6 +9,7 @@ package integrationsv1
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	structpb "google.golang.org/protobuf/types/known/structpb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -1782,11 +1783,535 @@ func (x *ParseResponse) GetParserVersion() string {
 	return ""
 }
 
+type WebhookRequest struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Scope          *Scope                 `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	ConnectionId   string                 `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
+	Model          string                 `protobuf:"bytes,3,opt,name=model,proto3" json:"model,omitempty"`
+	IdempotencyKey string                 `protobuf:"bytes,4,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
+	SubscriptionId string                 `protobuf:"bytes,5,opt,name=subscription_id,json=subscriptionId,proto3" json:"subscription_id,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *WebhookRequest) Reset() {
+	*x = WebhookRequest{}
+	mi := &file_lawpilot_integrations_v1_integrations_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WebhookRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WebhookRequest) ProtoMessage() {}
+
+func (x *WebhookRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_lawpilot_integrations_v1_integrations_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WebhookRequest.ProtoReflect.Descriptor instead.
+func (*WebhookRequest) Descriptor() ([]byte, []int) {
+	return file_lawpilot_integrations_v1_integrations_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *WebhookRequest) GetScope() *Scope {
+	if x != nil {
+		return x.Scope
+	}
+	return nil
+}
+
+func (x *WebhookRequest) GetConnectionId() string {
+	if x != nil {
+		return x.ConnectionId
+	}
+	return ""
+}
+
+func (x *WebhookRequest) GetModel() string {
+	if x != nil {
+		return x.Model
+	}
+	return ""
+}
+
+func (x *WebhookRequest) GetIdempotencyKey() string {
+	if x != nil {
+		return x.IdempotencyKey
+	}
+	return ""
+}
+
+func (x *WebhookRequest) GetSubscriptionId() string {
+	if x != nil {
+		return x.SubscriptionId
+	}
+	return ""
+}
+
+type WebhookResponse struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	SubscriptionId string                 `protobuf:"bytes,1,opt,name=subscription_id,json=subscriptionId,proto3" json:"subscription_id,omitempty"`
+	State          string                 `protobuf:"bytes,2,opt,name=state,proto3" json:"state,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *WebhookResponse) Reset() {
+	*x = WebhookResponse{}
+	mi := &file_lawpilot_integrations_v1_integrations_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WebhookResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WebhookResponse) ProtoMessage() {}
+
+func (x *WebhookResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_lawpilot_integrations_v1_integrations_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WebhookResponse.ProtoReflect.Descriptor instead.
+func (*WebhookResponse) Descriptor() ([]byte, []int) {
+	return file_lawpilot_integrations_v1_integrations_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *WebhookResponse) GetSubscriptionId() string {
+	if x != nil {
+		return x.SubscriptionId
+	}
+	return ""
+}
+
+func (x *WebhookResponse) GetState() string {
+	if x != nil {
+		return x.State
+	}
+	return ""
+}
+
+type ReceiveWebhookRequest struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	SubscriptionId string                 `protobuf:"bytes,1,opt,name=subscription_id,json=subscriptionId,proto3" json:"subscription_id,omitempty"`
+	CallbackToken  string                 `protobuf:"bytes,2,opt,name=callback_token,json=callbackToken,proto3" json:"callback_token,omitempty"`
+	Body           []byte                 `protobuf:"bytes,3,opt,name=body,proto3" json:"body,omitempty"`
+	Secret         string                 `protobuf:"bytes,4,opt,name=secret,proto3" json:"secret,omitempty"`
+	Signature      string                 `protobuf:"bytes,5,opt,name=signature,proto3" json:"signature,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *ReceiveWebhookRequest) Reset() {
+	*x = ReceiveWebhookRequest{}
+	mi := &file_lawpilot_integrations_v1_integrations_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReceiveWebhookRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReceiveWebhookRequest) ProtoMessage() {}
+
+func (x *ReceiveWebhookRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_lawpilot_integrations_v1_integrations_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReceiveWebhookRequest.ProtoReflect.Descriptor instead.
+func (*ReceiveWebhookRequest) Descriptor() ([]byte, []int) {
+	return file_lawpilot_integrations_v1_integrations_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *ReceiveWebhookRequest) GetSubscriptionId() string {
+	if x != nil {
+		return x.SubscriptionId
+	}
+	return ""
+}
+
+func (x *ReceiveWebhookRequest) GetCallbackToken() string {
+	if x != nil {
+		return x.CallbackToken
+	}
+	return ""
+}
+
+func (x *ReceiveWebhookRequest) GetBody() []byte {
+	if x != nil {
+		return x.Body
+	}
+	return nil
+}
+
+func (x *ReceiveWebhookRequest) GetSecret() string {
+	if x != nil {
+		return x.Secret
+	}
+	return ""
+}
+
+func (x *ReceiveWebhookRequest) GetSignature() string {
+	if x != nil {
+		return x.Signature
+	}
+	return ""
+}
+
+type ReceiveWebhookResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Accepted      bool                   `protobuf:"varint,1,opt,name=accepted,proto3" json:"accepted,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReceiveWebhookResponse) Reset() {
+	*x = ReceiveWebhookResponse{}
+	mi := &file_lawpilot_integrations_v1_integrations_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReceiveWebhookResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReceiveWebhookResponse) ProtoMessage() {}
+
+func (x *ReceiveWebhookResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_lawpilot_integrations_v1_integrations_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReceiveWebhookResponse.ProtoReflect.Descriptor instead.
+func (*ReceiveWebhookResponse) Descriptor() ([]byte, []int) {
+	return file_lawpilot_integrations_v1_integrations_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *ReceiveWebhookResponse) GetAccepted() bool {
+	if x != nil {
+		return x.Accepted
+	}
+	return false
+}
+
+type CalendarWriteRequest struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Scope          *Scope                 `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	ConnectionId   string                 `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
+	CalendarId     string                 `protobuf:"bytes,3,opt,name=calendar_id,json=calendarId,proto3" json:"calendar_id,omitempty"`
+	MatterId       string                 `protobuf:"bytes,4,opt,name=matter_id,json=matterId,proto3" json:"matter_id,omitempty"`
+	EntryId        string                 `protobuf:"bytes,5,opt,name=entry_id,json=entryId,proto3" json:"entry_id,omitempty"`
+	Operation      string                 `protobuf:"bytes,6,opt,name=operation,proto3" json:"operation,omitempty"`
+	Title          string                 `protobuf:"bytes,7,opt,name=title,proto3" json:"title,omitempty"`
+	Description    string                 `protobuf:"bytes,8,opt,name=description,proto3" json:"description,omitempty"`
+	StartAt        string                 `protobuf:"bytes,9,opt,name=start_at,json=startAt,proto3" json:"start_at,omitempty"`
+	EndAt          string                 `protobuf:"bytes,10,opt,name=end_at,json=endAt,proto3" json:"end_at,omitempty"`
+	TimeZone       string                 `protobuf:"bytes,11,opt,name=time_zone,json=timeZone,proto3" json:"time_zone,omitempty"`
+	IdempotencyKey string                 `protobuf:"bytes,12,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *CalendarWriteRequest) Reset() {
+	*x = CalendarWriteRequest{}
+	mi := &file_lawpilot_integrations_v1_integrations_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CalendarWriteRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CalendarWriteRequest) ProtoMessage() {}
+
+func (x *CalendarWriteRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_lawpilot_integrations_v1_integrations_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CalendarWriteRequest.ProtoReflect.Descriptor instead.
+func (*CalendarWriteRequest) Descriptor() ([]byte, []int) {
+	return file_lawpilot_integrations_v1_integrations_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *CalendarWriteRequest) GetScope() *Scope {
+	if x != nil {
+		return x.Scope
+	}
+	return nil
+}
+
+func (x *CalendarWriteRequest) GetConnectionId() string {
+	if x != nil {
+		return x.ConnectionId
+	}
+	return ""
+}
+
+func (x *CalendarWriteRequest) GetCalendarId() string {
+	if x != nil {
+		return x.CalendarId
+	}
+	return ""
+}
+
+func (x *CalendarWriteRequest) GetMatterId() string {
+	if x != nil {
+		return x.MatterId
+	}
+	return ""
+}
+
+func (x *CalendarWriteRequest) GetEntryId() string {
+	if x != nil {
+		return x.EntryId
+	}
+	return ""
+}
+
+func (x *CalendarWriteRequest) GetOperation() string {
+	if x != nil {
+		return x.Operation
+	}
+	return ""
+}
+
+func (x *CalendarWriteRequest) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *CalendarWriteRequest) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *CalendarWriteRequest) GetStartAt() string {
+	if x != nil {
+		return x.StartAt
+	}
+	return ""
+}
+
+func (x *CalendarWriteRequest) GetEndAt() string {
+	if x != nil {
+		return x.EndAt
+	}
+	return ""
+}
+
+func (x *CalendarWriteRequest) GetTimeZone() string {
+	if x != nil {
+		return x.TimeZone
+	}
+	return ""
+}
+
+func (x *CalendarWriteRequest) GetIdempotencyKey() string {
+	if x != nil {
+		return x.IdempotencyKey
+	}
+	return ""
+}
+
+type CalendarOperationRequest struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Scope          *Scope                 `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	OperationId    string                 `protobuf:"bytes,2,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
+	ArtifactSha256 string                 `protobuf:"bytes,3,opt,name=artifact_sha256,json=artifactSha256,proto3" json:"artifact_sha256,omitempty"`
+	Decision       string                 `protobuf:"bytes,4,opt,name=decision,proto3" json:"decision,omitempty"`
+	IdempotencyKey string                 `protobuf:"bytes,5,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *CalendarOperationRequest) Reset() {
+	*x = CalendarOperationRequest{}
+	mi := &file_lawpilot_integrations_v1_integrations_proto_msgTypes[33]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CalendarOperationRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CalendarOperationRequest) ProtoMessage() {}
+
+func (x *CalendarOperationRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_lawpilot_integrations_v1_integrations_proto_msgTypes[33]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CalendarOperationRequest.ProtoReflect.Descriptor instead.
+func (*CalendarOperationRequest) Descriptor() ([]byte, []int) {
+	return file_lawpilot_integrations_v1_integrations_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *CalendarOperationRequest) GetScope() *Scope {
+	if x != nil {
+		return x.Scope
+	}
+	return nil
+}
+
+func (x *CalendarOperationRequest) GetOperationId() string {
+	if x != nil {
+		return x.OperationId
+	}
+	return ""
+}
+
+func (x *CalendarOperationRequest) GetArtifactSha256() string {
+	if x != nil {
+		return x.ArtifactSha256
+	}
+	return ""
+}
+
+func (x *CalendarOperationRequest) GetDecision() string {
+	if x != nil {
+		return x.Decision
+	}
+	return ""
+}
+
+func (x *CalendarOperationRequest) GetIdempotencyKey() string {
+	if x != nil {
+		return x.IdempotencyKey
+	}
+	return ""
+}
+
+type CalendarOperationResponse struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	OperationId    string                 `protobuf:"bytes,1,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
+	State          string                 `protobuf:"bytes,2,opt,name=state,proto3" json:"state,omitempty"`
+	ArtifactSha256 string                 `protobuf:"bytes,3,opt,name=artifact_sha256,json=artifactSha256,proto3" json:"artifact_sha256,omitempty"`
+	Artifact       *structpb.Struct       `protobuf:"bytes,4,opt,name=artifact,proto3" json:"artifact,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *CalendarOperationResponse) Reset() {
+	*x = CalendarOperationResponse{}
+	mi := &file_lawpilot_integrations_v1_integrations_proto_msgTypes[34]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CalendarOperationResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CalendarOperationResponse) ProtoMessage() {}
+
+func (x *CalendarOperationResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_lawpilot_integrations_v1_integrations_proto_msgTypes[34]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CalendarOperationResponse.ProtoReflect.Descriptor instead.
+func (*CalendarOperationResponse) Descriptor() ([]byte, []int) {
+	return file_lawpilot_integrations_v1_integrations_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *CalendarOperationResponse) GetOperationId() string {
+	if x != nil {
+		return x.OperationId
+	}
+	return ""
+}
+
+func (x *CalendarOperationResponse) GetState() string {
+	if x != nil {
+		return x.State
+	}
+	return ""
+}
+
+func (x *CalendarOperationResponse) GetArtifactSha256() string {
+	if x != nil {
+		return x.ArtifactSha256
+	}
+	return ""
+}
+
+func (x *CalendarOperationResponse) GetArtifact() *structpb.Struct {
+	if x != nil {
+		return x.Artifact
+	}
+	return nil
+}
+
 var File_lawpilot_integrations_v1_integrations_proto protoreflect.FileDescriptor
 
 const file_lawpilot_integrations_v1_integrations_proto_rawDesc = "" +
 	"\n" +
-	"+lawpilot/integrations/v1/integrations.proto\x12\x18lawpilot.integrations.v1\"C\n" +
+	"+lawpilot/integrations/v1/integrations.proto\x12\x18lawpilot.integrations.v1\x1a\x1cgoogle/protobuf/struct.proto\"C\n" +
 	"\x05Scope\x12\x1b\n" +
 	"\ttenant_id\x18\x01 \x01(\tR\btenantId\x12\x1d\n" +
 	"\n" +
@@ -1925,8 +2450,57 @@ const file_lawpilot_integrations_v1_integrations_proto_rawDesc = "" +
 	"\rParseResponse\x12:\n" +
 	"\x05pages\x18\x01 \x03(\v2$.lawpilot.integrations.v1.ParsedPageR\x05pages\x12#\n" +
 	"\rsource_sha256\x18\x02 \x01(\tR\fsourceSha256\x12%\n" +
-	"\x0eparser_version\x18\x03 \x01(\tR\rparserVersion2\x8c\x0e\n" +
-	"\x12IntegrationService\x12[\n" +
+	"\x0eparser_version\x18\x03 \x01(\tR\rparserVersion\"\xd4\x01\n" +
+	"\x0eWebhookRequest\x125\n" +
+	"\x05scope\x18\x01 \x01(\v2\x1f.lawpilot.integrations.v1.ScopeR\x05scope\x12#\n" +
+	"\rconnection_id\x18\x02 \x01(\tR\fconnectionId\x12\x14\n" +
+	"\x05model\x18\x03 \x01(\tR\x05model\x12'\n" +
+	"\x0fidempotency_key\x18\x04 \x01(\tR\x0eidempotencyKey\x12'\n" +
+	"\x0fsubscription_id\x18\x05 \x01(\tR\x0esubscriptionId\"P\n" +
+	"\x0fWebhookResponse\x12'\n" +
+	"\x0fsubscription_id\x18\x01 \x01(\tR\x0esubscriptionId\x12\x14\n" +
+	"\x05state\x18\x02 \x01(\tR\x05state\"\xb1\x01\n" +
+	"\x15ReceiveWebhookRequest\x12'\n" +
+	"\x0fsubscription_id\x18\x01 \x01(\tR\x0esubscriptionId\x12%\n" +
+	"\x0ecallback_token\x18\x02 \x01(\tR\rcallbackToken\x12\x12\n" +
+	"\x04body\x18\x03 \x01(\fR\x04body\x12\x16\n" +
+	"\x06secret\x18\x04 \x01(\tR\x06secret\x12\x1c\n" +
+	"\tsignature\x18\x05 \x01(\tR\tsignature\"4\n" +
+	"\x16ReceiveWebhookResponse\x12\x1a\n" +
+	"\baccepted\x18\x01 \x01(\bR\baccepted\"\x99\x03\n" +
+	"\x14CalendarWriteRequest\x125\n" +
+	"\x05scope\x18\x01 \x01(\v2\x1f.lawpilot.integrations.v1.ScopeR\x05scope\x12#\n" +
+	"\rconnection_id\x18\x02 \x01(\tR\fconnectionId\x12\x1f\n" +
+	"\vcalendar_id\x18\x03 \x01(\tR\n" +
+	"calendarId\x12\x1b\n" +
+	"\tmatter_id\x18\x04 \x01(\tR\bmatterId\x12\x19\n" +
+	"\bentry_id\x18\x05 \x01(\tR\aentryId\x12\x1c\n" +
+	"\toperation\x18\x06 \x01(\tR\toperation\x12\x14\n" +
+	"\x05title\x18\a \x01(\tR\x05title\x12 \n" +
+	"\vdescription\x18\b \x01(\tR\vdescription\x12\x19\n" +
+	"\bstart_at\x18\t \x01(\tR\astartAt\x12\x15\n" +
+	"\x06end_at\x18\n" +
+	" \x01(\tR\x05endAt\x12\x1b\n" +
+	"\ttime_zone\x18\v \x01(\tR\btimeZone\x12'\n" +
+	"\x0fidempotency_key\x18\f \x01(\tR\x0eidempotencyKey\"\xe2\x01\n" +
+	"\x18CalendarOperationRequest\x125\n" +
+	"\x05scope\x18\x01 \x01(\v2\x1f.lawpilot.integrations.v1.ScopeR\x05scope\x12!\n" +
+	"\foperation_id\x18\x02 \x01(\tR\voperationId\x12'\n" +
+	"\x0fartifact_sha256\x18\x03 \x01(\tR\x0eartifactSha256\x12\x1a\n" +
+	"\bdecision\x18\x04 \x01(\tR\bdecision\x12'\n" +
+	"\x0fidempotency_key\x18\x05 \x01(\tR\x0eidempotencyKey\"\xb2\x01\n" +
+	"\x19CalendarOperationResponse\x12!\n" +
+	"\foperation_id\x18\x01 \x01(\tR\voperationId\x12\x14\n" +
+	"\x05state\x18\x02 \x01(\tR\x05state\x12'\n" +
+	"\x0fartifact_sha256\x18\x03 \x01(\tR\x0eartifactSha256\x123\n" +
+	"\bartifact\x18\x04 \x01(\v2\x17.google.protobuf.StructR\bartifact2\xcf\x13\n" +
+	"\x12IntegrationService\x12f\n" +
+	"\x0fRegisterWebhook\x12(.lawpilot.integrations.v1.WebhookRequest\x1a).lawpilot.integrations.v1.WebhookResponse\x12f\n" +
+	"\x0fActivateWebhook\x12(.lawpilot.integrations.v1.WebhookRequest\x1a).lawpilot.integrations.v1.WebhookResponse\x12s\n" +
+	"\x0eReceiveWebhook\x12/.lawpilot.integrations.v1.ReceiveWebhookRequest\x1a0.lawpilot.integrations.v1.ReceiveWebhookResponse\x12{\n" +
+	"\x14ProposeCalendarWrite\x12..lawpilot.integrations.v1.CalendarWriteRequest\x1a3.lawpilot.integrations.v1.CalendarOperationResponse\x12\x7f\n" +
+	"\x14GetCalendarOperation\x122.lawpilot.integrations.v1.CalendarOperationRequest\x1a3.lawpilot.integrations.v1.CalendarOperationResponse\x12~\n" +
+	"\x13DecideCalendarWrite\x122.lawpilot.integrations.v1.CalendarOperationRequest\x1a3.lawpilot.integrations.v1.CalendarOperationResponse\x12[\n" +
 	"\x06Status\x12'.lawpilot.integrations.v1.StatusRequest\x1a(.lawpilot.integrations.v1.StatusResponse\x12m\n" +
 	"\fCreateUpload\x12-.lawpilot.integrations.v1.CreateUploadRequest\x1a..lawpilot.integrations.v1.CreateUploadResponse\x12_\n" +
 	"\x0eFinalizeUpload\x12%.lawpilot.integrations.v1.FileRequest\x1a&.lawpilot.integrations.v1.FileResponse\x12X\n" +
@@ -1960,7 +2534,7 @@ func file_lawpilot_integrations_v1_integrations_proto_rawDescGZIP() []byte {
 	return file_lawpilot_integrations_v1_integrations_proto_rawDescData
 }
 
-var file_lawpilot_integrations_v1_integrations_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
+var file_lawpilot_integrations_v1_integrations_proto_msgTypes = make([]protoimpl.MessageInfo, 35)
 var file_lawpilot_integrations_v1_integrations_proto_goTypes = []any{
 	(*Scope)(nil),                        // 0: lawpilot.integrations.v1.Scope
 	(*Ref)(nil),                          // 1: lawpilot.integrations.v1.Ref
@@ -1990,6 +2564,14 @@ var file_lawpilot_integrations_v1_integrations_proto_goTypes = []any{
 	(*ParseRequest)(nil),                 // 25: lawpilot.integrations.v1.ParseRequest
 	(*ParsedPage)(nil),                   // 26: lawpilot.integrations.v1.ParsedPage
 	(*ParseResponse)(nil),                // 27: lawpilot.integrations.v1.ParseResponse
+	(*WebhookRequest)(nil),               // 28: lawpilot.integrations.v1.WebhookRequest
+	(*WebhookResponse)(nil),              // 29: lawpilot.integrations.v1.WebhookResponse
+	(*ReceiveWebhookRequest)(nil),        // 30: lawpilot.integrations.v1.ReceiveWebhookRequest
+	(*ReceiveWebhookResponse)(nil),       // 31: lawpilot.integrations.v1.ReceiveWebhookResponse
+	(*CalendarWriteRequest)(nil),         // 32: lawpilot.integrations.v1.CalendarWriteRequest
+	(*CalendarOperationRequest)(nil),     // 33: lawpilot.integrations.v1.CalendarOperationRequest
+	(*CalendarOperationResponse)(nil),    // 34: lawpilot.integrations.v1.CalendarOperationResponse
+	(*structpb.Struct)(nil),              // 35: google.protobuf.Struct
 }
 var file_lawpilot_integrations_v1_integrations_proto_depIdxs = []int32{
 	0,  // 0: lawpilot.integrations.v1.StatusRequest.scope:type_name -> lawpilot.integrations.v1.Scope
@@ -2009,47 +2591,63 @@ var file_lawpilot_integrations_v1_integrations_proto_depIdxs = []int32{
 	0,  // 14: lawpilot.integrations.v1.GrantConnectionRequest.scope:type_name -> lawpilot.integrations.v1.Scope
 	0,  // 15: lawpilot.integrations.v1.DecideProviderUpdateRequest.scope:type_name -> lawpilot.integrations.v1.Scope
 	26, // 16: lawpilot.integrations.v1.ParseResponse.pages:type_name -> lawpilot.integrations.v1.ParsedPage
-	2,  // 17: lawpilot.integrations.v1.IntegrationService.Status:input_type -> lawpilot.integrations.v1.StatusRequest
-	4,  // 18: lawpilot.integrations.v1.IntegrationService.CreateUpload:input_type -> lawpilot.integrations.v1.CreateUploadRequest
-	8,  // 19: lawpilot.integrations.v1.IntegrationService.FinalizeUpload:input_type -> lawpilot.integrations.v1.FileRequest
-	8,  // 20: lawpilot.integrations.v1.IntegrationService.GetFile:input_type -> lawpilot.integrations.v1.FileRequest
-	8,  // 21: lawpilot.integrations.v1.IntegrationService.DownloadFile:input_type -> lawpilot.integrations.v1.FileRequest
-	12, // 22: lawpilot.integrations.v1.IntegrationService.CreateConnection:input_type -> lawpilot.integrations.v1.CreateConnectionRequest
-	15, // 23: lawpilot.integrations.v1.IntegrationService.AuthorizeConnection:input_type -> lawpilot.integrations.v1.ConnectionRequest
-	17, // 24: lawpilot.integrations.v1.IntegrationService.CompleteOAuth:input_type -> lawpilot.integrations.v1.OAuthCompleteRequest
-	15, // 25: lawpilot.integrations.v1.IntegrationService.Disconnect:input_type -> lawpilot.integrations.v1.ConnectionRequest
-	18, // 26: lawpilot.integrations.v1.IntegrationService.RequestSync:input_type -> lawpilot.integrations.v1.SyncRequest
-	19, // 27: lawpilot.integrations.v1.IntegrationService.GetJob:input_type -> lawpilot.integrations.v1.JobRequest
-	23, // 28: lawpilot.integrations.v1.IntegrationService.GrantConnection:input_type -> lawpilot.integrations.v1.GrantConnectionRequest
-	22, // 29: lawpilot.integrations.v1.IntegrationService.GetProviderProposal:input_type -> lawpilot.integrations.v1.ProviderProposalRequest
-	20, // 30: lawpilot.integrations.v1.IntegrationService.ProposeProviderUpdate:input_type -> lawpilot.integrations.v1.ProposeProviderUpdateRequest
-	24, // 31: lawpilot.integrations.v1.IntegrationService.DecideProviderUpdate:input_type -> lawpilot.integrations.v1.DecideProviderUpdateRequest
-	1,  // 32: lawpilot.integrations.v1.IntegrationService.FailJob:input_type -> lawpilot.integrations.v1.Ref
-	1,  // 33: lawpilot.integrations.v1.IntegrationService.RunJob:input_type -> lawpilot.integrations.v1.Ref
-	25, // 34: lawpilot.integrations.v1.DocumentParser.Parse:input_type -> lawpilot.integrations.v1.ParseRequest
-	3,  // 35: lawpilot.integrations.v1.IntegrationService.Status:output_type -> lawpilot.integrations.v1.StatusResponse
-	7,  // 36: lawpilot.integrations.v1.IntegrationService.CreateUpload:output_type -> lawpilot.integrations.v1.CreateUploadResponse
-	9,  // 37: lawpilot.integrations.v1.IntegrationService.FinalizeUpload:output_type -> lawpilot.integrations.v1.FileResponse
-	9,  // 38: lawpilot.integrations.v1.IntegrationService.GetFile:output_type -> lawpilot.integrations.v1.FileResponse
-	10, // 39: lawpilot.integrations.v1.IntegrationService.DownloadFile:output_type -> lawpilot.integrations.v1.DownloadResponse
-	14, // 40: lawpilot.integrations.v1.IntegrationService.CreateConnection:output_type -> lawpilot.integrations.v1.ConnectionResponse
-	16, // 41: lawpilot.integrations.v1.IntegrationService.AuthorizeConnection:output_type -> lawpilot.integrations.v1.AuthorizeResponse
-	14, // 42: lawpilot.integrations.v1.IntegrationService.CompleteOAuth:output_type -> lawpilot.integrations.v1.ConnectionResponse
-	14, // 43: lawpilot.integrations.v1.IntegrationService.Disconnect:output_type -> lawpilot.integrations.v1.ConnectionResponse
-	11, // 44: lawpilot.integrations.v1.IntegrationService.RequestSync:output_type -> lawpilot.integrations.v1.JobResponse
-	11, // 45: lawpilot.integrations.v1.IntegrationService.GetJob:output_type -> lawpilot.integrations.v1.JobResponse
-	14, // 46: lawpilot.integrations.v1.IntegrationService.GrantConnection:output_type -> lawpilot.integrations.v1.ConnectionResponse
-	21, // 47: lawpilot.integrations.v1.IntegrationService.GetProviderProposal:output_type -> lawpilot.integrations.v1.ProviderProposalResponse
-	21, // 48: lawpilot.integrations.v1.IntegrationService.ProposeProviderUpdate:output_type -> lawpilot.integrations.v1.ProviderProposalResponse
-	21, // 49: lawpilot.integrations.v1.IntegrationService.DecideProviderUpdate:output_type -> lawpilot.integrations.v1.ProviderProposalResponse
-	11, // 50: lawpilot.integrations.v1.IntegrationService.FailJob:output_type -> lawpilot.integrations.v1.JobResponse
-	11, // 51: lawpilot.integrations.v1.IntegrationService.RunJob:output_type -> lawpilot.integrations.v1.JobResponse
-	27, // 52: lawpilot.integrations.v1.DocumentParser.Parse:output_type -> lawpilot.integrations.v1.ParseResponse
-	35, // [35:53] is the sub-list for method output_type
-	17, // [17:35] is the sub-list for method input_type
-	17, // [17:17] is the sub-list for extension type_name
-	17, // [17:17] is the sub-list for extension extendee
-	0,  // [0:17] is the sub-list for field type_name
+	0,  // 17: lawpilot.integrations.v1.WebhookRequest.scope:type_name -> lawpilot.integrations.v1.Scope
+	0,  // 18: lawpilot.integrations.v1.CalendarWriteRequest.scope:type_name -> lawpilot.integrations.v1.Scope
+	0,  // 19: lawpilot.integrations.v1.CalendarOperationRequest.scope:type_name -> lawpilot.integrations.v1.Scope
+	35, // 20: lawpilot.integrations.v1.CalendarOperationResponse.artifact:type_name -> google.protobuf.Struct
+	28, // 21: lawpilot.integrations.v1.IntegrationService.RegisterWebhook:input_type -> lawpilot.integrations.v1.WebhookRequest
+	28, // 22: lawpilot.integrations.v1.IntegrationService.ActivateWebhook:input_type -> lawpilot.integrations.v1.WebhookRequest
+	30, // 23: lawpilot.integrations.v1.IntegrationService.ReceiveWebhook:input_type -> lawpilot.integrations.v1.ReceiveWebhookRequest
+	32, // 24: lawpilot.integrations.v1.IntegrationService.ProposeCalendarWrite:input_type -> lawpilot.integrations.v1.CalendarWriteRequest
+	33, // 25: lawpilot.integrations.v1.IntegrationService.GetCalendarOperation:input_type -> lawpilot.integrations.v1.CalendarOperationRequest
+	33, // 26: lawpilot.integrations.v1.IntegrationService.DecideCalendarWrite:input_type -> lawpilot.integrations.v1.CalendarOperationRequest
+	2,  // 27: lawpilot.integrations.v1.IntegrationService.Status:input_type -> lawpilot.integrations.v1.StatusRequest
+	4,  // 28: lawpilot.integrations.v1.IntegrationService.CreateUpload:input_type -> lawpilot.integrations.v1.CreateUploadRequest
+	8,  // 29: lawpilot.integrations.v1.IntegrationService.FinalizeUpload:input_type -> lawpilot.integrations.v1.FileRequest
+	8,  // 30: lawpilot.integrations.v1.IntegrationService.GetFile:input_type -> lawpilot.integrations.v1.FileRequest
+	8,  // 31: lawpilot.integrations.v1.IntegrationService.DownloadFile:input_type -> lawpilot.integrations.v1.FileRequest
+	12, // 32: lawpilot.integrations.v1.IntegrationService.CreateConnection:input_type -> lawpilot.integrations.v1.CreateConnectionRequest
+	15, // 33: lawpilot.integrations.v1.IntegrationService.AuthorizeConnection:input_type -> lawpilot.integrations.v1.ConnectionRequest
+	17, // 34: lawpilot.integrations.v1.IntegrationService.CompleteOAuth:input_type -> lawpilot.integrations.v1.OAuthCompleteRequest
+	15, // 35: lawpilot.integrations.v1.IntegrationService.Disconnect:input_type -> lawpilot.integrations.v1.ConnectionRequest
+	18, // 36: lawpilot.integrations.v1.IntegrationService.RequestSync:input_type -> lawpilot.integrations.v1.SyncRequest
+	19, // 37: lawpilot.integrations.v1.IntegrationService.GetJob:input_type -> lawpilot.integrations.v1.JobRequest
+	23, // 38: lawpilot.integrations.v1.IntegrationService.GrantConnection:input_type -> lawpilot.integrations.v1.GrantConnectionRequest
+	22, // 39: lawpilot.integrations.v1.IntegrationService.GetProviderProposal:input_type -> lawpilot.integrations.v1.ProviderProposalRequest
+	20, // 40: lawpilot.integrations.v1.IntegrationService.ProposeProviderUpdate:input_type -> lawpilot.integrations.v1.ProposeProviderUpdateRequest
+	24, // 41: lawpilot.integrations.v1.IntegrationService.DecideProviderUpdate:input_type -> lawpilot.integrations.v1.DecideProviderUpdateRequest
+	1,  // 42: lawpilot.integrations.v1.IntegrationService.FailJob:input_type -> lawpilot.integrations.v1.Ref
+	1,  // 43: lawpilot.integrations.v1.IntegrationService.RunJob:input_type -> lawpilot.integrations.v1.Ref
+	25, // 44: lawpilot.integrations.v1.DocumentParser.Parse:input_type -> lawpilot.integrations.v1.ParseRequest
+	29, // 45: lawpilot.integrations.v1.IntegrationService.RegisterWebhook:output_type -> lawpilot.integrations.v1.WebhookResponse
+	29, // 46: lawpilot.integrations.v1.IntegrationService.ActivateWebhook:output_type -> lawpilot.integrations.v1.WebhookResponse
+	31, // 47: lawpilot.integrations.v1.IntegrationService.ReceiveWebhook:output_type -> lawpilot.integrations.v1.ReceiveWebhookResponse
+	34, // 48: lawpilot.integrations.v1.IntegrationService.ProposeCalendarWrite:output_type -> lawpilot.integrations.v1.CalendarOperationResponse
+	34, // 49: lawpilot.integrations.v1.IntegrationService.GetCalendarOperation:output_type -> lawpilot.integrations.v1.CalendarOperationResponse
+	34, // 50: lawpilot.integrations.v1.IntegrationService.DecideCalendarWrite:output_type -> lawpilot.integrations.v1.CalendarOperationResponse
+	3,  // 51: lawpilot.integrations.v1.IntegrationService.Status:output_type -> lawpilot.integrations.v1.StatusResponse
+	7,  // 52: lawpilot.integrations.v1.IntegrationService.CreateUpload:output_type -> lawpilot.integrations.v1.CreateUploadResponse
+	9,  // 53: lawpilot.integrations.v1.IntegrationService.FinalizeUpload:output_type -> lawpilot.integrations.v1.FileResponse
+	9,  // 54: lawpilot.integrations.v1.IntegrationService.GetFile:output_type -> lawpilot.integrations.v1.FileResponse
+	10, // 55: lawpilot.integrations.v1.IntegrationService.DownloadFile:output_type -> lawpilot.integrations.v1.DownloadResponse
+	14, // 56: lawpilot.integrations.v1.IntegrationService.CreateConnection:output_type -> lawpilot.integrations.v1.ConnectionResponse
+	16, // 57: lawpilot.integrations.v1.IntegrationService.AuthorizeConnection:output_type -> lawpilot.integrations.v1.AuthorizeResponse
+	14, // 58: lawpilot.integrations.v1.IntegrationService.CompleteOAuth:output_type -> lawpilot.integrations.v1.ConnectionResponse
+	14, // 59: lawpilot.integrations.v1.IntegrationService.Disconnect:output_type -> lawpilot.integrations.v1.ConnectionResponse
+	11, // 60: lawpilot.integrations.v1.IntegrationService.RequestSync:output_type -> lawpilot.integrations.v1.JobResponse
+	11, // 61: lawpilot.integrations.v1.IntegrationService.GetJob:output_type -> lawpilot.integrations.v1.JobResponse
+	14, // 62: lawpilot.integrations.v1.IntegrationService.GrantConnection:output_type -> lawpilot.integrations.v1.ConnectionResponse
+	21, // 63: lawpilot.integrations.v1.IntegrationService.GetProviderProposal:output_type -> lawpilot.integrations.v1.ProviderProposalResponse
+	21, // 64: lawpilot.integrations.v1.IntegrationService.ProposeProviderUpdate:output_type -> lawpilot.integrations.v1.ProviderProposalResponse
+	21, // 65: lawpilot.integrations.v1.IntegrationService.DecideProviderUpdate:output_type -> lawpilot.integrations.v1.ProviderProposalResponse
+	11, // 66: lawpilot.integrations.v1.IntegrationService.FailJob:output_type -> lawpilot.integrations.v1.JobResponse
+	11, // 67: lawpilot.integrations.v1.IntegrationService.RunJob:output_type -> lawpilot.integrations.v1.JobResponse
+	27, // 68: lawpilot.integrations.v1.DocumentParser.Parse:output_type -> lawpilot.integrations.v1.ParseResponse
+	45, // [45:69] is the sub-list for method output_type
+	21, // [21:45] is the sub-list for method input_type
+	21, // [21:21] is the sub-list for extension type_name
+	21, // [21:21] is the sub-list for extension extendee
+	0,  // [0:21] is the sub-list for field type_name
 }
 
 func init() { file_lawpilot_integrations_v1_integrations_proto_init() }
@@ -2063,7 +2661,7 @@ func file_lawpilot_integrations_v1_integrations_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_lawpilot_integrations_v1_integrations_proto_rawDesc), len(file_lawpilot_integrations_v1_integrations_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   28,
+			NumMessages:   35,
 			NumExtensions: 0,
 			NumServices:   2,
 		},

@@ -53,11 +53,17 @@ export class IntegrationClient implements OnModuleDestroy {
           {
             "grpc.ssl_target_name_override": "integration-service",
             "grpc.max_receive_message_length": 1048576,
-            "grpc.max_send_message_length": 65536,
+            "grpc.max_send_message_length": 131072,
           },
         );
       }
       const aliases: Record<string, string> = {
+        registerWebhook: "WebhookRequest",
+        activateWebhook: "WebhookRequest",
+        receiveWebhook: "ReceiveWebhookRequest",
+        proposeCalendarWrite: "CalendarWriteRequest",
+        getCalendarOperation: "CalendarOperationRequest",
+        decideCalendarWrite: "CalendarOperationRequest",
         finalizeUpload: "FileRequest",
         getFile: "FileRequest",
         downloadFile: "FileRequest",

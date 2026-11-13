@@ -34,6 +34,36 @@ class IntegrationServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
+        self.RegisterWebhook = channel.unary_unary(
+                '/lawpilot.integrations.v1.IntegrationService/RegisterWebhook',
+                request_serializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.WebhookRequest.SerializeToString,
+                response_deserializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.WebhookResponse.FromString,
+                _registered_method=True)
+        self.ActivateWebhook = channel.unary_unary(
+                '/lawpilot.integrations.v1.IntegrationService/ActivateWebhook',
+                request_serializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.WebhookRequest.SerializeToString,
+                response_deserializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.WebhookResponse.FromString,
+                _registered_method=True)
+        self.ReceiveWebhook = channel.unary_unary(
+                '/lawpilot.integrations.v1.IntegrationService/ReceiveWebhook',
+                request_serializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.ReceiveWebhookRequest.SerializeToString,
+                response_deserializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.ReceiveWebhookResponse.FromString,
+                _registered_method=True)
+        self.ProposeCalendarWrite = channel.unary_unary(
+                '/lawpilot.integrations.v1.IntegrationService/ProposeCalendarWrite',
+                request_serializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.CalendarWriteRequest.SerializeToString,
+                response_deserializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.CalendarOperationResponse.FromString,
+                _registered_method=True)
+        self.GetCalendarOperation = channel.unary_unary(
+                '/lawpilot.integrations.v1.IntegrationService/GetCalendarOperation',
+                request_serializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.CalendarOperationRequest.SerializeToString,
+                response_deserializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.CalendarOperationResponse.FromString,
+                _registered_method=True)
+        self.DecideCalendarWrite = channel.unary_unary(
+                '/lawpilot.integrations.v1.IntegrationService/DecideCalendarWrite',
+                request_serializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.CalendarOperationRequest.SerializeToString,
+                response_deserializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.CalendarOperationResponse.FromString,
+                _registered_method=True)
         self.Status = channel.unary_unary(
                 '/lawpilot.integrations.v1.IntegrationService/Status',
                 request_serializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.StatusRequest.SerializeToString,
@@ -123,6 +153,42 @@ class IntegrationServiceStub(object):
 
 class IntegrationServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
+
+    def RegisterWebhook(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ActivateWebhook(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ReceiveWebhook(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ProposeCalendarWrite(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetCalendarOperation(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DecideCalendarWrite(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def Status(self, request, context):
         """Missing associated documentation comment in .proto file."""
@@ -229,6 +295,36 @@ class IntegrationServiceServicer(object):
 
 def add_IntegrationServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
+            'RegisterWebhook': grpc.unary_unary_rpc_method_handler(
+                    servicer.RegisterWebhook,
+                    request_deserializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.WebhookRequest.FromString,
+                    response_serializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.WebhookResponse.SerializeToString,
+            ),
+            'ActivateWebhook': grpc.unary_unary_rpc_method_handler(
+                    servicer.ActivateWebhook,
+                    request_deserializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.WebhookRequest.FromString,
+                    response_serializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.WebhookResponse.SerializeToString,
+            ),
+            'ReceiveWebhook': grpc.unary_unary_rpc_method_handler(
+                    servicer.ReceiveWebhook,
+                    request_deserializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.ReceiveWebhookRequest.FromString,
+                    response_serializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.ReceiveWebhookResponse.SerializeToString,
+            ),
+            'ProposeCalendarWrite': grpc.unary_unary_rpc_method_handler(
+                    servicer.ProposeCalendarWrite,
+                    request_deserializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.CalendarWriteRequest.FromString,
+                    response_serializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.CalendarOperationResponse.SerializeToString,
+            ),
+            'GetCalendarOperation': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetCalendarOperation,
+                    request_deserializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.CalendarOperationRequest.FromString,
+                    response_serializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.CalendarOperationResponse.SerializeToString,
+            ),
+            'DecideCalendarWrite': grpc.unary_unary_rpc_method_handler(
+                    servicer.DecideCalendarWrite,
+                    request_deserializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.CalendarOperationRequest.FromString,
+                    response_serializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.CalendarOperationResponse.SerializeToString,
+            ),
             'Status': grpc.unary_unary_rpc_method_handler(
                     servicer.Status,
                     request_deserializer=lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.StatusRequest.FromString,
@@ -324,6 +420,168 @@ def add_IntegrationServiceServicer_to_server(servicer, server):
  # This class is part of an EXPERIMENTAL API.
 class IntegrationService(object):
     """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def RegisterWebhook(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/lawpilot.integrations.v1.IntegrationService/RegisterWebhook',
+            lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.WebhookRequest.SerializeToString,
+            lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.WebhookResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ActivateWebhook(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/lawpilot.integrations.v1.IntegrationService/ActivateWebhook',
+            lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.WebhookRequest.SerializeToString,
+            lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.WebhookResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ReceiveWebhook(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/lawpilot.integrations.v1.IntegrationService/ReceiveWebhook',
+            lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.ReceiveWebhookRequest.SerializeToString,
+            lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.ReceiveWebhookResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ProposeCalendarWrite(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/lawpilot.integrations.v1.IntegrationService/ProposeCalendarWrite',
+            lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.CalendarWriteRequest.SerializeToString,
+            lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.CalendarOperationResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetCalendarOperation(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/lawpilot.integrations.v1.IntegrationService/GetCalendarOperation',
+            lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.CalendarOperationRequest.SerializeToString,
+            lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.CalendarOperationResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DecideCalendarWrite(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/lawpilot.integrations.v1.IntegrationService/DecideCalendarWrite',
+            lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.CalendarOperationRequest.SerializeToString,
+            lawpilot_dot_integrations_dot_v1_dot_integrations__pb2.CalendarOperationResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
 
     @staticmethod
     def Status(request,

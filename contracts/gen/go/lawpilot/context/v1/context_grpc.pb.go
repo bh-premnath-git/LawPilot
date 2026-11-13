@@ -19,28 +19,32 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ContextService_PrepareExecutionContext_FullMethodName = "/lawpilot.context.v1.ContextService/PrepareExecutionContext"
-	ContextService_GetTemplate_FullMethodName             = "/lawpilot.context.v1.ContextService/GetTemplate"
-	ContextService_CreateTemplate_FullMethodName          = "/lawpilot.context.v1.ContextService/CreateTemplate"
-	ContextService_DecideTemplate_FullMethodName          = "/lawpilot.context.v1.ContextService/DecideTemplate"
-	ContextService_GetLegalReview_FullMethodName          = "/lawpilot.context.v1.ContextService/GetLegalReview"
-	ContextService_DecideLegalReview_FullMethodName       = "/lawpilot.context.v1.ContextService/DecideLegalReview"
-	ContextService_GetReviewDeadline_FullMethodName       = "/lawpilot.context.v1.ContextService/GetReviewDeadline"
-	ContextService_ExpireReview_FullMethodName            = "/lawpilot.context.v1.ContextService/ExpireReview"
-	ContextService_IngestProcessed_FullMethodName         = "/lawpilot.context.v1.ContextService/IngestProcessed"
-	ContextService_IngestText_FullMethodName              = "/lawpilot.context.v1.ContextService/IngestText"
-	ContextService_DeleteDocument_FullMethodName          = "/lawpilot.context.v1.ContextService/DeleteDocument"
-	ContextService_BuildContext_FullMethodName            = "/lawpilot.context.v1.ContextService/BuildContext"
-	ContextService_GetContext_FullMethodName              = "/lawpilot.context.v1.ContextService/GetContext"
-	ContextService_ResolveCitation_FullMethodName         = "/lawpilot.context.v1.ContextService/ResolveCitation"
-	ContextService_VerifyExecutionEvidence_FullMethodName = "/lawpilot.context.v1.ContextService/VerifyExecutionEvidence"
-	ContextService_ListMatterEvents_FullMethodName        = "/lawpilot.context.v1.ContextService/ListMatterEvents"
+	ContextService_RegisterKnowledgeLibrary_FullMethodName = "/lawpilot.context.v1.ContextService/RegisterKnowledgeLibrary"
+	ContextService_BuildCalendarContext_FullMethodName     = "/lawpilot.context.v1.ContextService/BuildCalendarContext"
+	ContextService_PrepareExecutionContext_FullMethodName  = "/lawpilot.context.v1.ContextService/PrepareExecutionContext"
+	ContextService_GetTemplate_FullMethodName              = "/lawpilot.context.v1.ContextService/GetTemplate"
+	ContextService_CreateTemplate_FullMethodName           = "/lawpilot.context.v1.ContextService/CreateTemplate"
+	ContextService_DecideTemplate_FullMethodName           = "/lawpilot.context.v1.ContextService/DecideTemplate"
+	ContextService_GetLegalReview_FullMethodName           = "/lawpilot.context.v1.ContextService/GetLegalReview"
+	ContextService_DecideLegalReview_FullMethodName        = "/lawpilot.context.v1.ContextService/DecideLegalReview"
+	ContextService_GetReviewDeadline_FullMethodName        = "/lawpilot.context.v1.ContextService/GetReviewDeadline"
+	ContextService_ExpireReview_FullMethodName             = "/lawpilot.context.v1.ContextService/ExpireReview"
+	ContextService_IngestProcessed_FullMethodName          = "/lawpilot.context.v1.ContextService/IngestProcessed"
+	ContextService_IngestText_FullMethodName               = "/lawpilot.context.v1.ContextService/IngestText"
+	ContextService_DeleteDocument_FullMethodName           = "/lawpilot.context.v1.ContextService/DeleteDocument"
+	ContextService_BuildContext_FullMethodName             = "/lawpilot.context.v1.ContextService/BuildContext"
+	ContextService_GetContext_FullMethodName               = "/lawpilot.context.v1.ContextService/GetContext"
+	ContextService_ResolveCitation_FullMethodName          = "/lawpilot.context.v1.ContextService/ResolveCitation"
+	ContextService_VerifyExecutionEvidence_FullMethodName  = "/lawpilot.context.v1.ContextService/VerifyExecutionEvidence"
+	ContextService_ListMatterEvents_FullMethodName         = "/lawpilot.context.v1.ContextService/ListMatterEvents"
 )
 
 // ContextServiceClient is the client API for ContextService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ContextServiceClient interface {
+	RegisterKnowledgeLibrary(ctx context.Context, in *KnowledgeLibraryRequest, opts ...grpc.CallOption) (*KnowledgeLibraryResponse, error)
+	BuildCalendarContext(ctx context.Context, in *CalendarContextRequest, opts ...grpc.CallOption) (*CalendarContextResponse, error)
 	PrepareExecutionContext(ctx context.Context, in *ExecutionRef, opts ...grpc.CallOption) (*PreparedContext, error)
 	GetTemplate(ctx context.Context, in *TemplateDecisionRequest, opts ...grpc.CallOption) (*TemplateResponse, error)
 	CreateTemplate(ctx context.Context, in *TemplateRequest, opts ...grpc.CallOption) (*TemplateResponse, error)
@@ -65,6 +69,26 @@ type contextServiceClient struct {
 
 func NewContextServiceClient(cc grpc.ClientConnInterface) ContextServiceClient {
 	return &contextServiceClient{cc}
+}
+
+func (c *contextServiceClient) RegisterKnowledgeLibrary(ctx context.Context, in *KnowledgeLibraryRequest, opts ...grpc.CallOption) (*KnowledgeLibraryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(KnowledgeLibraryResponse)
+	err := c.cc.Invoke(ctx, ContextService_RegisterKnowledgeLibrary_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *contextServiceClient) BuildCalendarContext(ctx context.Context, in *CalendarContextRequest, opts ...grpc.CallOption) (*CalendarContextResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CalendarContextResponse)
+	err := c.cc.Invoke(ctx, ContextService_BuildCalendarContext_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *contextServiceClient) PrepareExecutionContext(ctx context.Context, in *ExecutionRef, opts ...grpc.CallOption) (*PreparedContext, error) {
@@ -231,6 +255,8 @@ func (c *contextServiceClient) ListMatterEvents(ctx context.Context, in *ListMat
 // All implementations must embed UnimplementedContextServiceServer
 // for forward compatibility.
 type ContextServiceServer interface {
+	RegisterKnowledgeLibrary(context.Context, *KnowledgeLibraryRequest) (*KnowledgeLibraryResponse, error)
+	BuildCalendarContext(context.Context, *CalendarContextRequest) (*CalendarContextResponse, error)
 	PrepareExecutionContext(context.Context, *ExecutionRef) (*PreparedContext, error)
 	GetTemplate(context.Context, *TemplateDecisionRequest) (*TemplateResponse, error)
 	CreateTemplate(context.Context, *TemplateRequest) (*TemplateResponse, error)
@@ -257,6 +283,12 @@ type ContextServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedContextServiceServer struct{}
 
+func (UnimplementedContextServiceServer) RegisterKnowledgeLibrary(context.Context, *KnowledgeLibraryRequest) (*KnowledgeLibraryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegisterKnowledgeLibrary not implemented")
+}
+func (UnimplementedContextServiceServer) BuildCalendarContext(context.Context, *CalendarContextRequest) (*CalendarContextResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BuildCalendarContext not implemented")
+}
 func (UnimplementedContextServiceServer) PrepareExecutionContext(context.Context, *ExecutionRef) (*PreparedContext, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PrepareExecutionContext not implemented")
 }
@@ -324,6 +356,42 @@ func RegisterContextServiceServer(s grpc.ServiceRegistrar, srv ContextServiceSer
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&ContextService_ServiceDesc, srv)
+}
+
+func _ContextService_RegisterKnowledgeLibrary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(KnowledgeLibraryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContextServiceServer).RegisterKnowledgeLibrary(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ContextService_RegisterKnowledgeLibrary_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContextServiceServer).RegisterKnowledgeLibrary(ctx, req.(*KnowledgeLibraryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ContextService_BuildCalendarContext_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CalendarContextRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContextServiceServer).BuildCalendarContext(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ContextService_BuildCalendarContext_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContextServiceServer).BuildCalendarContext(ctx, req.(*CalendarContextRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _ContextService_PrepareExecutionContext_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -621,6 +689,14 @@ var ContextService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "lawpilot.context.v1.ContextService",
 	HandlerType: (*ContextServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "RegisterKnowledgeLibrary",
+			Handler:    _ContextService_RegisterKnowledgeLibrary_Handler,
+		},
+		{
+			MethodName: "BuildCalendarContext",
+			Handler:    _ContextService_BuildCalendarContext_Handler,
+		},
 		{
 			MethodName: "PrepareExecutionContext",
 			Handler:    _ContextService_PrepareExecutionContext_Handler,

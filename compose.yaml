@@ -1,4 +1,4 @@
-# Local development only. Production requires TLS databases/Temporal and external secret mounts.
+# Local development only; production requires configured TLS, credentials and policies.
 services:
   postgres:
     image: pgvector/pgvector:0.8.7-pg18-trixie
@@ -25,6 +25,9 @@ services:
     - ./db/002_tenant_directory_rls.sql:/docker-entrypoint-initdb.d/002_tenant_directory_rls.sql:ro
     - ./db/003_execution_outbox.sql:/docker-entrypoint-initdb.d/003_execution_outbox.sql:ro
     - ./db/004_pgvector.sql:/docker-entrypoint-initdb.d/004_pgvector.sql:ro
+    - ./db/016_sync_context_extensions.sql:/docker-entrypoint-initdb.d/016_sync_context_extensions.sql:ro
+    - ./db/017_knowledge_authorization.sql:/docker-entrypoint-initdb.d/017_knowledge_authorization.sql:ro
+    - ./db/018_review_and_queue_visibility.sql:/docker-entrypoint-initdb.d/018_review_and_queue_visibility.sql:ro
     - ./db/099_migration_ledger.sh:/docker-entrypoint-initdb.d/099_migration_ledger.sh:ro
     healthcheck:
       test:
@@ -83,6 +86,7 @@ services:
       CONTEXT_GRPC_ADDRESS: context-engine:50054
       INTEGRATION_GRPC_ADDRESS: integration-service:50055
       LEGAL_AI_ENABLED: ${LEGAL_AI_ENABLED:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
     depends_on:
       postgres:
         condition: service_healthy
@@ -115,6 +119,7 @@ services:
       TEMPORAL_TASK_QUEUE: lawpilot-executions-v1
       APP_ENV: development
       ENABLE_INTEGRATION_JOBS: 'true'
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
     depends_on:
       postgres:
         condition: service_healthy
@@ -278,6 +283,7 @@ services:
       GRPC_CA_FILE: /run/lawpilot/tls/ca.pem
       GRPC_SERVER_CERT_FILE: /run/lawpilot/tls/service.pem
       GRPC_SERVER_KEY_FILE: /run/lawpilot/tls/service.key
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
     depends_on:
       postgres:
         condition: service_healthy
@@ -312,6 +318,7 @@ services:
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
       EMBEDDING_REVISION: ${EMBEDDING_REVISION:-}
       EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
     volumes:
     - ./work/tls/ca.pem:/run/lawpilot/tls/ca.pem:ro
     - ./work/tls/context-engine.pem:/run/lawpilot/tls/service.pem:ro
@@ -340,6 +347,7 @@ services:
     environment:
       EVENT_DATABASE_URL: postgresql://lawpilot_events:local-dev-events-only@postgres:5432/lawpilot
       APP_ENV: development
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
     depends_on:
       postgres:
         condition: service_healthy
@@ -414,7 +422,11 @@ services:
       GENERIC_PROVIDER_REDIRECT_URI: ${GENERIC_PROVIDER_REDIRECT_URI:-}
       GENERIC_PROVIDER_TIME_ZONE: ${GENERIC_PROVIDER_TIME_ZONE:-}
       GENERIC_PROVIDER_API_VERSION: ${GENERIC_PROVIDER_API_VERSION:-}
+      PROVIDER_WEBHOOKS_ENABLED: ${PROVIDER_WEBHOOKS_ENABLED:-false}
+      PROVIDER_WEBHOOK_PUBLIC_URL: ${PROVIDER_WEBHOOK_PUBLIC_URL:-}
+      PROVIDER_CALENDAR_WRITES_ENABLED: ${PROVIDER_CALENDAR_WRITES_ENABLED:-false}
       PROVIDER_WRITES_ENABLED: ${PROVIDER_WRITES_ENABLED:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
     depends_on:
       postgres:
         condition: service_healthy
@@ -449,6 +461,9 @@ services:
       GRPC_SERVER_CERT_FILE: /run/lawpilot/tls/service.pem
       GRPC_SERVER_KEY_FILE: /run/lawpilot/tls/service.key
       APP_ENV: development
+      DOCUMENT_OCR_MODE: ${DOCUMENT_OCR_MODE:-off}
+      DOCUMENT_OCR_LANGUAGES: ${DOCUMENT_OCR_LANGUAGES:-eng}
+      DOCUMENT_OCR_MAX_PAGES: ${DOCUMENT_OCR_MAX_PAGES:-10}
       OPS_ADDRESS: :9090
     networks:
     - parser
@@ -458,10 +473,10 @@ services:
     security_opt:
     - no-new-privileges:true
     pids_limit: 32
-    mem_limit: 384m
+    mem_limit: 512m
     cpus: 1
     tmpfs:
-    - /tmp:rw,noexec,nosuid,size=32m
+    - /tmp:rw,noexec,nosuid,size=64m
     restart: unless-stopped
 volumes:
   temporaldata: null

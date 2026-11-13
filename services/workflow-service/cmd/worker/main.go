@@ -30,6 +30,11 @@ func env(name, fallback string) string {
 	return fallback
 }
 func main() {
+	stopTelemetry, telemetryErr := workload.StartTelemetry("execution-worker")
+	if telemetryErr != nil {
+		log.Fatal("telemetry configuration invalid")
+	}
+	defer stopTelemetry()
 	secret := os.Getenv("INTERNAL_HMAC_KEY")
 	url := workload.Secret("WORKFLOW_DATABASE_URL")
 	legacy := os.Getenv("ENABLE_LEGACY_INTERNAL_HTTP") == "true" && os.Getenv("APP_ENV") == "development"
@@ -44,7 +49,7 @@ func main() {
 	if err = workload.CheckDatabaseRole(context.Background(), pool); err != nil {
 		log.Fatal("runtime database role unsafe")
 	}
-	if err = workload.StartOperations(context.Background(), os.Getenv("OPS_ADDRESS"), pool.Ping); err != nil {
+	if err = workload.StartOperations(context.Background(), os.Getenv("OPS_ADDRESS"), pool.Ping, workload.QueueMetrics(pool)); err != nil {
 		log.Fatal("operations listener invalid")
 	}
 	registry, err := executions.LoadRegistry(env("CAPABILITY_REGISTRY_PATH", "contracts/capabilities/registry.v1.json"))
@@ -69,7 +74,7 @@ func main() {
 		if err != nil {
 			log.Fatal("context mTLS invalid")
 		}
-		connection, err := grpc.NewClient(target, grpc.WithTransportCredentials(credentials), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1048576)))
+		connection, err := grpc.NewClient(target, grpc.WithStatsHandler(workload.ClientTelemetry()), grpc.WithTransportCredentials(credentials), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1048576)))
 		if err != nil {
 			log.Fatal("context RPC invalid")
 		}
@@ -88,7 +93,7 @@ func main() {
 		if err != nil {
 			log.Fatal("integration mTLS invalid")
 		}
-		connection, err := grpc.NewClient(target, grpc.WithTransportCredentials(credentials))
+		connection, err := grpc.NewClient(target, grpc.WithStatsHandler(workload.ClientTelemetry()), grpc.WithTransportCredentials(credentials))
 		if err != nil {
 			log.Fatal("integration RPC invalid")
 		}
@@ -103,7 +108,7 @@ func main() {
 		if err != nil {
 			log.Fatal("calendar mTLS client configuration invalid")
 		}
-		connection, err := grpc.NewClient(target, grpc.WithTransportCredentials(credentials))
+		connection, err := grpc.NewClient(target, grpc.WithStatsHandler(workload.ClientTelemetry()), grpc.WithTransportCredentials(credentials))
 		if err != nil {
 			log.Fatal("calendar gRPC configuration invalid")
 		}
@@ -118,7 +123,7 @@ func main() {
 		if err != nil {
 			log.Fatal("supervisor mTLS configuration invalid")
 		}
-		connection, err := grpc.NewClient(target, grpc.WithTransportCredentials(credentials), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1048576)))
+		connection, err := grpc.NewClient(target, grpc.WithStatsHandler(workload.ClientTelemetry()), grpc.WithTransportCredentials(credentials), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1048576)))
 		if err != nil {
 			log.Fatal("supervisor gRPC configuration invalid")
 		}

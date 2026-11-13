@@ -39,7 +39,7 @@ func fixtureFor(t *testing.T) *fixture {
 	f := &fixture{s: &Service{Pool: pool}, admin: admin, tenant: uuid.NewString(), who: uuid.NewString(), matter: uuid.NewString(), other: uuid.NewString()}
 	t.Cleanup(func() {
 		admin.Exec(ctx, "DELETE FROM domain_event_deliveries WHERE event_id IN(SELECT id FROM domain_event_journal WHERE tenant_id=$1)", f.tenant)
-		for _, table := range []string{"domain_event_inbox", "domain_aggregate_heads", "domain_event_journal", "legal_review_decisions", "execution_context_grants", "legal_template_versions", "context_commands", "context_packages", "document_embeddings", "document_passages"} {
+		for _, table := range []string{"domain_event_inbox", "domain_aggregate_heads", "domain_event_journal", "knowledge_libraries", "legal_review_decisions", "execution_context_grants", "legal_template_versions", "context_commands", "context_packages", "document_embeddings", "document_passages"} {
 			if _, err := admin.Exec(ctx, "DELETE FROM "+table+" WHERE tenant_id=$1", f.tenant); err != nil {
 				t.Error(err)
 			}

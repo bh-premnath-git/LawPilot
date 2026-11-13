@@ -1,6 +1,7 @@
 syntax = "proto3";
 package lawpilot.integrations.v1;
 option go_package = "github.com/bh-premnath-git/LawPilot/contracts/gen/go/lawpilot/integrations/v1;integrationsv1";
+import "google/protobuf/struct.proto";
 message Scope { string tenant_id = 1; string request_id = 2; }
 message Ref { string tenant_id = 1; string id = 2; }
 message StatusRequest { Scope scope = 1; }
@@ -30,7 +31,20 @@ message DecideProviderUpdateRequest { Scope scope = 1; string operation_id = 2; 
 message ParseRequest { bytes data = 1; string media_type = 2; string expected_sha256 = 3; }
 message ParsedPage { int32 number = 1; string text = 2; }
 message ParseResponse { repeated ParsedPage pages = 1; string source_sha256 = 2; string parser_version = 3; }
+message WebhookRequest { Scope scope = 1; string connection_id = 2; string model = 3; string idempotency_key = 4; string subscription_id = 5; }
+message WebhookResponse { string subscription_id = 1; string state = 2; }
+message ReceiveWebhookRequest { string subscription_id = 1; string callback_token = 2; bytes body = 3; string secret = 4; string signature = 5; }
+message ReceiveWebhookResponse { bool accepted = 1; }
+message CalendarWriteRequest { Scope scope = 1; string connection_id = 2; string calendar_id = 3; string matter_id = 4; string entry_id = 5; string operation = 6; string title = 7; string description = 8; string start_at = 9; string end_at = 10; string time_zone = 11; string idempotency_key = 12; }
+message CalendarOperationRequest { Scope scope = 1; string operation_id = 2; string artifact_sha256 = 3; string decision = 4; string idempotency_key = 5; }
+message CalendarOperationResponse { string operation_id = 1; string state = 2; string artifact_sha256 = 3; google.protobuf.Struct artifact = 4; }
 service IntegrationService {
+ rpc RegisterWebhook(WebhookRequest) returns (WebhookResponse);
+ rpc ActivateWebhook(WebhookRequest) returns (WebhookResponse);
+ rpc ReceiveWebhook(ReceiveWebhookRequest) returns (ReceiveWebhookResponse);
+ rpc ProposeCalendarWrite(CalendarWriteRequest) returns (CalendarOperationResponse);
+ rpc GetCalendarOperation(CalendarOperationRequest) returns (CalendarOperationResponse);
+ rpc DecideCalendarWrite(CalendarOperationRequest) returns (CalendarOperationResponse);
  rpc Status(StatusRequest) returns (StatusResponse);
  rpc CreateUpload(CreateUploadRequest) returns (CreateUploadResponse);
  rpc FinalizeUpload(FileRequest) returns (FileResponse);

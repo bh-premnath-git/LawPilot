@@ -17,6 +17,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"strconv"
 	"syscall"
 	"time"
 )
@@ -33,13 +34,19 @@ func (p *parser) Parse(ctx context.Context, r *pb.ParseRequest) (*pb.ParseRespon
 	if len(r.Data) < 1 || len(r.Data) > 10*1024*1024 || hex.EncodeToString(sum[:]) != r.ExpectedSha256 || (r.MediaType != "application/pdf" && r.MediaType != "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
 		return nil, status.Error(codes.InvalidArgument, "INVALID_SOURCE")
 	}
-	call, cancel := context.WithTimeout(ctx, 25*time.Second)
+	call, cancel := context.WithTimeout(ctx, 120*time.Second)
 	defer cancel()
 	binary := os.Getenv("DOCUMENT_PROCESSOR_BIN")
 	if binary == "" {
 		binary = "/usr/local/bin/lawpilot-document-worker"
 	}
+	scratch, err := os.MkdirTemp("", "lawpilot-parser-")
+	if err != nil {
+		return nil, status.Error(codes.Unavailable, "PARSER_SCRATCH_UNAVAILABLE")
+	}
+	defer os.RemoveAll(scratch)
 	command := exec.CommandContext(call, binary)
+	command.Env = append(os.Environ(), "TMPDIR="+scratch)
 	command.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	command.Cancel = func() error {
 		if command.Process == nil {
@@ -75,7 +82,7 @@ func (p *parser) Parse(ctx context.Context, r *pb.ParseRequest) (*pb.ParseRespon
 			Text   string `json:"text"`
 		} `json:"pages"`
 	}
-	if json.Unmarshal(output, &result) != nil || result.SHA != r.ExpectedSha256 || result.Status != "ok" || result.Parser != "isolated-text.v1" || len(result.Pages) > 200 {
+	if json.Unmarshal(output, &result) != nil || result.SHA != r.ExpectedSha256 || result.Status != "ok" || (result.Parser != "isolated-text.v1" && result.Parser != "isolated-ocr.v1") || len(result.Pages) > 200 {
 		return nil, status.Error(codes.InvalidArgument, "INVALID_PARSER_RESULT")
 	}
 	reply := &pb.ParseResponse{SourceSha256: result.SHA, ParserVersion: result.Parser}
@@ -85,11 +92,37 @@ func (p *parser) Parse(ctx context.Context, r *pb.ParseRequest) (*pb.ParseRespon
 	return reply, nil
 }
 func main() {
+	stopTelemetry, telemetryErr := workload.StartTelemetry("document-parser")
+	if telemetryErr != nil {
+		log.Fatal("telemetry configuration invalid")
+	}
+	defer stopTelemetry()
+	mode := os.Getenv("DOCUMENT_OCR_MODE")
+	if v := os.Getenv("DOCUMENT_OCR_MAX_PAGES"); v != "" {
+		n, e := strconv.Atoi(v)
+		if e != nil || n < 1 || n > 20 {
+			log.Fatal("invalid OCR page bound")
+		}
+	}
+	if mode != "" && mode != "off" && mode != "empty-pages" && mode != "all-pages" {
+		log.Fatal("invalid OCR mode")
+	}
+	if mode != "" && mode != "off" {
+		for _, name := range []string{"pdftoppm", "tesseract"} {
+			if _, err := exec.LookPath(name); err != nil {
+				log.Fatal("OCR runtime unavailable")
+			}
+		}
+	}
 	creds, err := workload.ServerCredentials(os.Getenv("GRPC_CA_FILE"), os.Getenv("GRPC_SERVER_CERT_FILE"), os.Getenv("GRPC_SERVER_KEY_FILE"))
 	if err != nil {
 		log.Fatal("parser TLS required")
 	}
-	server := grpc.NewServer(grpc.Creds(creds), grpc.UnaryInterceptor(workload.Guard(4, 30*time.Second)), grpc.MaxRecvMsgSize(11*1024*1024), grpc.MaxSendMsgSize(2*1024*1024))
+	concurrency := 4
+	if mode != "" && mode != "off" {
+		concurrency = 2
+	}
+	server := grpc.NewServer(grpc.StatsHandler(workload.ServerTelemetry()), grpc.Creds(creds), grpc.UnaryInterceptor(workload.Guard(concurrency, 150*time.Second)), grpc.MaxRecvMsgSize(11*1024*1024), grpc.MaxSendMsgSize(2*1024*1024))
 	pb.RegisterDocumentParserServer(server, &parser{})
 	address := os.Getenv("PARSER_GRPC_ADDRESS")
 	if address == "" {

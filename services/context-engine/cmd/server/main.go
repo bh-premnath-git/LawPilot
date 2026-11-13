@@ -27,6 +27,11 @@ func required(name string) string {
 	return value
 }
 func main() {
+	stopTelemetry, telemetryErr := workload.StartTelemetry("context-engine")
+	if telemetryErr != nil {
+		log.Fatal("telemetry configuration invalid")
+	}
+	defer stopTelemetry()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	database := workload.Secret("CONTEXT_DATABASE_URL")
@@ -44,7 +49,7 @@ func main() {
 	if err = pool.Ping(ctx); err != nil {
 		log.Fatal("database unavailable")
 	}
-	if _, err = pool.Exec(ctx, "SELECT snapshot_sha256 FROM context_packages LIMIT 0"); err != nil {
+	if _, err = pool.Exec(ctx, "SELECT name FROM knowledge_libraries LIMIT 0"); err != nil {
 		log.Fatal("context migration required")
 	}
 	var evidenceReady bool
@@ -59,7 +64,7 @@ func main() {
 	if err != nil {
 		log.Fatal("identity configuration invalid")
 	}
-	server := grpc.NewServer(grpc.Creds(tls), grpc.ChainUnaryInterceptor(workload.Guard(32, 5*time.Minute), auth), grpc.KeepaliveParams(keepalive.ServerParameters{MaxConnectionAge: 5 * time.Minute, MaxConnectionAgeGrace: 30 * time.Second}), grpc.MaxRecvMsgSize(1048576), grpc.MaxSendMsgSize(1048576))
+	server := grpc.NewServer(grpc.StatsHandler(workload.ServerTelemetry()), grpc.Creds(tls), grpc.ChainUnaryInterceptor(workload.Guard(32, 5*time.Minute), auth), grpc.KeepaliveParams(keepalive.ServerParameters{MaxConnectionAge: 5 * time.Minute, MaxConnectionAgeGrace: 30 * time.Second}), grpc.MaxRecvMsgSize(1048576), grpc.MaxSendMsgSize(1048576))
 	service, err := engine.New(pool)
 	if err != nil {
 		log.Fatal("context/embedding configuration invalid")
@@ -87,7 +92,7 @@ func main() {
 			server.Stop()
 		}
 	}()
-	if err = workload.StartOperations(ctx, os.Getenv("OPS_ADDRESS"), pool.Ping); err != nil {
+	if err = workload.StartOperations(ctx, os.Getenv("OPS_ADDRESS"), pool.Ping, workload.QueueMetrics(pool)); err != nil {
 		log.Fatal("operations listener invalid")
 	}
 	log.Println("context gRPC service started (mTLS required)")

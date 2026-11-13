@@ -1,5 +1,7 @@
 # Backend layer order and current boundaries
 
+Latest scope: [capability extensions and validation](CAPABILITY_EXTENSIONS.md) covers webhooks, reconciled/bounded calendar sync, reviewed appointments, OCR, curated knowledge/calendar recipes, Go tracing and production policy templates (migrations 016–018).
+
 Current extension: see [configured integrations and operations](CONFIGURED_INTEGRATIONS.md) for implemented file processing, OAuth/polling adapters, configured legal generation, authoritative review, migrations 011–015 and current limitations. Earlier gap lists below describe the preceding baseline.
 
 Work proceeds in this order. The changes below harden the existing starter; they do not implement real legal AI, Clio synchronization or a production approval service.

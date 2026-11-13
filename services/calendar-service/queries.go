@@ -116,9 +116,12 @@ func (s *Service) ListEntries(ctx context.Context, r *pb.ListEntriesRequest) (*p
 	reply := &pb.ListEntriesResponse{Coverage: "native_only", AsOf: timestamppb.New(s.now())}
 	who := actor(ctx)
 	err = s.tx(ctx, tenant, r.CalendarId, false, func(tx pgx.Tx) error {
-		_, client, err := authorize(ctx, tx, tenant, r.CalendarId, who, "read")
+		calendar, client, err := authorize(ctx, tx, tenant, r.CalendarId, who, "read")
 		if err != nil {
 			return err
+		}
+		if calendar.Authority != "lawpilot-native" {
+			reply.Coverage = "provider_snapshot"
 		}
 		if err = matterAccess(ctx, tx, tenant, who, r.MatterId); err != nil {
 			return err
@@ -225,7 +228,7 @@ func (s *Service) SyncStatus(ctx context.Context, r *pb.SyncStatusRequest) (*pb.
 			reply.Authority = calendar.Authority
 			reply.State = "provider_polling"
 			reply.Coverage = "imported_snapshot"
-			reply.Warnings = []string{"Read-only imported snapshot; check the provider synchronization job for freshness. Remote deletions, recurrence reconciliation and webhooks are not synchronized."}
+			reply.Warnings = []string{"Imported snapshot; check synchronization jobs for freshness. Clio recurring occurrences cover a bounded window (30 days back, one year ahead). Webhooks trigger re-fetching and missing records are probed. Recurring, deadline and document writes remain unavailable."}
 		}
 		return err
 	})

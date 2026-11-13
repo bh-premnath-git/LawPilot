@@ -48,6 +48,10 @@ func loadEntry(ctx context.Context, tx pgx.Tx, tenant, calendar, id string) (*pb
 	return e, when, err
 }
 func visible(ctx context.Context, tx pgx.Tx, tenant, who string, e *pb.CalendarEntry, client bool) bool {
+	var unavailable bool
+	if err := tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM provider_sync_bindings WHERE tenant_id=$1 AND local_id=$2 AND resource_type='calendar_entry' AND deleted)", tenant, e.Id).Scan(&unavailable); err != nil || unavailable {
+		return false
+	}
 	if e.Visibility == pb.Visibility_VISIBILITY_PRIVATE && e.CreatedBy != who {
 		return false
 	}

@@ -158,7 +158,7 @@ func job(ctx context.Context, tx pgx.Tx, tenant, who, id, kind, resource string)
 	if _, err := tx.Exec(ctx, "INSERT INTO integration_jobs(id,tenant_id,principal_id,kind,resource_id,workflow_id)VALUES($1,$2,$3,$4,$5,$6)", id, tenant, who, kind, resource, workflowID); err != nil {
 		return err
 	}
-	event := map[string]string{"file": "file.process.requested.v1", "provider_sync": "provider.sync.requested.v1", "provider_update": "provider.update.requested.v1", "legal_review": "legal.review.requested.v1"}[kind]
+	event := map[string]string{"file": "file.process.requested.v1", "provider_sync": "provider.sync.requested.v1", "provider_update": "provider.update.requested.v1", "provider_calendar": "provider.update.requested.v1", "legal_review": "legal.review.requested.v1"}[kind]
 	_, err := tx.Exec(ctx, `INSERT INTO outbox_events(tenant_id,event_type,event_version,aggregate_id,event_body)VALUES($1,$2,'1.0',$3,jsonb_build_object('specversion','1.0','id',gen_random_uuid()::text,'source','integration-service','type',$2::text,'time',now(),'tenantId',$1::uuid::text,'schemaVersion','1.0','aggregateId',$3::uuid::text,'data',jsonb_build_object('state','queued')))`, tenant, event, id)
 	return err
 }

@@ -21,6 +21,11 @@ func env(name, fallback string) string {
 	return fallback
 }
 func main() {
+	stopTelemetry, telemetryErr := workload.StartTelemetry("outbox-dispatcher")
+	if telemetryErr != nil {
+		log.Fatal("telemetry configuration invalid")
+	}
+	defer stopTelemetry()
 	if workload.Secret("DISPATCHER_DATABASE_URL") == "" || workload.Secret("WORKFLOW_DATABASE_URL") == "" {
 		log.Fatal("dispatcher and workflow DB URLs required")
 	}
@@ -34,7 +39,7 @@ func main() {
 	if err = workload.CheckDatabaseRole(ctx, pool); err != nil {
 		log.Fatal("runtime database role unsafe")
 	}
-	if err = workload.StartOperations(ctx, os.Getenv("OPS_ADDRESS"), pool.Ping); err != nil {
+	if err = workload.StartOperations(ctx, os.Getenv("OPS_ADDRESS"), pool.Ping, workload.QueueMetrics(pool)); err != nil {
 		log.Fatal("operations listener invalid")
 	}
 	statePool, err := executions.Open(ctx, workload.Secret("WORKFLOW_DATABASE_URL"))

@@ -160,3 +160,58 @@ func TestDisabledConfigurationHasNoCredentialRequirement(t *testing.T) {
 		t.Fatal("enabled missing config accepted")
 	}
 }
+
+func TestClioExpandedRecurrenceMetadataAndSparseFields(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.Contains(r.URL.Query().Get("fields"), "recurrence_rule") {
+			t.Error("recurrence metadata omitted")
+		}
+		io.WriteString(w, `{"data":[{"id":"12_20261201","etag":"e1","summary":"Recurring appointment","description":"Synthetic","start_at":"2026-12-01T10:00:00Z","end_at":"2026-12-01T11:00:00Z","all_day":false,"start_at_time_zone":"Europe/London","calendar_owner":{"id":2,"type":"UserCalendar"},"matter":{"id":1},"recurrence_rule":"FREQ=WEEKLY;COUNT=4","court_rule":false}]}`)
+	}))
+	defer server.Close()
+	p := &Provider{ID: "clio-manage", Base: server.URL, HTTP: server.Client(), TimeZone: "UTC"}
+	page, err := p.Fetch(context.Background(), "calendar_entry", "", "synthetic")
+	if err != nil || len(page.Entries) != 1 {
+		t.Fatal(page, err)
+	}
+	entry := page.Entries[0]
+	if entry.Recurrence != "FREQ=WEEKLY;COUNT=4" || entry.Zone != "Europe/London" || entry.Calendar != "UserCalendar:2" {
+		t.Fatal("canonical recurrence mapping lost", entry)
+	}
+}
+
+func TestMissingProbeNeverTreatsAuthorizationOrNetworkFailureAsDeletion(t *testing.T) {
+	for _, code := range []int{200, 403, 404, 410, 429, 500} {
+		t.Run(string(rune(code)), func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(code) }))
+			defer server.Close()
+			p := &Provider{ID: "generic-rest", Base: server.URL, HTTP: server.Client()}
+			exists, err := p.Probe(context.Background(), "matter", "1", "synthetic")
+			if code == 200 {
+				if !exists || err != nil {
+					t.Fatal(exists, err)
+				}
+			} else if code == 404 || code == 410 {
+				if exists || err != nil {
+					t.Fatal(exists, err)
+				}
+			} else if err == nil {
+				t.Fatal("error response became deletion")
+			}
+		})
+	}
+}
+
+func TestExtensionFlagsFailClosedWhenConfigurationIsMissing(t *testing.T) {
+	t.Setenv("PROVIDER_WEBHOOKS_ENABLED", "true")
+	t.Setenv("PROVIDER_WEBHOOK_PUBLIC_URL", "")
+	t.Setenv("PROVIDER_CALENDAR_WRITES_ENABLED", "false")
+	if ValidateExtensions(map[string]*Provider{}, false) == nil {
+		t.Fatal("unconfigured webhooks accepted")
+	}
+	t.Setenv("PROVIDER_WEBHOOKS_ENABLED", "false")
+	t.Setenv("PROVIDER_CALENDAR_WRITES_ENABLED", "true")
+	if ValidateExtensions(map[string]*Provider{}, false) == nil {
+		t.Fatal("calendar writes enabled without provider policy")
+	}
+}

@@ -79,15 +79,96 @@ fn pdf(bytes: &[u8]) -> Result<Vec<Page>> {
     if parts.len() > MAX_PAGES {
         return Err("PAGE_LIMIT".into());
     }
-    Ok(parts
-        .into_iter()
-        .enumerate()
-        .map(|(i, s)| Page {
+    let mode = std::env::var("DOCUMENT_OCR_MODE").unwrap_or_else(|_| "off".into());
+    if mode != "off" && mode != "empty-pages" && mode != "all-pages" {
+        return Err("INVALID_OCR_MODE".into());
+    }
+    let mut pages = Vec::new();
+    let mut ocr_count = 0;
+    let maximum = std::env::var("DOCUMENT_OCR_MAX_PAGES")
+        .unwrap_or_else(|_| "10".into())
+        .parse::<usize>()?;
+    if maximum == 0 || maximum > 20 {
+        return Err("OCR_PAGE_LIMIT".into());
+    }
+    for (i, part) in parts.into_iter().enumerate() {
+        let mut text = part.to_owned();
+        if mode == "all-pages" || mode == "empty-pages" && text.trim().is_empty() {
+            ocr_count += 1;
+            if ocr_count > maximum {
+                return Err("OCR_PAGE_LIMIT".into());
+            }
+            text = ocr_page(bytes, i + 1)?;
+        }
+        pages.push(Page {
             number: i + 1,
-            text: s.to_owned(),
-        })
-        .collect())
+            text,
+        });
+    }
+    Ok(pages)
 }
+fn ocr_page(bytes: &[u8], page: usize) -> Result<String> {
+    let dir = tempfile::tempdir()?;
+    let input = dir.path().join("source.pdf");
+    let prefix = dir.path().join("page");
+    std::fs::write(&input, bytes)?;
+    let status = Command::new("pdftoppm")
+        .args([
+            "-f",
+            &page.to_string(),
+            "-l",
+            &page.to_string(),
+            "-singlefile",
+            "-r",
+            "180",
+            "-scale-to",
+            "2200",
+            "-gray",
+            "-png",
+        ])
+        .arg(&input)
+        .arg(&prefix)
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()?;
+    let image = dir.path().join("page.png");
+    if !status.success() || std::fs::metadata(&image)?.len() > 16 * 1024 * 1024 {
+        return Err("OCR_RASTER_LIMIT".into());
+    }
+    let lang = std::env::var("DOCUMENT_OCR_LANGUAGES").unwrap_or_else(|_| "eng".into());
+    if lang.len() > 80
+        || !lang
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '+')
+    {
+        return Err("OCR_LANGUAGE_CONFIGURATION".into());
+    }
+    let mut child = Command::new("tesseract")
+        .arg(&image)
+        .args(["stdout", "-l", &lang, "--psm", "3"])
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()?;
+    let mut output = Vec::new();
+    child
+        .stdout
+        .take()
+        .ok_or("OCR_PIPE")?
+        .take((MAX_TEXT + 1) as u64)
+        .read_to_end(&mut output)?;
+    if output.len() > MAX_TEXT {
+        let _ = child.kill();
+        let _ = child.wait();
+        return Err("OCR_TEXT_LIMIT".into());
+    }
+    if !child.wait()?.success() {
+        return Err("OCR_UNAVAILABLE".into());
+    }
+    Ok(String::from_utf8(output)?)
+}
+
 fn docx(bytes: &[u8]) -> Result<Vec<Page>> {
     if !bytes.starts_with(b"PK\x03\x04") {
         return Err("DOCX_SIGNATURE_REQUIRED".into());
@@ -269,7 +350,15 @@ fn process(mut reader: impl Read) -> Result<Output> {
         sha256: hex::encode(Sha256::digest(&bytes)),
         size_bytes: bytes.len(),
         pages,
-        parser_version: Some("isolated-text.v1"),
+        parser_version: Some(
+            if req.media_type == "application/pdf"
+                && std::env::var("DOCUMENT_OCR_MODE").unwrap_or_else(|_| "off".into()) != "off"
+            {
+                "isolated-ocr.v1"
+            } else {
+                "isolated-text.v1"
+            },
+        ),
     })
 }
 fn main() {
@@ -356,6 +445,17 @@ mod coverage_tests {
         assert_eq!(pages.len(), 1);
         assert_eq!(pages[0].number, 1);
         assert!(pages[0].text.contains("Rent due monthly."));
+        let recognized = ocr_page(raw.as_bytes(), 1).unwrap();
+        let normalized: String = recognized
+            .chars()
+            .filter(|c| c.is_ascii_alphanumeric())
+            .flat_map(|c| c.to_lowercase())
+            .collect();
+        assert!(
+            normalized.contains("leaseagreement"),
+            "OCR fixture text: {:?}",
+            recognized
+        );
     }
     #[test]
     fn docx_includes_footnotes_and_rejects_tracked_changes() {

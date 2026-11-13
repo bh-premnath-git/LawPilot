@@ -1,0 +1,217 @@
+# Requires cert-manager and an operator-provisioned lawpilot-workloads ClusterIssuer.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lawpilot
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: api-gateway
+  namespace: lawpilot
+spec:
+  secretName: api-gateway-tls
+  commonName: api-gateway
+  dnsNames:
+  - api-gateway
+  - api-gateway.lawpilot.svc.cluster.local
+  uris:
+  - spiffe://lawpilot.local/api-gateway
+  duration: 24h
+  renewBefore: 8h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  usages:
+  - server auth
+  - client auth
+  issuerRef:
+    name: lawpilot-workloads
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: execution-worker
+  namespace: lawpilot
+spec:
+  secretName: execution-worker-tls
+  commonName: execution-worker
+  dnsNames:
+  - execution-worker
+  - execution-worker.lawpilot.svc.cluster.local
+  uris:
+  - spiffe://lawpilot.local/execution-worker
+  duration: 24h
+  renewBefore: 8h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  usages:
+  - server auth
+  - client auth
+  issuerRef:
+    name: lawpilot-workloads
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: root-supervisor
+  namespace: lawpilot
+spec:
+  secretName: root-supervisor-tls
+  commonName: root-supervisor
+  dnsNames:
+  - root-supervisor
+  - root-supervisor.lawpilot.svc.cluster.local
+  uris:
+  - spiffe://lawpilot.local/root-supervisor
+  duration: 24h
+  renewBefore: 8h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  usages:
+  - server auth
+  - client auth
+  issuerRef:
+    name: lawpilot-workloads
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ai-capabilities
+  namespace: lawpilot
+spec:
+  secretName: ai-capabilities-tls
+  commonName: ai-capabilities
+  dnsNames:
+  - ai-capabilities
+  - ai-capabilities.lawpilot.svc.cluster.local
+  uris:
+  - spiffe://lawpilot.local/ai-capabilities
+  duration: 24h
+  renewBefore: 8h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  usages:
+  - server auth
+  - client auth
+  issuerRef:
+    name: lawpilot-workloads
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: calendar-service
+  namespace: lawpilot
+spec:
+  secretName: calendar-service-tls
+  commonName: calendar-service
+  dnsNames:
+  - calendar-service
+  - calendar-service.lawpilot.svc.cluster.local
+  uris:
+  - spiffe://lawpilot.local/calendar-service
+  duration: 24h
+  renewBefore: 8h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  usages:
+  - server auth
+  - client auth
+  issuerRef:
+    name: lawpilot-workloads
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: context-engine
+  namespace: lawpilot
+spec:
+  secretName: context-engine-tls
+  commonName: context-engine
+  dnsNames:
+  - context-engine
+  - context-engine.lawpilot.svc.cluster.local
+  uris:
+  - spiffe://lawpilot.local/context-engine
+  duration: 24h
+  renewBefore: 8h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  usages:
+  - server auth
+  - client auth
+  issuerRef:
+    name: lawpilot-workloads
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: integration-service
+  namespace: lawpilot
+spec:
+  secretName: integration-service-tls
+  commonName: integration-service
+  dnsNames:
+  - integration-service
+  - integration-service.lawpilot.svc.cluster.local
+  uris:
+  - spiffe://lawpilot.local/integration-service
+  duration: 24h
+  renewBefore: 8h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  usages:
+  - server auth
+  - client auth
+  issuerRef:
+    name: lawpilot-workloads
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: document-parser
+  namespace: lawpilot
+spec:
+  secretName: document-parser-tls
+  commonName: document-parser
+  dnsNames:
+  - document-parser
+  - document-parser.lawpilot.svc.cluster.local
+  uris:
+  - spiffe://lawpilot.local/document-parser
+  duration: 24h
+  renewBefore: 8h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  usages:
+  - server auth
+  - client auth
+  issuerRef:
+    name: lawpilot-workloads
+    kind: ClusterIssuer

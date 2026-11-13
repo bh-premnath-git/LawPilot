@@ -242,6 +242,15 @@ func (s *Service) processUpdate(ctx context.Context, tenant, jobID, id, who stri
 		code = "PROVIDER_WRITE_UNCERTAIN_REQUIRES_REVIEW"
 	}
 	err = s.tx(ctx, tenant, func(tx pgx.Tx) error {
+		var current string
+		if e := tx.QueryRow(ctx, "SELECT state FROM provider_update_proposals WHERE tenant_id=$1 AND id=$2 FOR UPDATE", tenant, id).Scan(&current); e != nil {
+			return e
+		}
+		if current == "completed" {
+			jobState = "completed"
+			code = ""
+			return nil
+		}
 		if _, err := tx.Exec(ctx, "UPDATE provider_update_proposals SET state=$3 WHERE tenant_id=$1 AND id=$2", tenant, id, outcome); err != nil {
 			return err
 		}

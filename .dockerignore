@@ -12,3 +12,5 @@ work
 *.pem
 *.key
 *.token
+
+var/cache/fontconfig

@@ -34,6 +34,16 @@ class ContextServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
+        self.RegisterKnowledgeLibrary = channel.unary_unary(
+                '/lawpilot.context.v1.ContextService/RegisterKnowledgeLibrary',
+                request_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.KnowledgeLibraryRequest.SerializeToString,
+                response_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.KnowledgeLibraryResponse.FromString,
+                _registered_method=True)
+        self.BuildCalendarContext = channel.unary_unary(
+                '/lawpilot.context.v1.ContextService/BuildCalendarContext',
+                request_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.CalendarContextRequest.SerializeToString,
+                response_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.CalendarContextResponse.FromString,
+                _registered_method=True)
         self.PrepareExecutionContext = channel.unary_unary(
                 '/lawpilot.context.v1.ContextService/PrepareExecutionContext',
                 request_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.ExecutionRef.SerializeToString,
@@ -118,6 +128,18 @@ class ContextServiceStub(object):
 
 class ContextServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
+
+    def RegisterKnowledgeLibrary(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def BuildCalendarContext(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def PrepareExecutionContext(self, request, context):
         """Missing associated documentation comment in .proto file."""
@@ -218,6 +240,16 @@ class ContextServiceServicer(object):
 
 def add_ContextServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
+            'RegisterKnowledgeLibrary': grpc.unary_unary_rpc_method_handler(
+                    servicer.RegisterKnowledgeLibrary,
+                    request_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.KnowledgeLibraryRequest.FromString,
+                    response_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.KnowledgeLibraryResponse.SerializeToString,
+            ),
+            'BuildCalendarContext': grpc.unary_unary_rpc_method_handler(
+                    servicer.BuildCalendarContext,
+                    request_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.CalendarContextRequest.FromString,
+                    response_serializer=lawpilot_dot_context_dot_v1_dot_context__pb2.CalendarContextResponse.SerializeToString,
+            ),
             'PrepareExecutionContext': grpc.unary_unary_rpc_method_handler(
                     servicer.PrepareExecutionContext,
                     request_deserializer=lawpilot_dot_context_dot_v1_dot_context__pb2.ExecutionRef.FromString,
@@ -308,6 +340,60 @@ def add_ContextServiceServicer_to_server(servicer, server):
  # This class is part of an EXPERIMENTAL API.
 class ContextService(object):
     """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def RegisterKnowledgeLibrary(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/lawpilot.context.v1.ContextService/RegisterKnowledgeLibrary',
+            lawpilot_dot_context_dot_v1_dot_context__pb2.KnowledgeLibraryRequest.SerializeToString,
+            lawpilot_dot_context_dot_v1_dot_context__pb2.KnowledgeLibraryResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def BuildCalendarContext(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/lawpilot.context.v1.ContextService/BuildCalendarContext',
+            lawpilot_dot_context_dot_v1_dot_context__pb2.CalendarContextRequest.SerializeToString,
+            lawpilot_dot_context_dot_v1_dot_context__pb2.CalendarContextResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
 
     @staticmethod
     def PrepareExecutionContext(request,

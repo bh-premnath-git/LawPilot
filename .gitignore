@@ -14,3 +14,6 @@ target/
 *.token
 
 work/
+
+# Local PDF renderer font cache.
+var/cache/fontconfig/

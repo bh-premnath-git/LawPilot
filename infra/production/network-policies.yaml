@@ -1,0 +1,439 @@
+# Requires a NetworkPolicy-enforcing CNI and matching workload labels.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: lawpilot
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-gateway-to-calendar-service
+  namespace: lawpilot
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: api-gateway
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: calendar-service
+    ports:
+    - protocol: TCP
+      port: 50051
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: calendar-service-from-api-gateway
+  namespace: lawpilot
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: calendar-service
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: api-gateway
+    ports:
+    - protocol: TCP
+      port: 50051
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-gateway-to-context-engine
+  namespace: lawpilot
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: api-gateway
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: context-engine
+    ports:
+    - protocol: TCP
+      port: 50054
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: context-engine-from-api-gateway
+  namespace: lawpilot
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: context-engine
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: api-gateway
+    ports:
+    - protocol: TCP
+      port: 50054
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-gateway-to-integration-service
+  namespace: lawpilot
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: api-gateway
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: integration-service
+    ports:
+    - protocol: TCP
+      port: 50055
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: integration-service-from-api-gateway
+  namespace: lawpilot
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: integration-service
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: api-gateway
+    ports:
+    - protocol: TCP
+      port: 50055
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: execution-worker-to-root-supervisor
+  namespace: lawpilot
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: execution-worker
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: root-supervisor
+    ports:
+    - protocol: TCP
+      port: 50052
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: root-supervisor-from-execution-worker
+  namespace: lawpilot
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: root-supervisor
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: execution-worker
+    ports:
+    - protocol: TCP
+      port: 50052
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: execution-worker-to-calendar-service
+  namespace: lawpilot
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: execution-worker
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: calendar-service
+    ports:
+    - protocol: TCP
+      port: 50051
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: calendar-service-from-execution-worker
+  namespace: lawpilot
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: calendar-service
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: execution-worker
+    ports:
+    - protocol: TCP
+      port: 50051
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: execution-worker-to-context-engine
+  namespace: lawpilot
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: execution-worker
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: context-engine
+    ports:
+    - protocol: TCP
+      port: 50054
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: context-engine-from-execution-worker
+  namespace: lawpilot
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: context-engine
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: execution-worker
+    ports:
+    - protocol: TCP
+      port: 50054
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: execution-worker-to-integration-service
+  namespace: lawpilot
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: execution-worker
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: integration-service
+    ports:
+    - protocol: TCP
+      port: 50055
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: integration-service-from-execution-worker
+  namespace: lawpilot
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: integration-service
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: execution-worker
+    ports:
+    - protocol: TCP
+      port: 50055
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: root-supervisor-to-ai-capabilities
+  namespace: lawpilot
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: root-supervisor
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: ai-capabilities
+    ports:
+    - protocol: TCP
+      port: 50053
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ai-capabilities-from-root-supervisor
+  namespace: lawpilot
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: ai-capabilities
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: root-supervisor
+    ports:
+    - protocol: TCP
+      port: 50053
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: integration-service-to-document-parser
+  namespace: lawpilot
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: integration-service
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: document-parser
+    ports:
+    - protocol: TCP
+      port: 50056
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: document-parser-from-integration-service
+  namespace: lawpilot
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: document-parser
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: integration-service
+    ports:
+    - protocol: TCP
+      port: 50056
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: integration-service-to-context-engine
+  namespace: lawpilot
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: integration-service
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: context-engine
+    ports:
+    - protocol: TCP
+      port: 50054
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: context-engine-from-integration-service
+  namespace: lawpilot
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: context-engine
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: integration-service
+    ports:
+    - protocol: TCP
+      port: 50054
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dns
+  namespace: lawpilot
+spec:
+  podSelector:
+    matchExpressions:
+    - key: app.kubernetes.io/name
+      operator: NotIn
+      values:
+      - document-parser
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53

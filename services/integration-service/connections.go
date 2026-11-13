@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 )
@@ -40,7 +41,20 @@ func connectionAccess(ctx context.Context, tx pgx.Tx, tenant, id, who, permissio
 	return c, err
 }
 func (c connection) public() *pb.Connection {
-	return &pb.Connection{Id: c.ID, ProviderId: c.Provider, State: c.State, Revision: c.Revision, Capabilities: []string{"matter.read.v1", "calendar.read.v1", "sync.poll.v1"}}
+	capabilities := []string{"matter.read.v1", "calendar.read.v1", "sync.poll.v1", "sync.reconcile.v1"}
+	if c.Provider == "clio-manage" {
+		capabilities = append(capabilities, "calendar.expanded_window.read.v1")
+		if os.Getenv("PROVIDER_WEBHOOKS_ENABLED") == "true" {
+			capabilities = append(capabilities, "webhook.hints.v1")
+		}
+	}
+	if os.Getenv("PROVIDER_WRITES_ENABLED") == "true" {
+		capabilities = append(capabilities, "matter.title.update.reviewed.v1")
+		if os.Getenv("PROVIDER_CALENDAR_WRITES_ENABLED") == "true" {
+			capabilities = append(capabilities, "calendar.appointment.create.reviewed.v1", "calendar.appointment.update.reviewed.v1")
+		}
+	}
+	return &pb.Connection{Id: c.ID, ProviderId: c.Provider, State: c.State, Revision: c.Revision, Capabilities: capabilities}
 }
 func (s *Service) CreateConnection(ctx context.Context, r *pb.CreateConnectionRequest) (*pb.ConnectionResponse, error) {
 	tenant, err := scope(r.Scope)
@@ -239,6 +253,9 @@ func (s *Service) Disconnect(ctx context.Context, r *pb.ConnectionRequest) (*pb.
 			return err
 		}
 		if _, err = tx.Exec(ctx, "UPDATE provider_connections SET status='disabled',encrypted_tokens=NULL,token_expires_at=NULL,revision=revision+1 WHERE tenant_id=$1 AND id=$2", tenant, c.ID); err != nil {
+			return err
+		}
+		if _, err = tx.Exec(ctx, "UPDATE provider_webhooks SET state='disabled',encrypted_secret=NULL WHERE tenant_id=$1 AND connection_id=$2", tenant, c.ID); err != nil {
 			return err
 		}
 		c.State = "disabled"

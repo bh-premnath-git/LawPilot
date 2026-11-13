@@ -6,6 +6,7 @@ import { Request, Response, json } from 'express';
 import { randomUUID } from 'node:crypto';
 import { AuthService } from './auth.service';
 import { DbService } from './db.service';
+import {ExtensionsController,ProviderWebhookController} from './integrations/extensions.controller';
 import {IntegrationController,IntegrationClient,LegalReviewController} from './integrations/integrations.controller';
 import {ContextController,ContextClient} from './context/context.controller';
 import {CalendarController,CalendarClient} from './calendar/calendar.controller';
@@ -64,7 +65,7 @@ class TelemetryLifecycle implements OnApplicationShutdown {
   async onApplicationShutdown(): Promise<void> { await shutdownTelemetry(); }
 }
 
-@Module({controllers:[ApiController,CalendarController,ContextController,IntegrationController,LegalReviewController],providers:[AuthService,DbService,AccessService,ExecutionsService,CalendarClient,ContextClient,IntegrationClient,TelemetryLifecycle]})
+@Module({controllers:[ApiController,CalendarController,ContextController,IntegrationController,LegalReviewController,ExtensionsController,ProviderWebhookController],providers:[AuthService,DbService,AccessService,ExecutionsService,CalendarClient,ContextClient,IntegrationClient,TelemetryLifecycle]})
 class AppModule{}
 async function bootstrap(){
   if(!process.env.KEYCLOAK_ISSUER||!process.env.KEYCLOAK_AUDIENCE||(!process.env.DATABASE_URL&&!process.env.DATABASE_URL_FILE)){throw new Error('Missing required auth/DB env');}
@@ -77,6 +78,7 @@ async function bootstrap(){
     Object.defineProperty(req,'lawpilotRequestId',{value:requestId,writable:false});
     next();
   });
+  app.use('/v1/provider-webhooks',json({limit:'64kb',strict:true,verify:(req:any,_res:any,buffer:Buffer)=>{req.rawBody=Buffer.from(buffer)}}));
   app.use(json({limit: '32kb', strict: true}));
   app.enableShutdownHooks();
   await app.listen(Number(process.env.API_PORT||3000),'0.0.0.0');

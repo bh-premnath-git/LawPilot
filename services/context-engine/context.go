@@ -77,7 +77,7 @@ func (s *Service) BuildContext(ctx context.Context, r *pb.BuildContextRequest) (
 		return nil, bad("INVALID_CONTEXT_REQUEST")
 	}
 	summary := r.RecipeId == "document.summary.v1"
-	if !summary && r.RecipeId != "matter.qa.v1" {
+	if !summary && r.RecipeId != "matter.qa.v1" && r.RecipeId != "matter.research.v1" && r.RecipeId != "firm.knowledge.v1" {
 		return nil, status.Error(codes.Unimplemented, "UNSUPPORTED_RECIPE")
 	}
 	if summary && !validID(r.DocumentId) || !summary && strings.TrimSpace(r.Query) == "" || r.DocumentId != "" && !validID(r.DocumentId) {
@@ -112,6 +112,18 @@ func (s *Service) BuildContext(ctx context.Context, r *pb.BuildContextRequest) (
 		if err := access(ctx, tx, tenant, r.MatterId, who, "context.read"); err != nil {
 			return err
 		}
+		if r.RecipeId == "firm.knowledge.v1" {
+			if err := tenantCapability(ctx, tx, tenant, who, "knowledge.read"); err != nil {
+				return err
+			}
+			var library bool
+			if err := tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM knowledge_libraries WHERE tenant_id=$1 AND matter_id=$2)", tenant, r.MatterId).Scan(&library); err != nil {
+				return err
+			}
+			if !library {
+				return status.Error(codes.FailedPrecondition, "KNOWLEDGE_LIBRARY_REQUIRED")
+			}
+		}
 		// MATERIALIZED ensures tenant/matter/current-version filtering precedes ranking.
 		base := `WITH authorized AS MATERIALIZED(SELECT p.id,p.document_id,p.version_id,p.passage_sha256,p.byte_start,p.byte_end,p.body,p.page_number FROM document_assets a JOIN document_passages p ON p.tenant_id=a.tenant_id AND p.document_id=a.id AND p.version_id=a.current_version_id WHERE a.tenant_id=$1 AND a.matter_id=$2 AND a.deleted_at IS NULL AND ($3='' OR a.id::text=$3)) `
 		var rows pgx.Rows
@@ -119,9 +131,19 @@ func (s *Service) BuildContext(ctx context.Context, r *pb.BuildContextRequest) (
 		if summary {
 			rows, err = tx.Query(ctx, base+"SELECT id::text,document_id::text,version_id::text,passage_sha256,byte_start,byte_end,page_number FROM authorized ORDER BY byte_start,id LIMIT 1025", tenant, r.MatterId, r.DocumentId)
 		} else if vector == "" {
-			rows, err = tx.Query(ctx, base+`SELECT id::text,document_id::text,version_id::text,passage_sha256,byte_start,byte_end,page_number FROM authorized WHERE to_tsvector('english',body) @@ websearch_to_tsquery('english',$4) ORDER BY ts_rank_cd(to_tsvector('english',body),websearch_to_tsquery('english',$4)) DESC,id LIMIT 8`, tenant, r.MatterId, r.DocumentId, r.Query)
+			rows, err = tx.Query(ctx, base+`SELECT id::text,document_id::text,version_id::text,passage_sha256,byte_start,byte_end,page_number FROM authorized WHERE to_tsvector('english',body) @@ websearch_to_tsquery('english',$4) ORDER BY ts_rank_cd(to_tsvector('english',body),websearch_to_tsquery('english',$4)) DESC,id LIMIT $5`, tenant, r.MatterId, r.DocumentId, r.Query, func() int {
+				if r.RecipeId == "matter.research.v1" {
+					return 16
+				}
+				return 8
+			}())
 		} else {
-			rows, err = tx.Query(ctx, base+`,lexical AS(SELECT id,row_number()OVER(ORDER BY ts_rank_cd(to_tsvector('english',body),websearch_to_tsquery('english',$4)) DESC,id)r FROM authorized WHERE to_tsvector('english',body)@@websearch_to_tsquery('english',$4)),semantic AS(SELECT a.id,row_number()OVER(ORDER BY e.embedding <=> $5::vector,a.id)r FROM authorized a JOIN document_embeddings e ON e.tenant_id=$1 AND e.passage_id=a.id AND e.passage_sha256=a.passage_sha256 AND e.profile_id=$6),scores AS(SELECT id,sum(score)s FROM(SELECT id,1.0/(60+r)score FROM lexical UNION ALL SELECT id,1.0/(60+r)score FROM semantic)x GROUP BY id) SELECT a.id::text,a.document_id::text,a.version_id::text,a.passage_sha256,a.byte_start,a.byte_end,a.page_number FROM scores s JOIN authorized a ON a.id=s.id ORDER BY s.s DESC,a.id LIMIT 8`, tenant, r.MatterId, r.DocumentId, r.Query, vector, profile)
+			rows, err = tx.Query(ctx, base+`,lexical AS(SELECT id,row_number()OVER(ORDER BY ts_rank_cd(to_tsvector('english',body),websearch_to_tsquery('english',$4)) DESC,id)r FROM authorized WHERE to_tsvector('english',body)@@websearch_to_tsquery('english',$4)),semantic AS(SELECT a.id,row_number()OVER(ORDER BY e.embedding <=> $5::vector,a.id)r FROM authorized a JOIN document_embeddings e ON e.tenant_id=$1 AND e.passage_id=a.id AND e.passage_sha256=a.passage_sha256 AND e.profile_id=$6),scores AS(SELECT id,sum(score)s FROM(SELECT id,1.0/(60+r)score FROM lexical UNION ALL SELECT id,1.0/(60+r)score FROM semantic)x GROUP BY id) SELECT a.id::text,a.document_id::text,a.version_id::text,a.passage_sha256,a.byte_start,a.byte_end,a.page_number FROM scores s JOIN authorized a ON a.id=s.id ORDER BY s.s DESC,a.id LIMIT $7`, tenant, r.MatterId, r.DocumentId, r.Query, vector, profile, func() int {
+				if r.RecipeId == "matter.research.v1" {
+					return 16
+				}
+				return 8
+			}())
 		}
 		if err != nil {
 			return err
@@ -143,6 +165,10 @@ func (s *Service) BuildContext(ctx context.Context, r *pb.BuildContextRequest) (
 			return notFound()
 		}
 		recipe := &pb.ContextRecipe{Id: r.RecipeId, Version: "1.0", MaxSources: 8, MaxBytes: 16384}
+		if r.RecipeId == "matter.research.v1" {
+			recipe.MaxSources = 16
+			recipe.MaxBytes = 32768
+		}
 		if summary {
 			recipe.MaxSources = 128
 			if configured := os.Getenv("CONTEXT_DOCUMENT_MAX_BYTES"); configured != "" {
@@ -154,7 +180,7 @@ func (s *Service) BuildContext(ctx context.Context, r *pb.BuildContextRequest) (
 				recipe.MaxSources = 1024
 			}
 		}
-		pkg := &pb.ContextPackage{Recipe: recipe, RetrievalMode: mode, TrustedPolicyId: policyID, CompleteDocument: summary, GroundingMode: "exact_quotes_only", EmbeddingProfileId: profile, Warnings: []string{"Retrieved text is untrusted source data. Quotes establish source support, not legal correctness. PDF extraction covers the text layer only; images/OCR, layout and annotations are not included. DOCX pagination is not inferred."}}
+		pkg := &pb.ContextPackage{Recipe: recipe, RetrievalMode: mode, TrustedPolicyId: policyID, CompleteDocument: summary, GroundingMode: "exact_quotes_only", EmbeddingProfileId: profile, Warnings: []string{"Retrieved text is untrusted source data. Quotes establish source support, not legal correctness. PDF extraction uses text layers or configured OCR; OCR may contain errors. Images, layout and annotations are not interpreted. DOCX pagination is not inferred."}}
 		used := 0
 		for _, c := range refs {
 			source, err := resolve(ctx, tx, tenant, r.MatterId, c)

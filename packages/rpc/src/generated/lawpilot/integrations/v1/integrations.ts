@@ -18,6 +18,7 @@ import {
   type ServiceError,
   type UntypedServiceImplementation,
 } from "@grpc/grpc-js";
+import { Struct } from "../../../google/protobuf/struct";
 
 export const protobufPackage = "lawpilot.integrations.v1";
 
@@ -198,6 +199,61 @@ export interface ParseResponse {
   pages: ParsedPage[];
   sourceSha256: string;
   parserVersion: string;
+}
+
+export interface WebhookRequest {
+  scope: Scope | undefined;
+  connectionId: string;
+  model: string;
+  idempotencyKey: string;
+  subscriptionId: string;
+}
+
+export interface WebhookResponse {
+  subscriptionId: string;
+  state: string;
+}
+
+export interface ReceiveWebhookRequest {
+  subscriptionId: string;
+  callbackToken: string;
+  body: Uint8Array;
+  secret: string;
+  signature: string;
+}
+
+export interface ReceiveWebhookResponse {
+  accepted: boolean;
+}
+
+export interface CalendarWriteRequest {
+  scope: Scope | undefined;
+  connectionId: string;
+  calendarId: string;
+  matterId: string;
+  entryId: string;
+  operation: string;
+  title: string;
+  description: string;
+  startAt: string;
+  endAt: string;
+  timeZone: string;
+  idempotencyKey: string;
+}
+
+export interface CalendarOperationRequest {
+  scope: Scope | undefined;
+  operationId: string;
+  artifactSha256: string;
+  decision: string;
+  idempotencyKey: string;
+}
+
+export interface CalendarOperationResponse {
+  operationId: string;
+  state: string;
+  artifactSha256: string;
+  artifact: { [key: string]: any } | undefined;
 }
 
 function createBaseScope(): Scope {
@@ -3171,8 +3227,1008 @@ export const ParseResponse: MessageFns<ParseResponse> = {
   },
 };
 
+function createBaseWebhookRequest(): WebhookRequest {
+  return { scope: undefined, connectionId: "", model: "", idempotencyKey: "", subscriptionId: "" };
+}
+
+export const WebhookRequest: MessageFns<WebhookRequest> = {
+  encode(message: WebhookRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.scope !== undefined) {
+      Scope.encode(message.scope, writer.uint32(10).fork()).join();
+    }
+    if (message.connectionId !== "") {
+      writer.uint32(18).string(message.connectionId);
+    }
+    if (message.model !== "") {
+      writer.uint32(26).string(message.model);
+    }
+    if (message.idempotencyKey !== "") {
+      writer.uint32(34).string(message.idempotencyKey);
+    }
+    if (message.subscriptionId !== "") {
+      writer.uint32(42).string(message.subscriptionId);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): WebhookRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseWebhookRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.scope = Scope.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.connectionId = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.model = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.idempotencyKey = reader.string();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.subscriptionId = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): WebhookRequest {
+    return {
+      scope: isSet(object.scope) ? Scope.fromJSON(object.scope) : undefined,
+      connectionId: isSet(object.connectionId)
+        ? globalThis.String(object.connectionId)
+        : isSet(object.connection_id)
+        ? globalThis.String(object.connection_id)
+        : "",
+      model: isSet(object.model) ? globalThis.String(object.model) : "",
+      idempotencyKey: isSet(object.idempotencyKey)
+        ? globalThis.String(object.idempotencyKey)
+        : isSet(object.idempotency_key)
+        ? globalThis.String(object.idempotency_key)
+        : "",
+      subscriptionId: isSet(object.subscriptionId)
+        ? globalThis.String(object.subscriptionId)
+        : isSet(object.subscription_id)
+        ? globalThis.String(object.subscription_id)
+        : "",
+    };
+  },
+
+  toJSON(message: WebhookRequest): unknown {
+    const obj: any = {};
+    if (message.scope !== undefined) {
+      obj.scope = Scope.toJSON(message.scope);
+    }
+    if (message.connectionId !== undefined) {
+      obj.connectionId = message.connectionId;
+    }
+    if (message.model !== undefined) {
+      obj.model = message.model;
+    }
+    if (message.idempotencyKey !== undefined) {
+      obj.idempotencyKey = message.idempotencyKey;
+    }
+    if (message.subscriptionId !== undefined) {
+      obj.subscriptionId = message.subscriptionId;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<WebhookRequest>): WebhookRequest {
+    return WebhookRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<WebhookRequest>): WebhookRequest {
+    const message = createBaseWebhookRequest();
+    message.scope = (object.scope !== undefined && object.scope !== null) ? Scope.fromPartial(object.scope) : undefined;
+    message.connectionId = object.connectionId ?? "";
+    message.model = object.model ?? "";
+    message.idempotencyKey = object.idempotencyKey ?? "";
+    message.subscriptionId = object.subscriptionId ?? "";
+    return message;
+  },
+};
+
+function createBaseWebhookResponse(): WebhookResponse {
+  return { subscriptionId: "", state: "" };
+}
+
+export const WebhookResponse: MessageFns<WebhookResponse> = {
+  encode(message: WebhookResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.subscriptionId !== "") {
+      writer.uint32(10).string(message.subscriptionId);
+    }
+    if (message.state !== "") {
+      writer.uint32(18).string(message.state);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): WebhookResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseWebhookResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.subscriptionId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.state = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): WebhookResponse {
+    return {
+      subscriptionId: isSet(object.subscriptionId)
+        ? globalThis.String(object.subscriptionId)
+        : isSet(object.subscription_id)
+        ? globalThis.String(object.subscription_id)
+        : "",
+      state: isSet(object.state) ? globalThis.String(object.state) : "",
+    };
+  },
+
+  toJSON(message: WebhookResponse): unknown {
+    const obj: any = {};
+    if (message.subscriptionId !== undefined) {
+      obj.subscriptionId = message.subscriptionId;
+    }
+    if (message.state !== undefined) {
+      obj.state = message.state;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<WebhookResponse>): WebhookResponse {
+    return WebhookResponse.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<WebhookResponse>): WebhookResponse {
+    const message = createBaseWebhookResponse();
+    message.subscriptionId = object.subscriptionId ?? "";
+    message.state = object.state ?? "";
+    return message;
+  },
+};
+
+function createBaseReceiveWebhookRequest(): ReceiveWebhookRequest {
+  return { subscriptionId: "", callbackToken: "", body: new Uint8Array(0), secret: "", signature: "" };
+}
+
+export const ReceiveWebhookRequest: MessageFns<ReceiveWebhookRequest> = {
+  encode(message: ReceiveWebhookRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.subscriptionId !== "") {
+      writer.uint32(10).string(message.subscriptionId);
+    }
+    if (message.callbackToken !== "") {
+      writer.uint32(18).string(message.callbackToken);
+    }
+    if (message.body.length !== 0) {
+      writer.uint32(26).bytes(message.body);
+    }
+    if (message.secret !== "") {
+      writer.uint32(34).string(message.secret);
+    }
+    if (message.signature !== "") {
+      writer.uint32(42).string(message.signature);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ReceiveWebhookRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseReceiveWebhookRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.subscriptionId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.callbackToken = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.body = reader.bytes();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.secret = reader.string();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.signature = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ReceiveWebhookRequest {
+    return {
+      subscriptionId: isSet(object.subscriptionId)
+        ? globalThis.String(object.subscriptionId)
+        : isSet(object.subscription_id)
+        ? globalThis.String(object.subscription_id)
+        : "",
+      callbackToken: isSet(object.callbackToken)
+        ? globalThis.String(object.callbackToken)
+        : isSet(object.callback_token)
+        ? globalThis.String(object.callback_token)
+        : "",
+      body: isSet(object.body) ? bytesFromBase64(object.body) : new Uint8Array(0),
+      secret: isSet(object.secret) ? globalThis.String(object.secret) : "",
+      signature: isSet(object.signature) ? globalThis.String(object.signature) : "",
+    };
+  },
+
+  toJSON(message: ReceiveWebhookRequest): unknown {
+    const obj: any = {};
+    if (message.subscriptionId !== undefined) {
+      obj.subscriptionId = message.subscriptionId;
+    }
+    if (message.callbackToken !== undefined) {
+      obj.callbackToken = message.callbackToken;
+    }
+    if (message.body !== undefined) {
+      obj.body = base64FromBytes(message.body);
+    }
+    if (message.secret !== undefined) {
+      obj.secret = message.secret;
+    }
+    if (message.signature !== undefined) {
+      obj.signature = message.signature;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ReceiveWebhookRequest>): ReceiveWebhookRequest {
+    return ReceiveWebhookRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ReceiveWebhookRequest>): ReceiveWebhookRequest {
+    const message = createBaseReceiveWebhookRequest();
+    message.subscriptionId = object.subscriptionId ?? "";
+    message.callbackToken = object.callbackToken ?? "";
+    message.body = object.body ?? new Uint8Array(0);
+    message.secret = object.secret ?? "";
+    message.signature = object.signature ?? "";
+    return message;
+  },
+};
+
+function createBaseReceiveWebhookResponse(): ReceiveWebhookResponse {
+  return { accepted: false };
+}
+
+export const ReceiveWebhookResponse: MessageFns<ReceiveWebhookResponse> = {
+  encode(message: ReceiveWebhookResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.accepted !== false) {
+      writer.uint32(8).bool(message.accepted);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ReceiveWebhookResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseReceiveWebhookResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.accepted = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ReceiveWebhookResponse {
+    return { accepted: isSet(object.accepted) ? globalThis.Boolean(object.accepted) : false };
+  },
+
+  toJSON(message: ReceiveWebhookResponse): unknown {
+    const obj: any = {};
+    if (message.accepted !== undefined) {
+      obj.accepted = message.accepted;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ReceiveWebhookResponse>): ReceiveWebhookResponse {
+    return ReceiveWebhookResponse.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ReceiveWebhookResponse>): ReceiveWebhookResponse {
+    const message = createBaseReceiveWebhookResponse();
+    message.accepted = object.accepted ?? false;
+    return message;
+  },
+};
+
+function createBaseCalendarWriteRequest(): CalendarWriteRequest {
+  return {
+    scope: undefined,
+    connectionId: "",
+    calendarId: "",
+    matterId: "",
+    entryId: "",
+    operation: "",
+    title: "",
+    description: "",
+    startAt: "",
+    endAt: "",
+    timeZone: "",
+    idempotencyKey: "",
+  };
+}
+
+export const CalendarWriteRequest: MessageFns<CalendarWriteRequest> = {
+  encode(message: CalendarWriteRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.scope !== undefined) {
+      Scope.encode(message.scope, writer.uint32(10).fork()).join();
+    }
+    if (message.connectionId !== "") {
+      writer.uint32(18).string(message.connectionId);
+    }
+    if (message.calendarId !== "") {
+      writer.uint32(26).string(message.calendarId);
+    }
+    if (message.matterId !== "") {
+      writer.uint32(34).string(message.matterId);
+    }
+    if (message.entryId !== "") {
+      writer.uint32(42).string(message.entryId);
+    }
+    if (message.operation !== "") {
+      writer.uint32(50).string(message.operation);
+    }
+    if (message.title !== "") {
+      writer.uint32(58).string(message.title);
+    }
+    if (message.description !== "") {
+      writer.uint32(66).string(message.description);
+    }
+    if (message.startAt !== "") {
+      writer.uint32(74).string(message.startAt);
+    }
+    if (message.endAt !== "") {
+      writer.uint32(82).string(message.endAt);
+    }
+    if (message.timeZone !== "") {
+      writer.uint32(90).string(message.timeZone);
+    }
+    if (message.idempotencyKey !== "") {
+      writer.uint32(98).string(message.idempotencyKey);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): CalendarWriteRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCalendarWriteRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.scope = Scope.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.connectionId = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.calendarId = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.matterId = reader.string();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.entryId = reader.string();
+          continue;
+        }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.operation = reader.string();
+          continue;
+        }
+        case 7: {
+          if (tag !== 58) {
+            break;
+          }
+
+          message.title = reader.string();
+          continue;
+        }
+        case 8: {
+          if (tag !== 66) {
+            break;
+          }
+
+          message.description = reader.string();
+          continue;
+        }
+        case 9: {
+          if (tag !== 74) {
+            break;
+          }
+
+          message.startAt = reader.string();
+          continue;
+        }
+        case 10: {
+          if (tag !== 82) {
+            break;
+          }
+
+          message.endAt = reader.string();
+          continue;
+        }
+        case 11: {
+          if (tag !== 90) {
+            break;
+          }
+
+          message.timeZone = reader.string();
+          continue;
+        }
+        case 12: {
+          if (tag !== 98) {
+            break;
+          }
+
+          message.idempotencyKey = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): CalendarWriteRequest {
+    return {
+      scope: isSet(object.scope) ? Scope.fromJSON(object.scope) : undefined,
+      connectionId: isSet(object.connectionId)
+        ? globalThis.String(object.connectionId)
+        : isSet(object.connection_id)
+        ? globalThis.String(object.connection_id)
+        : "",
+      calendarId: isSet(object.calendarId)
+        ? globalThis.String(object.calendarId)
+        : isSet(object.calendar_id)
+        ? globalThis.String(object.calendar_id)
+        : "",
+      matterId: isSet(object.matterId)
+        ? globalThis.String(object.matterId)
+        : isSet(object.matter_id)
+        ? globalThis.String(object.matter_id)
+        : "",
+      entryId: isSet(object.entryId)
+        ? globalThis.String(object.entryId)
+        : isSet(object.entry_id)
+        ? globalThis.String(object.entry_id)
+        : "",
+      operation: isSet(object.operation) ? globalThis.String(object.operation) : "",
+      title: isSet(object.title) ? globalThis.String(object.title) : "",
+      description: isSet(object.description) ? globalThis.String(object.description) : "",
+      startAt: isSet(object.startAt)
+        ? globalThis.String(object.startAt)
+        : isSet(object.start_at)
+        ? globalThis.String(object.start_at)
+        : "",
+      endAt: isSet(object.endAt)
+        ? globalThis.String(object.endAt)
+        : isSet(object.end_at)
+        ? globalThis.String(object.end_at)
+        : "",
+      timeZone: isSet(object.timeZone)
+        ? globalThis.String(object.timeZone)
+        : isSet(object.time_zone)
+        ? globalThis.String(object.time_zone)
+        : "",
+      idempotencyKey: isSet(object.idempotencyKey)
+        ? globalThis.String(object.idempotencyKey)
+        : isSet(object.idempotency_key)
+        ? globalThis.String(object.idempotency_key)
+        : "",
+    };
+  },
+
+  toJSON(message: CalendarWriteRequest): unknown {
+    const obj: any = {};
+    if (message.scope !== undefined) {
+      obj.scope = Scope.toJSON(message.scope);
+    }
+    if (message.connectionId !== undefined) {
+      obj.connectionId = message.connectionId;
+    }
+    if (message.calendarId !== undefined) {
+      obj.calendarId = message.calendarId;
+    }
+    if (message.matterId !== undefined) {
+      obj.matterId = message.matterId;
+    }
+    if (message.entryId !== undefined) {
+      obj.entryId = message.entryId;
+    }
+    if (message.operation !== undefined) {
+      obj.operation = message.operation;
+    }
+    if (message.title !== undefined) {
+      obj.title = message.title;
+    }
+    if (message.description !== undefined) {
+      obj.description = message.description;
+    }
+    if (message.startAt !== undefined) {
+      obj.startAt = message.startAt;
+    }
+    if (message.endAt !== undefined) {
+      obj.endAt = message.endAt;
+    }
+    if (message.timeZone !== undefined) {
+      obj.timeZone = message.timeZone;
+    }
+    if (message.idempotencyKey !== undefined) {
+      obj.idempotencyKey = message.idempotencyKey;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<CalendarWriteRequest>): CalendarWriteRequest {
+    return CalendarWriteRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<CalendarWriteRequest>): CalendarWriteRequest {
+    const message = createBaseCalendarWriteRequest();
+    message.scope = (object.scope !== undefined && object.scope !== null) ? Scope.fromPartial(object.scope) : undefined;
+    message.connectionId = object.connectionId ?? "";
+    message.calendarId = object.calendarId ?? "";
+    message.matterId = object.matterId ?? "";
+    message.entryId = object.entryId ?? "";
+    message.operation = object.operation ?? "";
+    message.title = object.title ?? "";
+    message.description = object.description ?? "";
+    message.startAt = object.startAt ?? "";
+    message.endAt = object.endAt ?? "";
+    message.timeZone = object.timeZone ?? "";
+    message.idempotencyKey = object.idempotencyKey ?? "";
+    return message;
+  },
+};
+
+function createBaseCalendarOperationRequest(): CalendarOperationRequest {
+  return { scope: undefined, operationId: "", artifactSha256: "", decision: "", idempotencyKey: "" };
+}
+
+export const CalendarOperationRequest: MessageFns<CalendarOperationRequest> = {
+  encode(message: CalendarOperationRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.scope !== undefined) {
+      Scope.encode(message.scope, writer.uint32(10).fork()).join();
+    }
+    if (message.operationId !== "") {
+      writer.uint32(18).string(message.operationId);
+    }
+    if (message.artifactSha256 !== "") {
+      writer.uint32(26).string(message.artifactSha256);
+    }
+    if (message.decision !== "") {
+      writer.uint32(34).string(message.decision);
+    }
+    if (message.idempotencyKey !== "") {
+      writer.uint32(42).string(message.idempotencyKey);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): CalendarOperationRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCalendarOperationRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.scope = Scope.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.operationId = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.artifactSha256 = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.decision = reader.string();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.idempotencyKey = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): CalendarOperationRequest {
+    return {
+      scope: isSet(object.scope) ? Scope.fromJSON(object.scope) : undefined,
+      operationId: isSet(object.operationId)
+        ? globalThis.String(object.operationId)
+        : isSet(object.operation_id)
+        ? globalThis.String(object.operation_id)
+        : "",
+      artifactSha256: isSet(object.artifactSha256)
+        ? globalThis.String(object.artifactSha256)
+        : isSet(object.artifact_sha256)
+        ? globalThis.String(object.artifact_sha256)
+        : "",
+      decision: isSet(object.decision) ? globalThis.String(object.decision) : "",
+      idempotencyKey: isSet(object.idempotencyKey)
+        ? globalThis.String(object.idempotencyKey)
+        : isSet(object.idempotency_key)
+        ? globalThis.String(object.idempotency_key)
+        : "",
+    };
+  },
+
+  toJSON(message: CalendarOperationRequest): unknown {
+    const obj: any = {};
+    if (message.scope !== undefined) {
+      obj.scope = Scope.toJSON(message.scope);
+    }
+    if (message.operationId !== undefined) {
+      obj.operationId = message.operationId;
+    }
+    if (message.artifactSha256 !== undefined) {
+      obj.artifactSha256 = message.artifactSha256;
+    }
+    if (message.decision !== undefined) {
+      obj.decision = message.decision;
+    }
+    if (message.idempotencyKey !== undefined) {
+      obj.idempotencyKey = message.idempotencyKey;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<CalendarOperationRequest>): CalendarOperationRequest {
+    return CalendarOperationRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<CalendarOperationRequest>): CalendarOperationRequest {
+    const message = createBaseCalendarOperationRequest();
+    message.scope = (object.scope !== undefined && object.scope !== null) ? Scope.fromPartial(object.scope) : undefined;
+    message.operationId = object.operationId ?? "";
+    message.artifactSha256 = object.artifactSha256 ?? "";
+    message.decision = object.decision ?? "";
+    message.idempotencyKey = object.idempotencyKey ?? "";
+    return message;
+  },
+};
+
+function createBaseCalendarOperationResponse(): CalendarOperationResponse {
+  return { operationId: "", state: "", artifactSha256: "", artifact: undefined };
+}
+
+export const CalendarOperationResponse: MessageFns<CalendarOperationResponse> = {
+  encode(message: CalendarOperationResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.operationId !== "") {
+      writer.uint32(10).string(message.operationId);
+    }
+    if (message.state !== "") {
+      writer.uint32(18).string(message.state);
+    }
+    if (message.artifactSha256 !== "") {
+      writer.uint32(26).string(message.artifactSha256);
+    }
+    if (message.artifact !== undefined) {
+      Struct.encode(Struct.wrap(message.artifact), writer.uint32(34).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): CalendarOperationResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCalendarOperationResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.operationId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.state = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.artifactSha256 = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.artifact = Struct.unwrap(Struct.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): CalendarOperationResponse {
+    return {
+      operationId: isSet(object.operationId)
+        ? globalThis.String(object.operationId)
+        : isSet(object.operation_id)
+        ? globalThis.String(object.operation_id)
+        : "",
+      state: isSet(object.state) ? globalThis.String(object.state) : "",
+      artifactSha256: isSet(object.artifactSha256)
+        ? globalThis.String(object.artifactSha256)
+        : isSet(object.artifact_sha256)
+        ? globalThis.String(object.artifact_sha256)
+        : "",
+      artifact: isObject(object.artifact) ? object.artifact : undefined,
+    };
+  },
+
+  toJSON(message: CalendarOperationResponse): unknown {
+    const obj: any = {};
+    if (message.operationId !== undefined) {
+      obj.operationId = message.operationId;
+    }
+    if (message.state !== undefined) {
+      obj.state = message.state;
+    }
+    if (message.artifactSha256 !== undefined) {
+      obj.artifactSha256 = message.artifactSha256;
+    }
+    if (message.artifact !== undefined) {
+      obj.artifact = message.artifact;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<CalendarOperationResponse>): CalendarOperationResponse {
+    return CalendarOperationResponse.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<CalendarOperationResponse>): CalendarOperationResponse {
+    const message = createBaseCalendarOperationResponse();
+    message.operationId = object.operationId ?? "";
+    message.state = object.state ?? "";
+    message.artifactSha256 = object.artifactSha256 ?? "";
+    message.artifact = object.artifact ?? undefined;
+    return message;
+  },
+};
+
 export type IntegrationServiceService = typeof IntegrationServiceService;
 export const IntegrationServiceService = {
+  registerWebhook: {
+    path: "/lawpilot.integrations.v1.IntegrationService/RegisterWebhook",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: WebhookRequest): Buffer => Buffer.from(WebhookRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): WebhookRequest => WebhookRequest.decode(value),
+    responseSerialize: (value: WebhookResponse): Buffer => Buffer.from(WebhookResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): WebhookResponse => WebhookResponse.decode(value),
+  },
+  activateWebhook: {
+    path: "/lawpilot.integrations.v1.IntegrationService/ActivateWebhook",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: WebhookRequest): Buffer => Buffer.from(WebhookRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): WebhookRequest => WebhookRequest.decode(value),
+    responseSerialize: (value: WebhookResponse): Buffer => Buffer.from(WebhookResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): WebhookResponse => WebhookResponse.decode(value),
+  },
+  receiveWebhook: {
+    path: "/lawpilot.integrations.v1.IntegrationService/ReceiveWebhook",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: ReceiveWebhookRequest): Buffer =>
+      Buffer.from(ReceiveWebhookRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): ReceiveWebhookRequest => ReceiveWebhookRequest.decode(value),
+    responseSerialize: (value: ReceiveWebhookResponse): Buffer =>
+      Buffer.from(ReceiveWebhookResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): ReceiveWebhookResponse => ReceiveWebhookResponse.decode(value),
+  },
+  proposeCalendarWrite: {
+    path: "/lawpilot.integrations.v1.IntegrationService/ProposeCalendarWrite",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: CalendarWriteRequest): Buffer => Buffer.from(CalendarWriteRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): CalendarWriteRequest => CalendarWriteRequest.decode(value),
+    responseSerialize: (value: CalendarOperationResponse): Buffer =>
+      Buffer.from(CalendarOperationResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): CalendarOperationResponse => CalendarOperationResponse.decode(value),
+  },
+  getCalendarOperation: {
+    path: "/lawpilot.integrations.v1.IntegrationService/GetCalendarOperation",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: CalendarOperationRequest): Buffer =>
+      Buffer.from(CalendarOperationRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): CalendarOperationRequest => CalendarOperationRequest.decode(value),
+    responseSerialize: (value: CalendarOperationResponse): Buffer =>
+      Buffer.from(CalendarOperationResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): CalendarOperationResponse => CalendarOperationResponse.decode(value),
+  },
+  decideCalendarWrite: {
+    path: "/lawpilot.integrations.v1.IntegrationService/DecideCalendarWrite",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: CalendarOperationRequest): Buffer =>
+      Buffer.from(CalendarOperationRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): CalendarOperationRequest => CalendarOperationRequest.decode(value),
+    responseSerialize: (value: CalendarOperationResponse): Buffer =>
+      Buffer.from(CalendarOperationResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): CalendarOperationResponse => CalendarOperationResponse.decode(value),
+  },
   status: {
     path: "/lawpilot.integrations.v1.IntegrationService/Status",
     requestStream: false,
@@ -3338,6 +4394,12 @@ export const IntegrationServiceService = {
 } as const;
 
 export interface IntegrationServiceServer extends UntypedServiceImplementation {
+  registerWebhook: handleUnaryCall<WebhookRequest, WebhookResponse>;
+  activateWebhook: handleUnaryCall<WebhookRequest, WebhookResponse>;
+  receiveWebhook: handleUnaryCall<ReceiveWebhookRequest, ReceiveWebhookResponse>;
+  proposeCalendarWrite: handleUnaryCall<CalendarWriteRequest, CalendarOperationResponse>;
+  getCalendarOperation: handleUnaryCall<CalendarOperationRequest, CalendarOperationResponse>;
+  decideCalendarWrite: handleUnaryCall<CalendarOperationRequest, CalendarOperationResponse>;
   status: handleUnaryCall<StatusRequest, StatusResponse>;
   createUpload: handleUnaryCall<CreateUploadRequest, CreateUploadResponse>;
   finalizeUpload: handleUnaryCall<FileRequest, FileResponse>;
@@ -3358,6 +4420,96 @@ export interface IntegrationServiceServer extends UntypedServiceImplementation {
 }
 
 export interface IntegrationServiceClient extends Client {
+  registerWebhook(
+    request: WebhookRequest,
+    callback: (error: ServiceError | null, response: WebhookResponse) => void,
+  ): ClientUnaryCall;
+  registerWebhook(
+    request: WebhookRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: WebhookResponse) => void,
+  ): ClientUnaryCall;
+  registerWebhook(
+    request: WebhookRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: WebhookResponse) => void,
+  ): ClientUnaryCall;
+  activateWebhook(
+    request: WebhookRequest,
+    callback: (error: ServiceError | null, response: WebhookResponse) => void,
+  ): ClientUnaryCall;
+  activateWebhook(
+    request: WebhookRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: WebhookResponse) => void,
+  ): ClientUnaryCall;
+  activateWebhook(
+    request: WebhookRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: WebhookResponse) => void,
+  ): ClientUnaryCall;
+  receiveWebhook(
+    request: ReceiveWebhookRequest,
+    callback: (error: ServiceError | null, response: ReceiveWebhookResponse) => void,
+  ): ClientUnaryCall;
+  receiveWebhook(
+    request: ReceiveWebhookRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: ReceiveWebhookResponse) => void,
+  ): ClientUnaryCall;
+  receiveWebhook(
+    request: ReceiveWebhookRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: ReceiveWebhookResponse) => void,
+  ): ClientUnaryCall;
+  proposeCalendarWrite(
+    request: CalendarWriteRequest,
+    callback: (error: ServiceError | null, response: CalendarOperationResponse) => void,
+  ): ClientUnaryCall;
+  proposeCalendarWrite(
+    request: CalendarWriteRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: CalendarOperationResponse) => void,
+  ): ClientUnaryCall;
+  proposeCalendarWrite(
+    request: CalendarWriteRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: CalendarOperationResponse) => void,
+  ): ClientUnaryCall;
+  getCalendarOperation(
+    request: CalendarOperationRequest,
+    callback: (error: ServiceError | null, response: CalendarOperationResponse) => void,
+  ): ClientUnaryCall;
+  getCalendarOperation(
+    request: CalendarOperationRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: CalendarOperationResponse) => void,
+  ): ClientUnaryCall;
+  getCalendarOperation(
+    request: CalendarOperationRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: CalendarOperationResponse) => void,
+  ): ClientUnaryCall;
+  decideCalendarWrite(
+    request: CalendarOperationRequest,
+    callback: (error: ServiceError | null, response: CalendarOperationResponse) => void,
+  ): ClientUnaryCall;
+  decideCalendarWrite(
+    request: CalendarOperationRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: CalendarOperationResponse) => void,
+  ): ClientUnaryCall;
+  decideCalendarWrite(
+    request: CalendarOperationRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: CalendarOperationResponse) => void,
+  ): ClientUnaryCall;
   status(
     request: StatusRequest,
     callback: (error: ServiceError | null, response: StatusResponse) => void,
@@ -3701,6 +4853,10 @@ function longToNumber(int64: { toString(): string }): number {
     throw new globalThis.Error("Value is smaller than Number.MIN_SAFE_INTEGER");
   }
   return num;
+}
+
+function isObject(value: any): boolean {
+  return typeof value === "object" && value !== null;
 }
 
 function isSet(value: any): boolean {

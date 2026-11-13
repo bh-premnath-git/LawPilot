@@ -195,6 +195,9 @@ type RemoteEntry struct {
 	ID, ETag, Calendar, Matter, Title, Description, Zone string
 	Start, End                                           time.Time
 	AllDay                                               bool
+	Recurrence                                           string
+	OperationID                                          string
+	CourtRule                                            bool
 }
 type RemotePage struct {
 	Matters   []RemoteMatter
@@ -231,7 +234,7 @@ func (p *Provider) safeURL(kind, cursor string) (string, error) {
 		q := base.Query()
 		q.Set("limit", "100")
 		if p.ID == "clio-manage" {
-			q.Set("fields", map[string]string{"matter": "id,etag,description,status,display_number", "calendar": "id,etag,name,type", "calendar_entry": "id,etag,summary,description,start_at,end_at,all_day,calendar_owner{id,type},matter{id}"}[kind])
+			q.Set("fields", map[string]string{"matter": "id,etag,description,status,display_number", "calendar": "id,etag,name,type", "calendar_entry": "id,etag,summary,description,start_at,end_at,all_day,calendar_owner{id,type},matter{id},recurrence_rule,parent_calendar_entry_id,court_rule,start_at_time_zone"}[kind])
 			q.Set("order", "id(asc)")
 		}
 		base.RawQuery = q.Encode()
@@ -312,6 +315,9 @@ func (p *Provider) Fetch(ctx context.Context, kind, cursor, token string) (Remot
 			Start       string          `json:"start_at"`
 			End         string          `json:"end_at"`
 			AllDay      bool            `json:"all_day"`
+			OperationID string          `json:"operation_id"`
+			ClioZone    string          `json:"start_at_time_zone"`
+			CourtRule   bool            `json:"court_rule"`
 			TimeZone    string          `json:"time_zone"`
 			Recurrence  json.RawMessage `json:"recurrence_rule"`
 			Deleted     bool            `json:"deleted"`
@@ -328,7 +334,7 @@ func (p *Provider) Fetch(ctx context.Context, kind, cursor, token string) (Remot
 		if json.Unmarshal(raw, &row) != nil {
 			return RemotePage{}, errors.New("invalid provider resource")
 		}
-		if row.Deleted || len(row.Recurrence) > 0 && string(row.Recurrence) != "null" && string(row.Recurrence) != `""` {
+		if row.Deleted {
 			return RemotePage{}, errors.New("unsupported remote deletion or recurrence")
 		}
 		id := scalar(row.ID)
@@ -373,13 +379,22 @@ func (p *Provider) Fetch(ctx context.Context, kind, cursor, token string) (Remot
 				return RemotePage{}, errors.New("calendar interval invalid")
 			}
 			zone := row.TimeZone
+			if p.ID == "clio-manage" && row.ClioZone != "" {
+				zone = row.ClioZone
+			}
 			if zone == "" {
 				zone = p.TimeZone
 			}
 			if _, err = time.LoadLocation(zone); err != nil {
 				return RemotePage{}, errors.New("provider zone invalid")
 			}
-			page.Entries = append(page.Entries, RemoteEntry{id, row.ETag, calendar, matter, row.Title, row.Description, zone, start, end, row.AllDay})
+			recurrence := ""
+			if len(row.Recurrence) > 0 && string(row.Recurrence) != "null" {
+				if json.Unmarshal(row.Recurrence, &recurrence) != nil || len(recurrence) > 2048 {
+					return RemotePage{}, errors.New("invalid recurrence metadata")
+				}
+			}
+			page.Entries = append(page.Entries, RemoteEntry{ID: id, ETag: row.ETag, Calendar: calendar, Matter: matter, Title: row.Title, Description: row.Description, Zone: zone, Start: start, End: end, AllDay: row.AllDay, Recurrence: recurrence, CourtRule: row.CourtRule, OperationID: row.OperationID})
 		}
 	}
 	return page, nil

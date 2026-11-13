@@ -240,6 +240,43 @@ export interface ReviewDeadline {
   deadline: Date | undefined;
 }
 
+export interface KnowledgeLibraryRequest {
+  scope: Scope | undefined;
+  matterId: string;
+  name: string;
+}
+
+export interface KnowledgeLibraryResponse {
+  matterId: string;
+  name: string;
+}
+
+export interface CalendarContextRequest {
+  scope: Scope | undefined;
+  matterId: string;
+  from: string;
+  to: string;
+}
+
+export interface CalendarFact {
+  entryId: string;
+  calendarId: string;
+  revision: number;
+  title: string;
+  startAt: string;
+  endAt: string;
+  timeZone: string;
+  allDay: boolean;
+  authority: string;
+  status: string;
+}
+
+export interface CalendarContextResponse {
+  entries: CalendarFact[];
+  snapshotSha256: string;
+  warnings: string[];
+}
+
 function createBaseScope(): Scope {
   return { tenantId: "", requestId: "" };
 }
@@ -3856,8 +3893,655 @@ export const ReviewDeadline: MessageFns<ReviewDeadline> = {
   },
 };
 
+function createBaseKnowledgeLibraryRequest(): KnowledgeLibraryRequest {
+  return { scope: undefined, matterId: "", name: "" };
+}
+
+export const KnowledgeLibraryRequest: MessageFns<KnowledgeLibraryRequest> = {
+  encode(message: KnowledgeLibraryRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.scope !== undefined) {
+      Scope.encode(message.scope, writer.uint32(10).fork()).join();
+    }
+    if (message.matterId !== "") {
+      writer.uint32(18).string(message.matterId);
+    }
+    if (message.name !== "") {
+      writer.uint32(26).string(message.name);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): KnowledgeLibraryRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseKnowledgeLibraryRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.scope = Scope.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.matterId = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.name = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): KnowledgeLibraryRequest {
+    return {
+      scope: isSet(object.scope) ? Scope.fromJSON(object.scope) : undefined,
+      matterId: isSet(object.matterId)
+        ? globalThis.String(object.matterId)
+        : isSet(object.matter_id)
+        ? globalThis.String(object.matter_id)
+        : "",
+      name: isSet(object.name) ? globalThis.String(object.name) : "",
+    };
+  },
+
+  toJSON(message: KnowledgeLibraryRequest): unknown {
+    const obj: any = {};
+    if (message.scope !== undefined) {
+      obj.scope = Scope.toJSON(message.scope);
+    }
+    if (message.matterId !== undefined) {
+      obj.matterId = message.matterId;
+    }
+    if (message.name !== undefined) {
+      obj.name = message.name;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<KnowledgeLibraryRequest>): KnowledgeLibraryRequest {
+    return KnowledgeLibraryRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<KnowledgeLibraryRequest>): KnowledgeLibraryRequest {
+    const message = createBaseKnowledgeLibraryRequest();
+    message.scope = (object.scope !== undefined && object.scope !== null) ? Scope.fromPartial(object.scope) : undefined;
+    message.matterId = object.matterId ?? "";
+    message.name = object.name ?? "";
+    return message;
+  },
+};
+
+function createBaseKnowledgeLibraryResponse(): KnowledgeLibraryResponse {
+  return { matterId: "", name: "" };
+}
+
+export const KnowledgeLibraryResponse: MessageFns<KnowledgeLibraryResponse> = {
+  encode(message: KnowledgeLibraryResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.matterId !== "") {
+      writer.uint32(10).string(message.matterId);
+    }
+    if (message.name !== "") {
+      writer.uint32(18).string(message.name);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): KnowledgeLibraryResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseKnowledgeLibraryResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.matterId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.name = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): KnowledgeLibraryResponse {
+    return {
+      matterId: isSet(object.matterId)
+        ? globalThis.String(object.matterId)
+        : isSet(object.matter_id)
+        ? globalThis.String(object.matter_id)
+        : "",
+      name: isSet(object.name) ? globalThis.String(object.name) : "",
+    };
+  },
+
+  toJSON(message: KnowledgeLibraryResponse): unknown {
+    const obj: any = {};
+    if (message.matterId !== undefined) {
+      obj.matterId = message.matterId;
+    }
+    if (message.name !== undefined) {
+      obj.name = message.name;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<KnowledgeLibraryResponse>): KnowledgeLibraryResponse {
+    return KnowledgeLibraryResponse.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<KnowledgeLibraryResponse>): KnowledgeLibraryResponse {
+    const message = createBaseKnowledgeLibraryResponse();
+    message.matterId = object.matterId ?? "";
+    message.name = object.name ?? "";
+    return message;
+  },
+};
+
+function createBaseCalendarContextRequest(): CalendarContextRequest {
+  return { scope: undefined, matterId: "", from: "", to: "" };
+}
+
+export const CalendarContextRequest: MessageFns<CalendarContextRequest> = {
+  encode(message: CalendarContextRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.scope !== undefined) {
+      Scope.encode(message.scope, writer.uint32(10).fork()).join();
+    }
+    if (message.matterId !== "") {
+      writer.uint32(18).string(message.matterId);
+    }
+    if (message.from !== "") {
+      writer.uint32(26).string(message.from);
+    }
+    if (message.to !== "") {
+      writer.uint32(34).string(message.to);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): CalendarContextRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCalendarContextRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.scope = Scope.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.matterId = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.from = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.to = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): CalendarContextRequest {
+    return {
+      scope: isSet(object.scope) ? Scope.fromJSON(object.scope) : undefined,
+      matterId: isSet(object.matterId)
+        ? globalThis.String(object.matterId)
+        : isSet(object.matter_id)
+        ? globalThis.String(object.matter_id)
+        : "",
+      from: isSet(object.from) ? globalThis.String(object.from) : "",
+      to: isSet(object.to) ? globalThis.String(object.to) : "",
+    };
+  },
+
+  toJSON(message: CalendarContextRequest): unknown {
+    const obj: any = {};
+    if (message.scope !== undefined) {
+      obj.scope = Scope.toJSON(message.scope);
+    }
+    if (message.matterId !== undefined) {
+      obj.matterId = message.matterId;
+    }
+    if (message.from !== undefined) {
+      obj.from = message.from;
+    }
+    if (message.to !== undefined) {
+      obj.to = message.to;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<CalendarContextRequest>): CalendarContextRequest {
+    return CalendarContextRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<CalendarContextRequest>): CalendarContextRequest {
+    const message = createBaseCalendarContextRequest();
+    message.scope = (object.scope !== undefined && object.scope !== null) ? Scope.fromPartial(object.scope) : undefined;
+    message.matterId = object.matterId ?? "";
+    message.from = object.from ?? "";
+    message.to = object.to ?? "";
+    return message;
+  },
+};
+
+function createBaseCalendarFact(): CalendarFact {
+  return {
+    entryId: "",
+    calendarId: "",
+    revision: 0,
+    title: "",
+    startAt: "",
+    endAt: "",
+    timeZone: "",
+    allDay: false,
+    authority: "",
+    status: "",
+  };
+}
+
+export const CalendarFact: MessageFns<CalendarFact> = {
+  encode(message: CalendarFact, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.entryId !== "") {
+      writer.uint32(10).string(message.entryId);
+    }
+    if (message.calendarId !== "") {
+      writer.uint32(18).string(message.calendarId);
+    }
+    if (message.revision !== 0) {
+      writer.uint32(24).int64(message.revision);
+    }
+    if (message.title !== "") {
+      writer.uint32(34).string(message.title);
+    }
+    if (message.startAt !== "") {
+      writer.uint32(42).string(message.startAt);
+    }
+    if (message.endAt !== "") {
+      writer.uint32(50).string(message.endAt);
+    }
+    if (message.timeZone !== "") {
+      writer.uint32(58).string(message.timeZone);
+    }
+    if (message.allDay !== false) {
+      writer.uint32(64).bool(message.allDay);
+    }
+    if (message.authority !== "") {
+      writer.uint32(74).string(message.authority);
+    }
+    if (message.status !== "") {
+      writer.uint32(82).string(message.status);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): CalendarFact {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCalendarFact();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.entryId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.calendarId = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.revision = longToNumber(reader.int64());
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.title = reader.string();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.startAt = reader.string();
+          continue;
+        }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.endAt = reader.string();
+          continue;
+        }
+        case 7: {
+          if (tag !== 58) {
+            break;
+          }
+
+          message.timeZone = reader.string();
+          continue;
+        }
+        case 8: {
+          if (tag !== 64) {
+            break;
+          }
+
+          message.allDay = reader.bool();
+          continue;
+        }
+        case 9: {
+          if (tag !== 74) {
+            break;
+          }
+
+          message.authority = reader.string();
+          continue;
+        }
+        case 10: {
+          if (tag !== 82) {
+            break;
+          }
+
+          message.status = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): CalendarFact {
+    return {
+      entryId: isSet(object.entryId)
+        ? globalThis.String(object.entryId)
+        : isSet(object.entry_id)
+        ? globalThis.String(object.entry_id)
+        : "",
+      calendarId: isSet(object.calendarId)
+        ? globalThis.String(object.calendarId)
+        : isSet(object.calendar_id)
+        ? globalThis.String(object.calendar_id)
+        : "",
+      revision: isSet(object.revision) ? globalThis.Number(object.revision) : 0,
+      title: isSet(object.title) ? globalThis.String(object.title) : "",
+      startAt: isSet(object.startAt)
+        ? globalThis.String(object.startAt)
+        : isSet(object.start_at)
+        ? globalThis.String(object.start_at)
+        : "",
+      endAt: isSet(object.endAt)
+        ? globalThis.String(object.endAt)
+        : isSet(object.end_at)
+        ? globalThis.String(object.end_at)
+        : "",
+      timeZone: isSet(object.timeZone)
+        ? globalThis.String(object.timeZone)
+        : isSet(object.time_zone)
+        ? globalThis.String(object.time_zone)
+        : "",
+      allDay: isSet(object.allDay)
+        ? globalThis.Boolean(object.allDay)
+        : isSet(object.all_day)
+        ? globalThis.Boolean(object.all_day)
+        : false,
+      authority: isSet(object.authority) ? globalThis.String(object.authority) : "",
+      status: isSet(object.status) ? globalThis.String(object.status) : "",
+    };
+  },
+
+  toJSON(message: CalendarFact): unknown {
+    const obj: any = {};
+    if (message.entryId !== undefined) {
+      obj.entryId = message.entryId;
+    }
+    if (message.calendarId !== undefined) {
+      obj.calendarId = message.calendarId;
+    }
+    if (message.revision !== undefined) {
+      obj.revision = Math.round(message.revision);
+    }
+    if (message.title !== undefined) {
+      obj.title = message.title;
+    }
+    if (message.startAt !== undefined) {
+      obj.startAt = message.startAt;
+    }
+    if (message.endAt !== undefined) {
+      obj.endAt = message.endAt;
+    }
+    if (message.timeZone !== undefined) {
+      obj.timeZone = message.timeZone;
+    }
+    if (message.allDay !== undefined) {
+      obj.allDay = message.allDay;
+    }
+    if (message.authority !== undefined) {
+      obj.authority = message.authority;
+    }
+    if (message.status !== undefined) {
+      obj.status = message.status;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<CalendarFact>): CalendarFact {
+    return CalendarFact.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<CalendarFact>): CalendarFact {
+    const message = createBaseCalendarFact();
+    message.entryId = object.entryId ?? "";
+    message.calendarId = object.calendarId ?? "";
+    message.revision = object.revision ?? 0;
+    message.title = object.title ?? "";
+    message.startAt = object.startAt ?? "";
+    message.endAt = object.endAt ?? "";
+    message.timeZone = object.timeZone ?? "";
+    message.allDay = object.allDay ?? false;
+    message.authority = object.authority ?? "";
+    message.status = object.status ?? "";
+    return message;
+  },
+};
+
+function createBaseCalendarContextResponse(): CalendarContextResponse {
+  return { entries: [], snapshotSha256: "", warnings: [] };
+}
+
+export const CalendarContextResponse: MessageFns<CalendarContextResponse> = {
+  encode(message: CalendarContextResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.entries) {
+      CalendarFact.encode(v!, writer.uint32(10).fork()).join();
+    }
+    if (message.snapshotSha256 !== "") {
+      writer.uint32(18).string(message.snapshotSha256);
+    }
+    for (const v of message.warnings) {
+      writer.uint32(26).string(v!);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): CalendarContextResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCalendarContextResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.entries.push(CalendarFact.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.snapshotSha256 = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.warnings.push(reader.string());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): CalendarContextResponse {
+    return {
+      entries: globalThis.Array.isArray(object?.entries)
+        ? object.entries.map((e: any) => CalendarFact.fromJSON(e))
+        : [],
+      snapshotSha256: isSet(object.snapshotSha256)
+        ? globalThis.String(object.snapshotSha256)
+        : isSet(object.snapshot_sha256)
+        ? globalThis.String(object.snapshot_sha256)
+        : "",
+      warnings: globalThis.Array.isArray(object?.warnings) ? object.warnings.map((e: any) => globalThis.String(e)) : [],
+    };
+  },
+
+  toJSON(message: CalendarContextResponse): unknown {
+    const obj: any = {};
+    if (message.entries?.length) {
+      obj.entries = message.entries.map((e) => CalendarFact.toJSON(e));
+    }
+    if (message.snapshotSha256 !== undefined) {
+      obj.snapshotSha256 = message.snapshotSha256;
+    }
+    if (message.warnings?.length) {
+      obj.warnings = message.warnings;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<CalendarContextResponse>): CalendarContextResponse {
+    return CalendarContextResponse.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<CalendarContextResponse>): CalendarContextResponse {
+    const message = createBaseCalendarContextResponse();
+    message.entries = object.entries?.map((e) => CalendarFact.fromPartial(e)) || [];
+    message.snapshotSha256 = object.snapshotSha256 ?? "";
+    message.warnings = object.warnings?.map((e) => e) || [];
+    return message;
+  },
+};
+
 export type ContextServiceService = typeof ContextServiceService;
 export const ContextServiceService = {
+  registerKnowledgeLibrary: {
+    path: "/lawpilot.context.v1.ContextService/RegisterKnowledgeLibrary",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: KnowledgeLibraryRequest): Buffer =>
+      Buffer.from(KnowledgeLibraryRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): KnowledgeLibraryRequest => KnowledgeLibraryRequest.decode(value),
+    responseSerialize: (value: KnowledgeLibraryResponse): Buffer =>
+      Buffer.from(KnowledgeLibraryResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): KnowledgeLibraryResponse => KnowledgeLibraryResponse.decode(value),
+  },
+  buildCalendarContext: {
+    path: "/lawpilot.context.v1.ContextService/BuildCalendarContext",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: CalendarContextRequest): Buffer =>
+      Buffer.from(CalendarContextRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): CalendarContextRequest => CalendarContextRequest.decode(value),
+    responseSerialize: (value: CalendarContextResponse): Buffer =>
+      Buffer.from(CalendarContextResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): CalendarContextResponse => CalendarContextResponse.decode(value),
+  },
   prepareExecutionContext: {
     path: "/lawpilot.context.v1.ContextService/PrepareExecutionContext",
     requestStream: false,
@@ -4018,6 +4702,8 @@ export const ContextServiceService = {
 } as const;
 
 export interface ContextServiceServer extends UntypedServiceImplementation {
+  registerKnowledgeLibrary: handleUnaryCall<KnowledgeLibraryRequest, KnowledgeLibraryResponse>;
+  buildCalendarContext: handleUnaryCall<CalendarContextRequest, CalendarContextResponse>;
   prepareExecutionContext: handleUnaryCall<ExecutionRef, PreparedContext>;
   getTemplate: handleUnaryCall<TemplateDecisionRequest, TemplateResponse>;
   createTemplate: handleUnaryCall<TemplateRequest, TemplateResponse>;
@@ -4037,6 +4723,36 @@ export interface ContextServiceServer extends UntypedServiceImplementation {
 }
 
 export interface ContextServiceClient extends Client {
+  registerKnowledgeLibrary(
+    request: KnowledgeLibraryRequest,
+    callback: (error: ServiceError | null, response: KnowledgeLibraryResponse) => void,
+  ): ClientUnaryCall;
+  registerKnowledgeLibrary(
+    request: KnowledgeLibraryRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: KnowledgeLibraryResponse) => void,
+  ): ClientUnaryCall;
+  registerKnowledgeLibrary(
+    request: KnowledgeLibraryRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: KnowledgeLibraryResponse) => void,
+  ): ClientUnaryCall;
+  buildCalendarContext(
+    request: CalendarContextRequest,
+    callback: (error: ServiceError | null, response: CalendarContextResponse) => void,
+  ): ClientUnaryCall;
+  buildCalendarContext(
+    request: CalendarContextRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: CalendarContextResponse) => void,
+  ): ClientUnaryCall;
+  buildCalendarContext(
+    request: CalendarContextRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: CalendarContextResponse) => void,
+  ): ClientUnaryCall;
   prepareExecutionContext(
     request: ExecutionRef,
     callback: (error: ServiceError | null, response: PreparedContext) => void,

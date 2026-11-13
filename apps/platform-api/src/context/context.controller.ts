@@ -69,8 +69,18 @@ export class ContextClient implements OnModuleDestroy {
           },
         );
       }
-      const aliases:Record<string,string>={getTemplate:"TemplateDecisionRequest",createTemplate:"TemplateRequest",decideTemplate:"TemplateDecisionRequest",getLegalReview:"ReviewRequest",decideLegalReview:"ReviewRequest"};
-      const requestType=(RPC as any)[aliases[method] || method[0].toUpperCase()+method.slice(1)+"Request"];
+      const aliases: Record<string, string> = {
+        registerKnowledgeLibrary: "KnowledgeLibraryRequest",
+        buildCalendarContext: "CalendarContextRequest",
+        getTemplate: "TemplateDecisionRequest",
+        createTemplate: "TemplateRequest",
+        decideTemplate: "TemplateDecisionRequest",
+        getLegalReview: "ReviewRequest",
+        decideLegalReview: "ReviewRequest",
+      };
+      const requestType = (RPC as any)[
+        aliases[method] || method[0].toUpperCase() + method.slice(1) + "Request"
+      ];
       payload = requestType.fromPartial(payload);
       const metadata = traceMetadata();
       metadata.set("authorization", authorization || "");
@@ -197,7 +207,12 @@ export class ContextController {
     const value = parse(
       z
         .object({
-          recipeId: z.enum(["matter.qa.v1", "document.summary.v1"]),
+          recipeId: z.enum([
+            "matter.qa.v1",
+            "document.summary.v1",
+            "matter.research.v1",
+            "firm.knowledge.v1",
+          ]),
           query: z.string().max(4096).default(""),
           documentId: uuid.optional(),
         })

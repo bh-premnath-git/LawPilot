@@ -2129,6 +2129,362 @@ func (x *ReviewDeadline) GetDeadline() *timestamppb.Timestamp {
 	return nil
 }
 
+type KnowledgeLibraryRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Scope         *Scope                 `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	MatterId      string                 `protobuf:"bytes,2,opt,name=matter_id,json=matterId,proto3" json:"matter_id,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *KnowledgeLibraryRequest) Reset() {
+	*x = KnowledgeLibraryRequest{}
+	mi := &file_lawpilot_context_v1_context_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *KnowledgeLibraryRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*KnowledgeLibraryRequest) ProtoMessage() {}
+
+func (x *KnowledgeLibraryRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_lawpilot_context_v1_context_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use KnowledgeLibraryRequest.ProtoReflect.Descriptor instead.
+func (*KnowledgeLibraryRequest) Descriptor() ([]byte, []int) {
+	return file_lawpilot_context_v1_context_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *KnowledgeLibraryRequest) GetScope() *Scope {
+	if x != nil {
+		return x.Scope
+	}
+	return nil
+}
+
+func (x *KnowledgeLibraryRequest) GetMatterId() string {
+	if x != nil {
+		return x.MatterId
+	}
+	return ""
+}
+
+func (x *KnowledgeLibraryRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type KnowledgeLibraryResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	MatterId      string                 `protobuf:"bytes,1,opt,name=matter_id,json=matterId,proto3" json:"matter_id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *KnowledgeLibraryResponse) Reset() {
+	*x = KnowledgeLibraryResponse{}
+	mi := &file_lawpilot_context_v1_context_proto_msgTypes[33]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *KnowledgeLibraryResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*KnowledgeLibraryResponse) ProtoMessage() {}
+
+func (x *KnowledgeLibraryResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_lawpilot_context_v1_context_proto_msgTypes[33]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use KnowledgeLibraryResponse.ProtoReflect.Descriptor instead.
+func (*KnowledgeLibraryResponse) Descriptor() ([]byte, []int) {
+	return file_lawpilot_context_v1_context_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *KnowledgeLibraryResponse) GetMatterId() string {
+	if x != nil {
+		return x.MatterId
+	}
+	return ""
+}
+
+func (x *KnowledgeLibraryResponse) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type CalendarContextRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Scope         *Scope                 `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	MatterId      string                 `protobuf:"bytes,2,opt,name=matter_id,json=matterId,proto3" json:"matter_id,omitempty"`
+	From          string                 `protobuf:"bytes,3,opt,name=from,proto3" json:"from,omitempty"`
+	To            string                 `protobuf:"bytes,4,opt,name=to,proto3" json:"to,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CalendarContextRequest) Reset() {
+	*x = CalendarContextRequest{}
+	mi := &file_lawpilot_context_v1_context_proto_msgTypes[34]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CalendarContextRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CalendarContextRequest) ProtoMessage() {}
+
+func (x *CalendarContextRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_lawpilot_context_v1_context_proto_msgTypes[34]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CalendarContextRequest.ProtoReflect.Descriptor instead.
+func (*CalendarContextRequest) Descriptor() ([]byte, []int) {
+	return file_lawpilot_context_v1_context_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *CalendarContextRequest) GetScope() *Scope {
+	if x != nil {
+		return x.Scope
+	}
+	return nil
+}
+
+func (x *CalendarContextRequest) GetMatterId() string {
+	if x != nil {
+		return x.MatterId
+	}
+	return ""
+}
+
+func (x *CalendarContextRequest) GetFrom() string {
+	if x != nil {
+		return x.From
+	}
+	return ""
+}
+
+func (x *CalendarContextRequest) GetTo() string {
+	if x != nil {
+		return x.To
+	}
+	return ""
+}
+
+type CalendarFact struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	EntryId       string                 `protobuf:"bytes,1,opt,name=entry_id,json=entryId,proto3" json:"entry_id,omitempty"`
+	CalendarId    string                 `protobuf:"bytes,2,opt,name=calendar_id,json=calendarId,proto3" json:"calendar_id,omitempty"`
+	Revision      int64                  `protobuf:"varint,3,opt,name=revision,proto3" json:"revision,omitempty"`
+	Title         string                 `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
+	StartAt       string                 `protobuf:"bytes,5,opt,name=start_at,json=startAt,proto3" json:"start_at,omitempty"`
+	EndAt         string                 `protobuf:"bytes,6,opt,name=end_at,json=endAt,proto3" json:"end_at,omitempty"`
+	TimeZone      string                 `protobuf:"bytes,7,opt,name=time_zone,json=timeZone,proto3" json:"time_zone,omitempty"`
+	AllDay        bool                   `protobuf:"varint,8,opt,name=all_day,json=allDay,proto3" json:"all_day,omitempty"`
+	Authority     string                 `protobuf:"bytes,9,opt,name=authority,proto3" json:"authority,omitempty"`
+	Status        string                 `protobuf:"bytes,10,opt,name=status,proto3" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CalendarFact) Reset() {
+	*x = CalendarFact{}
+	mi := &file_lawpilot_context_v1_context_proto_msgTypes[35]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CalendarFact) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CalendarFact) ProtoMessage() {}
+
+func (x *CalendarFact) ProtoReflect() protoreflect.Message {
+	mi := &file_lawpilot_context_v1_context_proto_msgTypes[35]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CalendarFact.ProtoReflect.Descriptor instead.
+func (*CalendarFact) Descriptor() ([]byte, []int) {
+	return file_lawpilot_context_v1_context_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *CalendarFact) GetEntryId() string {
+	if x != nil {
+		return x.EntryId
+	}
+	return ""
+}
+
+func (x *CalendarFact) GetCalendarId() string {
+	if x != nil {
+		return x.CalendarId
+	}
+	return ""
+}
+
+func (x *CalendarFact) GetRevision() int64 {
+	if x != nil {
+		return x.Revision
+	}
+	return 0
+}
+
+func (x *CalendarFact) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *CalendarFact) GetStartAt() string {
+	if x != nil {
+		return x.StartAt
+	}
+	return ""
+}
+
+func (x *CalendarFact) GetEndAt() string {
+	if x != nil {
+		return x.EndAt
+	}
+	return ""
+}
+
+func (x *CalendarFact) GetTimeZone() string {
+	if x != nil {
+		return x.TimeZone
+	}
+	return ""
+}
+
+func (x *CalendarFact) GetAllDay() bool {
+	if x != nil {
+		return x.AllDay
+	}
+	return false
+}
+
+func (x *CalendarFact) GetAuthority() string {
+	if x != nil {
+		return x.Authority
+	}
+	return ""
+}
+
+func (x *CalendarFact) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+type CalendarContextResponse struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Entries        []*CalendarFact        `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries,omitempty"`
+	SnapshotSha256 string                 `protobuf:"bytes,2,opt,name=snapshot_sha256,json=snapshotSha256,proto3" json:"snapshot_sha256,omitempty"`
+	Warnings       []string               `protobuf:"bytes,3,rep,name=warnings,proto3" json:"warnings,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *CalendarContextResponse) Reset() {
+	*x = CalendarContextResponse{}
+	mi := &file_lawpilot_context_v1_context_proto_msgTypes[36]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CalendarContextResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CalendarContextResponse) ProtoMessage() {}
+
+func (x *CalendarContextResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_lawpilot_context_v1_context_proto_msgTypes[36]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CalendarContextResponse.ProtoReflect.Descriptor instead.
+func (*CalendarContextResponse) Descriptor() ([]byte, []int) {
+	return file_lawpilot_context_v1_context_proto_rawDescGZIP(), []int{36}
+}
+
+func (x *CalendarContextResponse) GetEntries() []*CalendarFact {
+	if x != nil {
+		return x.Entries
+	}
+	return nil
+}
+
+func (x *CalendarContextResponse) GetSnapshotSha256() string {
+	if x != nil {
+		return x.SnapshotSha256
+	}
+	return ""
+}
+
+func (x *CalendarContextResponse) GetWarnings() []string {
+	if x != nil {
+		return x.Warnings
+	}
+	return nil
+}
+
 var File_lawpilot_context_v1_context_proto protoreflect.FileDescriptor
 
 const file_lawpilot_context_v1_context_proto_rawDesc = "" +
@@ -2301,8 +2657,39 @@ const file_lawpilot_context_v1_context_proto_rawDesc = "" +
 	"\bartifact\x18\x05 \x01(\v2\x17.google.protobuf.StructR\bartifact\"^\n" +
 	"\x0eReviewDeadline\x12\x14\n" +
 	"\x05state\x18\x01 \x01(\tR\x05state\x126\n" +
-	"\bdeadline\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\bdeadline2\xe9\f\n" +
-	"\x0eContextService\x12b\n" +
+	"\bdeadline\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\bdeadline\"|\n" +
+	"\x17KnowledgeLibraryRequest\x120\n" +
+	"\x05scope\x18\x01 \x01(\v2\x1a.lawpilot.context.v1.ScopeR\x05scope\x12\x1b\n" +
+	"\tmatter_id\x18\x02 \x01(\tR\bmatterId\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\"K\n" +
+	"\x18KnowledgeLibraryResponse\x12\x1b\n" +
+	"\tmatter_id\x18\x01 \x01(\tR\bmatterId\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\"\x8b\x01\n" +
+	"\x16CalendarContextRequest\x120\n" +
+	"\x05scope\x18\x01 \x01(\v2\x1a.lawpilot.context.v1.ScopeR\x05scope\x12\x1b\n" +
+	"\tmatter_id\x18\x02 \x01(\tR\bmatterId\x12\x12\n" +
+	"\x04from\x18\x03 \x01(\tR\x04from\x12\x0e\n" +
+	"\x02to\x18\x04 \x01(\tR\x02to\"\x9a\x02\n" +
+	"\fCalendarFact\x12\x19\n" +
+	"\bentry_id\x18\x01 \x01(\tR\aentryId\x12\x1f\n" +
+	"\vcalendar_id\x18\x02 \x01(\tR\n" +
+	"calendarId\x12\x1a\n" +
+	"\brevision\x18\x03 \x01(\x03R\brevision\x12\x14\n" +
+	"\x05title\x18\x04 \x01(\tR\x05title\x12\x19\n" +
+	"\bstart_at\x18\x05 \x01(\tR\astartAt\x12\x15\n" +
+	"\x06end_at\x18\x06 \x01(\tR\x05endAt\x12\x1b\n" +
+	"\ttime_zone\x18\a \x01(\tR\btimeZone\x12\x17\n" +
+	"\aall_day\x18\b \x01(\bR\x06allDay\x12\x1c\n" +
+	"\tauthority\x18\t \x01(\tR\tauthority\x12\x16\n" +
+	"\x06status\x18\n" +
+	" \x01(\tR\x06status\"\x9b\x01\n" +
+	"\x17CalendarContextResponse\x12;\n" +
+	"\aentries\x18\x01 \x03(\v2!.lawpilot.context.v1.CalendarFactR\aentries\x12'\n" +
+	"\x0fsnapshot_sha256\x18\x02 \x01(\tR\x0esnapshotSha256\x12\x1a\n" +
+	"\bwarnings\x18\x03 \x03(\tR\bwarnings2\xd5\x0e\n" +
+	"\x0eContextService\x12w\n" +
+	"\x18RegisterKnowledgeLibrary\x12,.lawpilot.context.v1.KnowledgeLibraryRequest\x1a-.lawpilot.context.v1.KnowledgeLibraryResponse\x12q\n" +
+	"\x14BuildCalendarContext\x12+.lawpilot.context.v1.CalendarContextRequest\x1a,.lawpilot.context.v1.CalendarContextResponse\x12b\n" +
 	"\x17PrepareExecutionContext\x12!.lawpilot.context.v1.ExecutionRef\x1a$.lawpilot.context.v1.PreparedContext\x12b\n" +
 	"\vGetTemplate\x12,.lawpilot.context.v1.TemplateDecisionRequest\x1a%.lawpilot.context.v1.TemplateResponse\x12]\n" +
 	"\x0eCreateTemplate\x12$.lawpilot.context.v1.TemplateRequest\x1a%.lawpilot.context.v1.TemplateResponse\x12e\n" +
@@ -2334,7 +2721,7 @@ func file_lawpilot_context_v1_context_proto_rawDescGZIP() []byte {
 	return file_lawpilot_context_v1_context_proto_rawDescData
 }
 
-var file_lawpilot_context_v1_context_proto_msgTypes = make([]protoimpl.MessageInfo, 32)
+var file_lawpilot_context_v1_context_proto_msgTypes = make([]protoimpl.MessageInfo, 37)
 var file_lawpilot_context_v1_context_proto_goTypes = []any{
 	(*Scope)(nil),                           // 0: lawpilot.context.v1.Scope
 	(*Citation)(nil),                        // 1: lawpilot.context.v1.Citation
@@ -2368,8 +2755,13 @@ var file_lawpilot_context_v1_context_proto_goTypes = []any{
 	(*ReviewRequest)(nil),                   // 29: lawpilot.context.v1.ReviewRequest
 	(*ReviewResponse)(nil),                  // 30: lawpilot.context.v1.ReviewResponse
 	(*ReviewDeadline)(nil),                  // 31: lawpilot.context.v1.ReviewDeadline
-	(*timestamppb.Timestamp)(nil),           // 32: google.protobuf.Timestamp
-	(*structpb.Struct)(nil),                 // 33: google.protobuf.Struct
+	(*KnowledgeLibraryRequest)(nil),         // 32: lawpilot.context.v1.KnowledgeLibraryRequest
+	(*KnowledgeLibraryResponse)(nil),        // 33: lawpilot.context.v1.KnowledgeLibraryResponse
+	(*CalendarContextRequest)(nil),          // 34: lawpilot.context.v1.CalendarContextRequest
+	(*CalendarFact)(nil),                    // 35: lawpilot.context.v1.CalendarFact
+	(*CalendarContextResponse)(nil),         // 36: lawpilot.context.v1.CalendarContextResponse
+	(*timestamppb.Timestamp)(nil),           // 37: google.protobuf.Timestamp
+	(*structpb.Struct)(nil),                 // 38: google.protobuf.Struct
 }
 var file_lawpilot_context_v1_context_proto_depIdxs = []int32{
 	0,  // 0: lawpilot.context.v1.IngestTextRequest.scope:type_name -> lawpilot.context.v1.Scope
@@ -2380,7 +2772,7 @@ var file_lawpilot_context_v1_context_proto_depIdxs = []int32{
 	1,  // 5: lawpilot.context.v1.Source.citation:type_name -> lawpilot.context.v1.Citation
 	7,  // 6: lawpilot.context.v1.ContextPackage.recipe:type_name -> lawpilot.context.v1.ContextRecipe
 	9,  // 7: lawpilot.context.v1.ContextPackage.sources:type_name -> lawpilot.context.v1.Source
-	32, // 8: lawpilot.context.v1.ContextPackage.expires_at:type_name -> google.protobuf.Timestamp
+	37, // 8: lawpilot.context.v1.ContextPackage.expires_at:type_name -> google.protobuf.Timestamp
 	10, // 9: lawpilot.context.v1.BuildContextResponse.package:type_name -> lawpilot.context.v1.ContextPackage
 	0,  // 10: lawpilot.context.v1.GetContextRequest.scope:type_name -> lawpilot.context.v1.Scope
 	10, // 11: lawpilot.context.v1.GetContextResponse.package:type_name -> lawpilot.context.v1.ContextPackage
@@ -2389,7 +2781,7 @@ var file_lawpilot_context_v1_context_proto_depIdxs = []int32{
 	1,  // 14: lawpilot.context.v1.ResolveCitationResponse.citation:type_name -> lawpilot.context.v1.Citation
 	1,  // 15: lawpilot.context.v1.VerifyExecutionEvidenceRequest.citations:type_name -> lawpilot.context.v1.Citation
 	0,  // 16: lawpilot.context.v1.ListMatterEventsRequest.scope:type_name -> lawpilot.context.v1.Scope
-	32, // 17: lawpilot.context.v1.EventNotification.occurred_at:type_name -> google.protobuf.Timestamp
+	37, // 17: lawpilot.context.v1.EventNotification.occurred_at:type_name -> google.protobuf.Timestamp
 	19, // 18: lawpilot.context.v1.ListMatterEventsResponse.events:type_name -> lawpilot.context.v1.EventNotification
 	21, // 19: lawpilot.context.v1.IngestProcessedRequest.pages:type_name -> lawpilot.context.v1.ProcessedPage
 	10, // 20: lawpilot.context.v1.PreparedContext.package:type_name -> lawpilot.context.v1.ContextPackage
@@ -2398,45 +2790,52 @@ var file_lawpilot_context_v1_context_proto_depIdxs = []int32{
 	0,  // 23: lawpilot.context.v1.TemplateDecisionRequest.scope:type_name -> lawpilot.context.v1.Scope
 	24, // 24: lawpilot.context.v1.TemplateResponse.template:type_name -> lawpilot.context.v1.ApprovedTemplate
 	0,  // 25: lawpilot.context.v1.ReviewRequest.scope:type_name -> lawpilot.context.v1.Scope
-	33, // 26: lawpilot.context.v1.ReviewResponse.artifact:type_name -> google.protobuf.Struct
-	32, // 27: lawpilot.context.v1.ReviewDeadline.deadline:type_name -> google.protobuf.Timestamp
-	23, // 28: lawpilot.context.v1.ContextService.PrepareExecutionContext:input_type -> lawpilot.context.v1.ExecutionRef
-	27, // 29: lawpilot.context.v1.ContextService.GetTemplate:input_type -> lawpilot.context.v1.TemplateDecisionRequest
-	26, // 30: lawpilot.context.v1.ContextService.CreateTemplate:input_type -> lawpilot.context.v1.TemplateRequest
-	27, // 31: lawpilot.context.v1.ContextService.DecideTemplate:input_type -> lawpilot.context.v1.TemplateDecisionRequest
-	29, // 32: lawpilot.context.v1.ContextService.GetLegalReview:input_type -> lawpilot.context.v1.ReviewRequest
-	29, // 33: lawpilot.context.v1.ContextService.DecideLegalReview:input_type -> lawpilot.context.v1.ReviewRequest
-	23, // 34: lawpilot.context.v1.ContextService.GetReviewDeadline:input_type -> lawpilot.context.v1.ExecutionRef
-	23, // 35: lawpilot.context.v1.ContextService.ExpireReview:input_type -> lawpilot.context.v1.ExecutionRef
-	22, // 36: lawpilot.context.v1.ContextService.IngestProcessed:input_type -> lawpilot.context.v1.IngestProcessedRequest
-	2,  // 37: lawpilot.context.v1.ContextService.IngestText:input_type -> lawpilot.context.v1.IngestTextRequest
-	5,  // 38: lawpilot.context.v1.ContextService.DeleteDocument:input_type -> lawpilot.context.v1.DeleteDocumentRequest
-	8,  // 39: lawpilot.context.v1.ContextService.BuildContext:input_type -> lawpilot.context.v1.BuildContextRequest
-	12, // 40: lawpilot.context.v1.ContextService.GetContext:input_type -> lawpilot.context.v1.GetContextRequest
-	14, // 41: lawpilot.context.v1.ContextService.ResolveCitation:input_type -> lawpilot.context.v1.ResolveCitationRequest
-	16, // 42: lawpilot.context.v1.ContextService.VerifyExecutionEvidence:input_type -> lawpilot.context.v1.VerifyExecutionEvidenceRequest
-	18, // 43: lawpilot.context.v1.ContextService.ListMatterEvents:input_type -> lawpilot.context.v1.ListMatterEventsRequest
-	25, // 44: lawpilot.context.v1.ContextService.PrepareExecutionContext:output_type -> lawpilot.context.v1.PreparedContext
-	28, // 45: lawpilot.context.v1.ContextService.GetTemplate:output_type -> lawpilot.context.v1.TemplateResponse
-	28, // 46: lawpilot.context.v1.ContextService.CreateTemplate:output_type -> lawpilot.context.v1.TemplateResponse
-	28, // 47: lawpilot.context.v1.ContextService.DecideTemplate:output_type -> lawpilot.context.v1.TemplateResponse
-	30, // 48: lawpilot.context.v1.ContextService.GetLegalReview:output_type -> lawpilot.context.v1.ReviewResponse
-	30, // 49: lawpilot.context.v1.ContextService.DecideLegalReview:output_type -> lawpilot.context.v1.ReviewResponse
-	31, // 50: lawpilot.context.v1.ContextService.GetReviewDeadline:output_type -> lawpilot.context.v1.ReviewDeadline
-	31, // 51: lawpilot.context.v1.ContextService.ExpireReview:output_type -> lawpilot.context.v1.ReviewDeadline
-	4,  // 52: lawpilot.context.v1.ContextService.IngestProcessed:output_type -> lawpilot.context.v1.IngestTextResponse
-	4,  // 53: lawpilot.context.v1.ContextService.IngestText:output_type -> lawpilot.context.v1.IngestTextResponse
-	6,  // 54: lawpilot.context.v1.ContextService.DeleteDocument:output_type -> lawpilot.context.v1.DeleteDocumentResponse
-	11, // 55: lawpilot.context.v1.ContextService.BuildContext:output_type -> lawpilot.context.v1.BuildContextResponse
-	13, // 56: lawpilot.context.v1.ContextService.GetContext:output_type -> lawpilot.context.v1.GetContextResponse
-	15, // 57: lawpilot.context.v1.ContextService.ResolveCitation:output_type -> lawpilot.context.v1.ResolveCitationResponse
-	17, // 58: lawpilot.context.v1.ContextService.VerifyExecutionEvidence:output_type -> lawpilot.context.v1.VerifyExecutionEvidenceResponse
-	20, // 59: lawpilot.context.v1.ContextService.ListMatterEvents:output_type -> lawpilot.context.v1.ListMatterEventsResponse
-	44, // [44:60] is the sub-list for method output_type
-	28, // [28:44] is the sub-list for method input_type
-	28, // [28:28] is the sub-list for extension type_name
-	28, // [28:28] is the sub-list for extension extendee
-	0,  // [0:28] is the sub-list for field type_name
+	38, // 26: lawpilot.context.v1.ReviewResponse.artifact:type_name -> google.protobuf.Struct
+	37, // 27: lawpilot.context.v1.ReviewDeadline.deadline:type_name -> google.protobuf.Timestamp
+	0,  // 28: lawpilot.context.v1.KnowledgeLibraryRequest.scope:type_name -> lawpilot.context.v1.Scope
+	0,  // 29: lawpilot.context.v1.CalendarContextRequest.scope:type_name -> lawpilot.context.v1.Scope
+	35, // 30: lawpilot.context.v1.CalendarContextResponse.entries:type_name -> lawpilot.context.v1.CalendarFact
+	32, // 31: lawpilot.context.v1.ContextService.RegisterKnowledgeLibrary:input_type -> lawpilot.context.v1.KnowledgeLibraryRequest
+	34, // 32: lawpilot.context.v1.ContextService.BuildCalendarContext:input_type -> lawpilot.context.v1.CalendarContextRequest
+	23, // 33: lawpilot.context.v1.ContextService.PrepareExecutionContext:input_type -> lawpilot.context.v1.ExecutionRef
+	27, // 34: lawpilot.context.v1.ContextService.GetTemplate:input_type -> lawpilot.context.v1.TemplateDecisionRequest
+	26, // 35: lawpilot.context.v1.ContextService.CreateTemplate:input_type -> lawpilot.context.v1.TemplateRequest
+	27, // 36: lawpilot.context.v1.ContextService.DecideTemplate:input_type -> lawpilot.context.v1.TemplateDecisionRequest
+	29, // 37: lawpilot.context.v1.ContextService.GetLegalReview:input_type -> lawpilot.context.v1.ReviewRequest
+	29, // 38: lawpilot.context.v1.ContextService.DecideLegalReview:input_type -> lawpilot.context.v1.ReviewRequest
+	23, // 39: lawpilot.context.v1.ContextService.GetReviewDeadline:input_type -> lawpilot.context.v1.ExecutionRef
+	23, // 40: lawpilot.context.v1.ContextService.ExpireReview:input_type -> lawpilot.context.v1.ExecutionRef
+	22, // 41: lawpilot.context.v1.ContextService.IngestProcessed:input_type -> lawpilot.context.v1.IngestProcessedRequest
+	2,  // 42: lawpilot.context.v1.ContextService.IngestText:input_type -> lawpilot.context.v1.IngestTextRequest
+	5,  // 43: lawpilot.context.v1.ContextService.DeleteDocument:input_type -> lawpilot.context.v1.DeleteDocumentRequest
+	8,  // 44: lawpilot.context.v1.ContextService.BuildContext:input_type -> lawpilot.context.v1.BuildContextRequest
+	12, // 45: lawpilot.context.v1.ContextService.GetContext:input_type -> lawpilot.context.v1.GetContextRequest
+	14, // 46: lawpilot.context.v1.ContextService.ResolveCitation:input_type -> lawpilot.context.v1.ResolveCitationRequest
+	16, // 47: lawpilot.context.v1.ContextService.VerifyExecutionEvidence:input_type -> lawpilot.context.v1.VerifyExecutionEvidenceRequest
+	18, // 48: lawpilot.context.v1.ContextService.ListMatterEvents:input_type -> lawpilot.context.v1.ListMatterEventsRequest
+	33, // 49: lawpilot.context.v1.ContextService.RegisterKnowledgeLibrary:output_type -> lawpilot.context.v1.KnowledgeLibraryResponse
+	36, // 50: lawpilot.context.v1.ContextService.BuildCalendarContext:output_type -> lawpilot.context.v1.CalendarContextResponse
+	25, // 51: lawpilot.context.v1.ContextService.PrepareExecutionContext:output_type -> lawpilot.context.v1.PreparedContext
+	28, // 52: lawpilot.context.v1.ContextService.GetTemplate:output_type -> lawpilot.context.v1.TemplateResponse
+	28, // 53: lawpilot.context.v1.ContextService.CreateTemplate:output_type -> lawpilot.context.v1.TemplateResponse
+	28, // 54: lawpilot.context.v1.ContextService.DecideTemplate:output_type -> lawpilot.context.v1.TemplateResponse
+	30, // 55: lawpilot.context.v1.ContextService.GetLegalReview:output_type -> lawpilot.context.v1.ReviewResponse
+	30, // 56: lawpilot.context.v1.ContextService.DecideLegalReview:output_type -> lawpilot.context.v1.ReviewResponse
+	31, // 57: lawpilot.context.v1.ContextService.GetReviewDeadline:output_type -> lawpilot.context.v1.ReviewDeadline
+	31, // 58: lawpilot.context.v1.ContextService.ExpireReview:output_type -> lawpilot.context.v1.ReviewDeadline
+	4,  // 59: lawpilot.context.v1.ContextService.IngestProcessed:output_type -> lawpilot.context.v1.IngestTextResponse
+	4,  // 60: lawpilot.context.v1.ContextService.IngestText:output_type -> lawpilot.context.v1.IngestTextResponse
+	6,  // 61: lawpilot.context.v1.ContextService.DeleteDocument:output_type -> lawpilot.context.v1.DeleteDocumentResponse
+	11, // 62: lawpilot.context.v1.ContextService.BuildContext:output_type -> lawpilot.context.v1.BuildContextResponse
+	13, // 63: lawpilot.context.v1.ContextService.GetContext:output_type -> lawpilot.context.v1.GetContextResponse
+	15, // 64: lawpilot.context.v1.ContextService.ResolveCitation:output_type -> lawpilot.context.v1.ResolveCitationResponse
+	17, // 65: lawpilot.context.v1.ContextService.VerifyExecutionEvidence:output_type -> lawpilot.context.v1.VerifyExecutionEvidenceResponse
+	20, // 66: lawpilot.context.v1.ContextService.ListMatterEvents:output_type -> lawpilot.context.v1.ListMatterEventsResponse
+	49, // [49:67] is the sub-list for method output_type
+	31, // [31:49] is the sub-list for method input_type
+	31, // [31:31] is the sub-list for extension type_name
+	31, // [31:31] is the sub-list for extension extendee
+	0,  // [0:31] is the sub-list for field type_name
 }
 
 func init() { file_lawpilot_context_v1_context_proto_init() }
@@ -2451,7 +2850,7 @@ func file_lawpilot_context_v1_context_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_lawpilot_context_v1_context_proto_rawDesc), len(file_lawpilot_context_v1_context_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   32,
+			NumMessages:   37,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

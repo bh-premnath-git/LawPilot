@@ -14,6 +14,11 @@ import (
 )
 
 func main() {
+	stopTelemetry, telemetryErr := workload.StartTelemetry("domain-events")
+	if telemetryErr != nil {
+		log.Fatal("telemetry configuration invalid")
+	}
+	defer stopTelemetry()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	url := os.Getenv("EVENT_DATABASE_URL")
@@ -28,7 +33,7 @@ func main() {
 	if err = workload.CheckDatabaseRole(ctx, pool); err != nil {
 		log.Fatal("runtime role is unsafe")
 	}
-	if err = workload.StartOperations(ctx, os.Getenv("OPS_ADDRESS"), pool.Ping); err != nil {
+	if err = workload.StartOperations(ctx, os.Getenv("OPS_ADDRESS"), pool.Ping, workload.QueueMetrics(pool)); err != nil {
 		log.Fatal("operations listener invalid")
 	}
 	if err = pool.Ping(ctx); err != nil {

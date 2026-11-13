@@ -9,23 +9,31 @@ import (
 	"github.com/jackc/pgx/v5"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"net/url"
 	"time"
 )
 
 type syncCursor struct {
-	Kind  string `json:"kind"`
-	Next  string `json:"next"`
-	Pages int    `json:"pages"`
+	Kind         string `json:"kind"`
+	Next         string `json:"next"`
+	Pages        int    `json:"pages"`
+	CalendarFrom string `json:"calendarFrom"`
+	CalendarTo   string `json:"calendarTo"`
 }
 
 func binding(ctx context.Context, tx pgx.Tx, tenant, connection, kind, external string) (string, string, error) {
 	var id, etag string
-	err := tx.QueryRow(ctx, "SELECT local_id::text,external_etag FROM provider_sync_bindings WHERE tenant_id=$1 AND connection_id=$2 AND resource_type=$3 AND external_id=$4", tenant, connection, kind, external).Scan(&id, &etag)
+	err := tx.QueryRow(ctx, "SELECT local_id::text,CASE WHEN deleted THEN '' ELSE external_etag END FROM provider_sync_bindings WHERE tenant_id=$1 AND connection_id=$2 AND resource_type=$3 AND external_id=$4", tenant, connection, kind, external).Scan(&id, &etag)
 	return id, etag, err
 }
 func remember(ctx context.Context, tx pgx.Tx, tenant, connection, kind, external, id, etag string, value any, jobID string) error {
 	raw, _ := json.Marshal(value)
 	_, err := tx.Exec(ctx, "INSERT INTO provider_sync_bindings(tenant_id,connection_id,resource_type,external_id,local_id,external_etag,snapshot_sha256,seen_job_id)VALUES($1,$2,$3,$4,$5,$6,$7,$8)ON CONFLICT(tenant_id,connection_id,resource_type,external_id)DO UPDATE SET external_etag=excluded.external_etag,snapshot_sha256=excluded.snapshot_sha256,last_synced_at=now(),seen_job_id=excluded.seen_job_id,deleted=false", tenant, connection, kind, external, id, etag, sha(raw), jobID)
+	if err == nil && kind == "calendar_entry" {
+		if entry, ok := value.(RemoteEntry); ok {
+			_, err = tx.Exec(ctx, "UPDATE provider_sync_bindings SET remote_recurrence=$5,remote_court_rule=$6 WHERE tenant_id=$1 AND connection_id=$2 AND resource_type=$3 AND external_id=$4", tenant, connection, kind, external, entry.Recurrence, entry.CourtRule)
+		}
+	}
 	return err
 }
 func (s *Service) processSync(ctx context.Context, tenant, jobID, connectionID, who string) (*pb.JobResponse, error) {
@@ -33,7 +41,7 @@ func (s *Service) processSync(ctx context.Context, tenant, jobID, connectionID, 
 	if err != nil {
 		return nil, err
 	}
-	cursor := syncCursor{Kind: "matter"}
+	cursor := syncCursor{Kind: "matter", CalendarFrom: time.Now().UTC().AddDate(0, 0, -30).Format(time.RFC3339), CalendarTo: time.Now().UTC().AddDate(1, 0, 0).Format(time.RFC3339)}
 	var raw []byte
 	err = s.tx(ctx, tenant, func(tx pgx.Tx) error {
 		return tx.QueryRow(ctx, "SELECT cursor FROM integration_jobs WHERE tenant_id=$1 AND id=$2", tenant, jobID).Scan(&raw)
@@ -46,10 +54,27 @@ func (s *Service) processSync(ctx context.Context, tenant, jobID, connectionID, 
 			return nil, status.Error(codes.DataLoss, "SYNC_CURSOR_CORRUPT")
 		}
 	}
+	if cursor.Kind == "reconcile" {
+		return s.reconcileMissing(ctx, tenant, jobID, connectionID, who, p, token)
+	}
 	if cursor.Pages >= 1000 {
 		return nil, status.Error(codes.ResourceExhausted, "SYNC_PAGE_LIMIT")
 	}
-	page, err := p.Fetch(ctx, cursor.Kind, cursor.Next, token)
+	fetchCursor := cursor.Next
+	if cursor.Kind == "calendar_entry" && fetchCursor == "" && p.ID == "clio-manage" {
+		initial, e := p.safeURL(cursor.Kind, "")
+		if e != nil {
+			return nil, e
+		}
+		u, _ := url.Parse(initial)
+		q := u.Query()
+		q.Set("expanded", "true")
+		q.Set("from", cursor.CalendarFrom)
+		q.Set("to", cursor.CalendarTo)
+		u.RawQuery = q.Encode()
+		fetchCursor = u.String()
+	}
+	page, err := p.Fetch(ctx, cursor.Kind, fetchCursor, token)
 	if err != nil {
 		return nil, unavailable("PROVIDER_SYNC_PAGE_UNAVAILABLE")
 	}
@@ -177,7 +202,7 @@ func (s *Service) processSync(ctx context.Context, tenant, jobID, connectionID, 
 			case "calendar":
 				cursor.Kind = "calendar_entry"
 			default:
-				state = "completed"
+				cursor.Kind = "reconcile"
 			}
 		}
 		encoded, _ := json.Marshal(cursor)
@@ -213,6 +238,8 @@ func (s *Service) RunJob(ctx context.Context, r *pb.Ref) (*pb.JobResponse, error
 		reply, err = s.processFile(ctx, r.TenantId, resource)
 	case "provider_sync":
 		reply, err = s.processSync(ctx, r.TenantId, r.Id, resource, who)
+	case "provider_calendar":
+		reply, err = s.processCalendarWrite(ctx, r.TenantId, r.Id, resource, who)
 	case "provider_update":
 		reply, err = s.processUpdate(ctx, r.TenantId, r.Id, resource, who)
 	default:
@@ -253,6 +280,12 @@ func (s *Service) FailJob(ctx context.Context, r *pb.Ref) (*pb.JobResponse, erro
 		next := "failed"
 		if kind == "file" {
 			if _, err := tx.Exec(ctx, "UPDATE file_ingestions SET state='rejected',error_code='RETRIES_EXHAUSTED' WHERE tenant_id=$1 AND id=$2 AND state IN('queued','processing')", r.TenantId, resource); err != nil {
+				return err
+			}
+		}
+		if kind == "provider_calendar" {
+			next = "uncertain"
+			if _, err := tx.Exec(ctx, "UPDATE provider_calendar_operations SET state='uncertain' WHERE tenant_id=$1 AND id=$2 AND state='inflight'", r.TenantId, resource); err != nil {
 				return err
 			}
 		}

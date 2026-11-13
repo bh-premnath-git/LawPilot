@@ -12,9 +12,10 @@ RUN go mod download
 COPY services/integration-service .
 RUN CGO_ENABLED=0 go build -o /document-parser ./cmd/parser
 FROM debian:bookworm-slim
-RUN apt-get update && apt-get install -y --no-install-recommends poppler-utils ca-certificates && rm -rf /var/lib/apt/lists/* && useradd --uid 10001 --no-create-home parser
+RUN apt-get update && apt-get install -y --no-install-recommends poppler-utils tesseract-ocr tesseract-ocr-eng fonts-dejavu-core fonts-urw-base35 ca-certificates && rm -rf /var/lib/apt/lists/* && useradd --uid 10001 --no-create-home parser
 COPY --from=rust-build /src/target/release/lawpilot-document-worker /usr/local/bin/lawpilot-document-worker
 COPY --from=go-build /document-parser /usr/local/bin/document-parser
 USER parser
+ENV OMP_THREAD_LIMIT=1
 ENV DOCUMENT_PROCESSOR_BIN=/usr/local/bin/lawpilot-document-worker
 CMD ["document-parser"]

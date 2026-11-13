@@ -13,7 +13,7 @@ import (
 
 // StartOperations is optional and exposes only fixed, aggregate metrics. Bind it
 // on an internal interface and enforce network policy before remote scraping.
-func StartOperations(ctx context.Context, address string, ready func(context.Context) error) error {
+func StartOperations(ctx context.Context, address string, ready func(context.Context) error, queues ...func(context.Context) (map[string]int64, error)) error {
 	if address == "" {
 		return nil
 	}
@@ -34,7 +34,24 @@ func StartOperations(ctx context.Context, address string, ready func(context.Con
 	mux.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; version=0.0.4")
 		fmt.Fprintf(w, "lawpilot_rpc_calls_total %d\nlawpilot_rpc_rejected_total %d\n", Calls.Load(), Rejected.Load())
-		data, err := os.ReadFile(os.Getenv("GRPC_SERVER_CERT_FILE"))
+		if len(queues) > 0 {
+			call, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+			metrics, err := queues[0](call)
+			cancel()
+			if err != nil {
+				fmt.Fprintln(w, "lawpilot_queue_metrics_available 0")
+			} else {
+				fmt.Fprintln(w, "lawpilot_queue_metrics_available 1")
+				for name, value := range metrics {
+					fmt.Fprintf(w, "lawpilot_queue_records{state=%q} %d\n", name, value)
+				}
+			}
+		}
+		certPath := os.Getenv("GRPC_SERVER_CERT_FILE")
+		if certPath == "" {
+			certPath = os.Getenv("GRPC_CLIENT_CERT_FILE")
+		}
+		data, err := os.ReadFile(certPath)
 		if err == nil {
 			block, _ := pem.Decode(data)
 			if block != nil {

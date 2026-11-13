@@ -19,6 +19,12 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
+	IntegrationService_RegisterWebhook_FullMethodName       = "/lawpilot.integrations.v1.IntegrationService/RegisterWebhook"
+	IntegrationService_ActivateWebhook_FullMethodName       = "/lawpilot.integrations.v1.IntegrationService/ActivateWebhook"
+	IntegrationService_ReceiveWebhook_FullMethodName        = "/lawpilot.integrations.v1.IntegrationService/ReceiveWebhook"
+	IntegrationService_ProposeCalendarWrite_FullMethodName  = "/lawpilot.integrations.v1.IntegrationService/ProposeCalendarWrite"
+	IntegrationService_GetCalendarOperation_FullMethodName  = "/lawpilot.integrations.v1.IntegrationService/GetCalendarOperation"
+	IntegrationService_DecideCalendarWrite_FullMethodName   = "/lawpilot.integrations.v1.IntegrationService/DecideCalendarWrite"
 	IntegrationService_Status_FullMethodName                = "/lawpilot.integrations.v1.IntegrationService/Status"
 	IntegrationService_CreateUpload_FullMethodName          = "/lawpilot.integrations.v1.IntegrationService/CreateUpload"
 	IntegrationService_FinalizeUpload_FullMethodName        = "/lawpilot.integrations.v1.IntegrationService/FinalizeUpload"
@@ -42,6 +48,12 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type IntegrationServiceClient interface {
+	RegisterWebhook(ctx context.Context, in *WebhookRequest, opts ...grpc.CallOption) (*WebhookResponse, error)
+	ActivateWebhook(ctx context.Context, in *WebhookRequest, opts ...grpc.CallOption) (*WebhookResponse, error)
+	ReceiveWebhook(ctx context.Context, in *ReceiveWebhookRequest, opts ...grpc.CallOption) (*ReceiveWebhookResponse, error)
+	ProposeCalendarWrite(ctx context.Context, in *CalendarWriteRequest, opts ...grpc.CallOption) (*CalendarOperationResponse, error)
+	GetCalendarOperation(ctx context.Context, in *CalendarOperationRequest, opts ...grpc.CallOption) (*CalendarOperationResponse, error)
+	DecideCalendarWrite(ctx context.Context, in *CalendarOperationRequest, opts ...grpc.CallOption) (*CalendarOperationResponse, error)
 	Status(ctx context.Context, in *StatusRequest, opts ...grpc.CallOption) (*StatusResponse, error)
 	CreateUpload(ctx context.Context, in *CreateUploadRequest, opts ...grpc.CallOption) (*CreateUploadResponse, error)
 	FinalizeUpload(ctx context.Context, in *FileRequest, opts ...grpc.CallOption) (*FileResponse, error)
@@ -67,6 +79,66 @@ type integrationServiceClient struct {
 
 func NewIntegrationServiceClient(cc grpc.ClientConnInterface) IntegrationServiceClient {
 	return &integrationServiceClient{cc}
+}
+
+func (c *integrationServiceClient) RegisterWebhook(ctx context.Context, in *WebhookRequest, opts ...grpc.CallOption) (*WebhookResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(WebhookResponse)
+	err := c.cc.Invoke(ctx, IntegrationService_RegisterWebhook_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *integrationServiceClient) ActivateWebhook(ctx context.Context, in *WebhookRequest, opts ...grpc.CallOption) (*WebhookResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(WebhookResponse)
+	err := c.cc.Invoke(ctx, IntegrationService_ActivateWebhook_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *integrationServiceClient) ReceiveWebhook(ctx context.Context, in *ReceiveWebhookRequest, opts ...grpc.CallOption) (*ReceiveWebhookResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReceiveWebhookResponse)
+	err := c.cc.Invoke(ctx, IntegrationService_ReceiveWebhook_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *integrationServiceClient) ProposeCalendarWrite(ctx context.Context, in *CalendarWriteRequest, opts ...grpc.CallOption) (*CalendarOperationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CalendarOperationResponse)
+	err := c.cc.Invoke(ctx, IntegrationService_ProposeCalendarWrite_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *integrationServiceClient) GetCalendarOperation(ctx context.Context, in *CalendarOperationRequest, opts ...grpc.CallOption) (*CalendarOperationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CalendarOperationResponse)
+	err := c.cc.Invoke(ctx, IntegrationService_GetCalendarOperation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *integrationServiceClient) DecideCalendarWrite(ctx context.Context, in *CalendarOperationRequest, opts ...grpc.CallOption) (*CalendarOperationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CalendarOperationResponse)
+	err := c.cc.Invoke(ctx, IntegrationService_DecideCalendarWrite_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *integrationServiceClient) Status(ctx context.Context, in *StatusRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
@@ -243,6 +315,12 @@ func (c *integrationServiceClient) RunJob(ctx context.Context, in *Ref, opts ...
 // All implementations must embed UnimplementedIntegrationServiceServer
 // for forward compatibility.
 type IntegrationServiceServer interface {
+	RegisterWebhook(context.Context, *WebhookRequest) (*WebhookResponse, error)
+	ActivateWebhook(context.Context, *WebhookRequest) (*WebhookResponse, error)
+	ReceiveWebhook(context.Context, *ReceiveWebhookRequest) (*ReceiveWebhookResponse, error)
+	ProposeCalendarWrite(context.Context, *CalendarWriteRequest) (*CalendarOperationResponse, error)
+	GetCalendarOperation(context.Context, *CalendarOperationRequest) (*CalendarOperationResponse, error)
+	DecideCalendarWrite(context.Context, *CalendarOperationRequest) (*CalendarOperationResponse, error)
 	Status(context.Context, *StatusRequest) (*StatusResponse, error)
 	CreateUpload(context.Context, *CreateUploadRequest) (*CreateUploadResponse, error)
 	FinalizeUpload(context.Context, *FileRequest) (*FileResponse, error)
@@ -270,6 +348,24 @@ type IntegrationServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedIntegrationServiceServer struct{}
 
+func (UnimplementedIntegrationServiceServer) RegisterWebhook(context.Context, *WebhookRequest) (*WebhookResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegisterWebhook not implemented")
+}
+func (UnimplementedIntegrationServiceServer) ActivateWebhook(context.Context, *WebhookRequest) (*WebhookResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ActivateWebhook not implemented")
+}
+func (UnimplementedIntegrationServiceServer) ReceiveWebhook(context.Context, *ReceiveWebhookRequest) (*ReceiveWebhookResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReceiveWebhook not implemented")
+}
+func (UnimplementedIntegrationServiceServer) ProposeCalendarWrite(context.Context, *CalendarWriteRequest) (*CalendarOperationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProposeCalendarWrite not implemented")
+}
+func (UnimplementedIntegrationServiceServer) GetCalendarOperation(context.Context, *CalendarOperationRequest) (*CalendarOperationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCalendarOperation not implemented")
+}
+func (UnimplementedIntegrationServiceServer) DecideCalendarWrite(context.Context, *CalendarOperationRequest) (*CalendarOperationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DecideCalendarWrite not implemented")
+}
 func (UnimplementedIntegrationServiceServer) Status(context.Context, *StatusRequest) (*StatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Status not implemented")
 }
@@ -340,6 +436,114 @@ func RegisterIntegrationServiceServer(s grpc.ServiceRegistrar, srv IntegrationSe
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&IntegrationService_ServiceDesc, srv)
+}
+
+func _IntegrationService_RegisterWebhook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WebhookRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IntegrationServiceServer).RegisterWebhook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IntegrationService_RegisterWebhook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IntegrationServiceServer).RegisterWebhook(ctx, req.(*WebhookRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IntegrationService_ActivateWebhook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WebhookRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IntegrationServiceServer).ActivateWebhook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IntegrationService_ActivateWebhook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IntegrationServiceServer).ActivateWebhook(ctx, req.(*WebhookRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IntegrationService_ReceiveWebhook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReceiveWebhookRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IntegrationServiceServer).ReceiveWebhook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IntegrationService_ReceiveWebhook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IntegrationServiceServer).ReceiveWebhook(ctx, req.(*ReceiveWebhookRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IntegrationService_ProposeCalendarWrite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CalendarWriteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IntegrationServiceServer).ProposeCalendarWrite(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IntegrationService_ProposeCalendarWrite_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IntegrationServiceServer).ProposeCalendarWrite(ctx, req.(*CalendarWriteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IntegrationService_GetCalendarOperation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CalendarOperationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IntegrationServiceServer).GetCalendarOperation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IntegrationService_GetCalendarOperation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IntegrationServiceServer).GetCalendarOperation(ctx, req.(*CalendarOperationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IntegrationService_DecideCalendarWrite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CalendarOperationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IntegrationServiceServer).DecideCalendarWrite(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IntegrationService_DecideCalendarWrite_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IntegrationServiceServer).DecideCalendarWrite(ctx, req.(*CalendarOperationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _IntegrationService_Status_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -655,6 +859,30 @@ var IntegrationService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "lawpilot.integrations.v1.IntegrationService",
 	HandlerType: (*IntegrationServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "RegisterWebhook",
+			Handler:    _IntegrationService_RegisterWebhook_Handler,
+		},
+		{
+			MethodName: "ActivateWebhook",
+			Handler:    _IntegrationService_ActivateWebhook_Handler,
+		},
+		{
+			MethodName: "ReceiveWebhook",
+			Handler:    _IntegrationService_ReceiveWebhook_Handler,
+		},
+		{
+			MethodName: "ProposeCalendarWrite",
+			Handler:    _IntegrationService_ProposeCalendarWrite_Handler,
+		},
+		{
+			MethodName: "GetCalendarOperation",
+			Handler:    _IntegrationService_GetCalendarOperation_Handler,
+		},
+		{
+			MethodName: "DecideCalendarWrite",
+			Handler:    _IntegrationService_DecideCalendarWrite_Handler,
+		},
 		{
 			MethodName: "Status",
 			Handler:    _IntegrationService_Status_Handler,

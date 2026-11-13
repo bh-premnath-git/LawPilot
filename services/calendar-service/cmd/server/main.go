@@ -27,6 +27,11 @@ func required(name string) string {
 	return value
 }
 func main() {
+	stopTelemetry, telemetryErr := workload.StartTelemetry("calendar-service")
+	if telemetryErr != nil {
+		log.Fatal("telemetry configuration invalid")
+	}
+	defer stopTelemetry()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	database := workload.Secret("CALENDAR_DATABASE_URL")
@@ -44,7 +49,7 @@ func main() {
 	if err = pool.Ping(ctx); err != nil {
 		log.Fatal("database unavailable")
 	}
-	if _, err = pool.Exec(ctx, "SELECT overlap_policy FROM calendars LIMIT 0"); err != nil {
+	if _, err = pool.Exec(ctx, "SELECT deleted FROM provider_sync_bindings LIMIT 0"); err != nil {
 		log.Fatal("calendar migration required")
 	}
 	tls, err := calendar.Credentials(required("GRPC_CA_FILE"), required("GRPC_SERVER_CERT_FILE"), required("GRPC_SERVER_KEY_FILE"))
@@ -55,7 +60,7 @@ func main() {
 	if err != nil {
 		log.Fatal("identity configuration invalid")
 	}
-	server := grpc.NewServer(grpc.Creds(tls), grpc.ChainUnaryInterceptor(workload.Guard(32, 5*time.Minute), auth), grpc.KeepaliveParams(keepalive.ServerParameters{MaxConnectionAge: 5 * time.Minute, MaxConnectionAgeGrace: 30 * time.Second}), grpc.MaxRecvMsgSize(262144), grpc.MaxSendMsgSize(1048576))
+	server := grpc.NewServer(grpc.StatsHandler(workload.ServerTelemetry()), grpc.Creds(tls), grpc.ChainUnaryInterceptor(workload.Guard(32, 5*time.Minute), auth), grpc.KeepaliveParams(keepalive.ServerParameters{MaxConnectionAge: 5 * time.Minute, MaxConnectionAgeGrace: 30 * time.Second}), grpc.MaxRecvMsgSize(262144), grpc.MaxSendMsgSize(1048576))
 	pb.RegisterCalendarServiceServer(server, &calendar.Service{Pool: pool})
 	checker := health.NewServer()
 	checker.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)

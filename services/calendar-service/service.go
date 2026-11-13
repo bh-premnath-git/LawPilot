@@ -133,6 +133,13 @@ func authorize(ctx context.Context, tx pgx.Tx, tenant, id, who, action string) (
 			return nil, false, status.Error(codes.PermissionDenied, "PERMISSION_DENIED")
 		}
 	}
+	var unavailable bool
+	if err := tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM provider_sync_bindings WHERE tenant_id=$1 AND resource_type='calendar' AND local_id=$2 AND deleted)", tenant, id).Scan(&unavailable); err != nil {
+		return nil, false, err
+	}
+	if unavailable {
+		return nil, false, status.Error(codes.FailedPrecondition, "PROVIDER_CALENDAR_UNAVAILABLE")
+	}
 	var allowed bool
 	err = tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM calendar_grants WHERE tenant_id=$1 AND calendar_id=$2 AND principal_id=$3 AND permission=$4)", tenant, id, who, action).Scan(&allowed)
 	if err != nil {

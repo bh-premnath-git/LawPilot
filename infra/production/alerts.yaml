@@ -1,0 +1,23 @@
+groups:
+- name: lawpilot
+  rules:
+  - alert: LawPilotDeadLetters
+    expr: sum(lawpilot_queue_records{state=~".*dead_letter"}) > 0
+    for: 5m
+    labels: {severity: warning}
+    annotations: {summary: "LawPilot has dead-letter deliveries; inspect authorized replay controls"}
+  - alert: LawPilotUncertainProviderWrite
+    expr: sum(lawpilot_queue_records{state="integration_uncertain"}) > 0
+    for: 1m
+    labels: {severity: warning}
+    annotations: {summary: "Provider write requires reconciliation; do not blindly repeat it"}
+  - alert: LawPilotCertificateExpiry
+    expr: lawpilot_certificate_expiry_seconds < 21600
+    for: 5m
+    labels: {severity: critical}
+    annotations: {summary: "Workload certificate expires within six hours"}
+  - alert: LawPilotMetricsUnavailable
+    expr: lawpilot_queue_metrics_available == 0
+    for: 5m
+    labels: {severity: warning}
+    annotations: {summary: "Queue metrics cannot reach the database"}

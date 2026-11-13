@@ -91,6 +91,15 @@ func access(ctx context.Context, tx pgx.Tx, tenant, matter, who, permission stri
 	if !ok {
 		return denied()
 	}
+	if permission == "context.read" {
+		var library, knowledge bool
+		if err := tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM knowledge_libraries WHERE tenant_id=$1 AND matter_id=$2),EXISTS(SELECT 1 FROM principal_capabilities WHERE tenant_id=$1 AND principal_id=$3 AND capability_id='knowledge.read')", tenant, matter, who).Scan(&library, &knowledge); err != nil {
+			return err
+		}
+		if library && !knowledge {
+			return denied()
+		}
+	}
 	return nil
 }
 func lockMatter(ctx context.Context, tx pgx.Tx, tenant, matter string) error {

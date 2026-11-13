@@ -9,16 +9,18 @@
 | NestJS platform API | Durable mock execution API | Keycloak identity/grants, atomic 202 acceptance, owner-only polling/cancel/requeue and database readiness |
 | TypeScript Root Supervisor | Runnable starter | mTLS gRPC, versioned capability discovery and bounded delegation to Python |
 | Python AI capability service | Configured model adapter; disabled by default | Structured generation from authorized snapshots; exact quotes, no tools, mandatory distinct attorney review |
-| Go integration service | Configured adapters; disabled by default | Clio Manage + generic OAuth, encrypted tokens, durable polling imports and approved conditional matter-title updates |
+| Go integration service | Configured adapters; disabled by default | Clio Manage + generic OAuth, encrypted tokens, durable polling imports and reviewed matter-title/appointment writes |
 | Go context engine + domain events | Runnable native text path | Versioned text, authorized lexical/configured vector retrieval, expiring context snapshots, exact-quote evidence checks, leased journal/consumer inboxes and authorized SSE |
 | Go native calendar | Runnable native domain | Tenant/matter ACLs, typed time/recurrence, explicit shared/exclusive overlap policy, revisions, approval proposals, calendar occupancy and Temporal in-app reminder state; configured provider polling imports |
 | PostgreSQL + pgvector | PostgreSQL 18 / pgvector 0.8.7 | Canonical records, permissions, audit/outbox, tenant RLS and vector similarity primitives |
 | Keycloak | Dev infrastructure | Importable demo realm, OIDC/JWKS boundary; no production users provisioned |
 | Go Temporal worker + dispatcher | Runnable local mock path | Leased/fenced command delivery, persistent Temporal workflows, bounded activity retries and recovery, authoritative legal review and durable integration jobs |
-| Rust document worker | Isolated PDF/DOCX text parser | Bounded extraction, scanned private uploads, PDF page provenance and immutable source hashes |
-| OpenTelemetry | AI request-path instrumentation | API spans and Supervisor → Python traces; durable Go/Temporal trace propagation pending |
-| Clio OAuth + synchronization | Configured implementation | Single-use OAuth state and paged imports; live account validation, webhooks/deletion/recurrence reconciliation remain pending |
+| Rust document worker | Isolated PDF/DOCX text parser with optional OCR | Bounded extraction, scanned private uploads, PDF page provenance and immutable source hashes |
+| OpenTelemetry | AI request-path instrumentation | API and Go/TS/Python gRPC spans; durable Temporal acceptance/history trace linking remains a deployment concern |
+| Clio OAuth + synchronization | Configured implementation | Single-use OAuth state and paged imports; webhook hints, unavailable-resource reconciliation and bounded expanded occurrences; live account validation remains pending |
 | Legal drafting / real LLM | Configured implementation | Approved templates, input-bound context grants and full artifact review; credentials supplied later |
+
+See [capability extensions, configuration and validation](docs/CAPABILITY_EXTENSIONS.md) for migrations **016–018**, Clio webhooks and bounded recurrence imports, missing-resource reconciliation, reviewed appointment writes, optional OCR, curated knowledge/calendar recipes and production policy templates. Real credentials and live legal/provider/deployment evaluation remain operator gates.
 
 ## Backend layers and implementation order
 

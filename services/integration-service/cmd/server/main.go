@@ -18,6 +18,11 @@ import (
 )
 
 func main() {
+	stopTelemetry, telemetryErr := workload.StartTelemetry("integration-service")
+	if telemetryErr != nil {
+		log.Fatal("telemetry configuration invalid")
+	}
+	defer stopTelemetry()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	url := workload.Secret("INTEGRATION_DATABASE_URL")
@@ -35,12 +40,15 @@ func main() {
 	if err = pool.Ping(ctx); err != nil {
 		log.Fatal("database unavailable")
 	}
-	if _, err = pool.Exec(ctx, "SELECT source_sha256 FROM file_ingestions LIMIT 0"); err != nil {
+	if _, err = pool.Exec(ctx, "SELECT remote_recurrence FROM provider_sync_bindings LIMIT 0"); err != nil {
 		log.Fatal("integration migration required")
 	}
 	providers, keys, err := app.NewProviders()
 	if err != nil {
 		log.Fatal("provider configuration invalid")
+	}
+	if err = app.ValidateExtensions(providers, os.Getenv("PROVIDER_WRITES_ENABLED") == "true"); err != nil {
+		log.Fatal("provider extension configuration invalid")
 	}
 	storage, err := app.NewStorage(ctx)
 	if err != nil {
@@ -63,7 +71,7 @@ func main() {
 			if err != nil {
 				log.Fatal("client mTLS invalid")
 			}
-			connection, err := grpc.NewClient(target.Address, grpc.WithTransportCredentials(creds), grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(11*1024*1024), grpc.MaxCallRecvMsgSize(2*1024*1024)))
+			connection, err := grpc.NewClient(target.Address, grpc.WithStatsHandler(workload.ClientTelemetry()), grpc.WithTransportCredentials(creds), grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(11*1024*1024), grpc.MaxCallRecvMsgSize(2*1024*1024)))
 			if err != nil {
 				log.Fatal("RPC configuration invalid")
 			}
@@ -83,7 +91,7 @@ func main() {
 	if err != nil {
 		log.Fatal("identity config invalid")
 	}
-	server := grpc.NewServer(grpc.Creds(creds), grpc.ChainUnaryInterceptor(workload.Guard(32, 5*time.Minute), auth), grpc.KeepaliveParams(keepalive.ServerParameters{MaxConnectionAge: 5 * time.Minute, MaxConnectionAgeGrace: 30 * time.Second}), grpc.MaxRecvMsgSize(65536), grpc.MaxSendMsgSize(1048576))
+	server := grpc.NewServer(grpc.StatsHandler(workload.ServerTelemetry()), grpc.Creds(creds), grpc.ChainUnaryInterceptor(workload.Guard(32, 5*time.Minute), auth), grpc.KeepaliveParams(keepalive.ServerParameters{MaxConnectionAge: 5 * time.Minute, MaxConnectionAgeGrace: 30 * time.Second}), grpc.MaxRecvMsgSize(131072), grpc.MaxSendMsgSize(1048576))
 	pb.RegisterIntegrationServiceServer(server, service)
 	address := os.Getenv("INTEGRATION_GRPC_BIND")
 	if address == "" {
@@ -93,7 +101,7 @@ func main() {
 	if err != nil {
 		log.Fatal("listen unavailable")
 	}
-	if err = workload.StartOperations(ctx, os.Getenv("OPS_ADDRESS"), pool.Ping); err != nil {
+	if err = workload.StartOperations(ctx, os.Getenv("OPS_ADDRESS"), pool.Ping, workload.QueueMetrics(pool)); err != nil {
 		log.Fatal("operations listener failed")
 	}
 	go func() {
@@ -122,6 +130,20 @@ func main() {
 			}
 		}()
 	}
+	go func() {
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				if service.DrainSyncSignals(ctx) != nil {
+					log.Println("provider sync signals will retry")
+				}
+			}
+		}
+	}()
 	log.Println("integration service started; optional capabilities are explicitly configured")
 	if server.Serve(listener) != nil {
 		log.Fatal("service stopped")

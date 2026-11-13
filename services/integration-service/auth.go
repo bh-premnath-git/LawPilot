@@ -44,6 +44,12 @@ func Authenticator(ctx context.Context, issuer, jwks, audience, environment stri
 			return nil, status.Error(codes.PermissionDenied, "WORKLOAD_SCOPE_DENIED")
 		}
 
+		if info.FullMethod == "/lawpilot.integrations.v1.IntegrationService/ReceiveWebhook" {
+			if identity != "api-gateway" {
+				return nil, status.Error(codes.PermissionDenied, "WORKLOAD_SCOPE_DENIED")
+			}
+			return next(ctx, req)
+		}
 		if info.FullMethod == "/grpc.health.v1.Health/Check" {
 			if identity != "api-gateway" && identity != "execution-worker" {
 				return nil, status.Error(codes.PermissionDenied, "WORKLOAD_SCOPE_DENIED")

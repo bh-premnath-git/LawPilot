@@ -1,5 +1,7 @@
 # Configured file, provider and legal AI services
 
+**Updated scope:** [Capability extensions](CAPABILITY_EXTENSIONS.md) supersede earlier limitations below for webhooks, reconciliation, appointments, OCR and context workspaces. Apply migrations 016–018.
+
 These features are implemented behind disabled-by-default configuration. No real account, document store or model was accessed during development. Tests use synthetic fixtures. Existing Keycloak 26.8.2, PostgreSQL 18/pgvector 0.8.7, native calendar ACLs and shared/exclusive booking policy remain the foundation.
 
 ## Start locally

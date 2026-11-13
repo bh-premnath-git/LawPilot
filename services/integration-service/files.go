@@ -288,7 +288,7 @@ func (s *Service) processFile(ctx context.Context, tenant, id string) (*pb.JobRe
 		}
 		return nil, unavailable("PARSER_UNAVAILABLE")
 	}
-	if parsed.SourceSha256 != f.SHA || parsed.ParserVersion != "isolated-text.v1" || len(parsed.Pages) == 0 || len(parsed.Pages) > 200 {
+	if parsed.SourceSha256 != f.SHA || (parsed.ParserVersion != "isolated-text.v1" && parsed.ParserVersion != "isolated-ocr.v1") || len(parsed.Pages) == 0 || len(parsed.Pages) > 200 {
 		return s.rejectFile(ctx, tenant, f, "PARSER_INTEGRITY_MISMATCH", false)
 	}
 	text, err := JoinPages(parsed.Pages)

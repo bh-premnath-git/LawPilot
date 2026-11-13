@@ -285,6 +285,7 @@ function identity(role) {
     CONTEXT_GRPC_ADDRESS: contextAddress,
     PARSER_GRPC_ADDRESS: parserAddress,
     FILE_STORAGE_ENABLED: "true",
+    PROVIDER_WEBHOOKS_ENABLED: "false",
     S3_ENDPOINT: `http://127.0.0.1:${s3port}`,
     S3_FORCE_PATH_STYLE: "true",
     S3_BUCKET: "bucket",
@@ -330,6 +331,22 @@ function identity(role) {
     return value;
   }
   await until(() => request("GET", "integration-status"));
+  const unknownHook = await fetch(
+    `http://127.0.0.1:${apiPort}/v1/provider-webhooks/${randomUUID()}/${"x".repeat(43)}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Hook-Signature": "0".repeat(64),
+      },
+      body: ' { "meta": {"event":"updated","webhook_id":900}, "data":{"id":1} } ',
+    },
+  );
+  assert.equal(
+    unknownHook.status,
+    409,
+    "raw webhook route must reach the configured integration boundary without a browser token",
+  );
   const credentials = grpc.credentials.createSsl(
     fs.readFileSync(path.join(tls, "ca.pem")),
     fs.readFileSync(path.join(tls, "execution-worker.key")),
@@ -515,6 +532,29 @@ function identity(role) {
     200,
     reviewToken,
   );
+  await pool.query(
+    "INSERT INTO principal_capabilities VALUES($1,$2,'knowledge.manage'),($1,$2,'knowledge.read')",
+    [tenant, owner],
+  );
+  await request(
+    "POST",
+    "knowledge-libraries",
+    { matterId: matter, name: "Synthetic firm library" },
+    201,
+  );
+  const library = await request(
+    "POST",
+    `matters/${matter}/context/build`,
+    { recipeId: "firm.knowledge.v1", query: "rent" },
+    201,
+  );
+  assert(library.package.sources.length > 0);
+  const calendarContext = await request(
+    "POST",
+    `matters/${matter}/context/calendar`,
+    { from: "2026-12-01T00:00:00Z", to: "2026-12-02T00:00:00Z" },
+    403,
+  );
   const rejectedFile = await upload();
   infected = true;
   await request(
@@ -569,6 +609,7 @@ function identity(role) {
         "domain_event_inbox",
         "domain_aggregate_heads",
         "domain_event_journal",
+        "knowledge_libraries",
         "legal_review_decisions",
         "execution_context_grants",
         "context_commands",

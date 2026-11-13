@@ -16,7 +16,7 @@ type fileProvenance struct {
 }
 
 func (s *Service) IngestProcessed(ctx context.Context, r *pb.IngestProcessedRequest) (*pb.IngestTextResponse, error) {
-	if !validID(r.FileId) || !validID(r.TenantId) || r.ParserVersion != "isolated-text.v1" || len(r.Pages) == 0 || len(r.Pages) > 200 {
+	if !validID(r.FileId) || !validID(r.TenantId) || (r.ParserVersion != "isolated-text.v1" && r.ParserVersion != "isolated-ocr.v1") || len(r.Pages) == 0 || len(r.Pages) > 200 {
 		return nil, bad("INVALID_PROCESSED_SOURCE")
 	}
 	var text strings.Builder

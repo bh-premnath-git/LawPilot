@@ -26,6 +26,7 @@ def model(monkeypatch):
 def test_configured_generation_is_reviewable_and_citations_are_server_owned(model):
     state,task,trusted=model;result=run(task,trusted)
     assert result.requiresAttorneyReview and result.proposedActions==[]
+    assert 'inspect originals' in result.output['limitations'][0]
     assert result.evidence[0].pageNumber==2
     assert result.output['claims'][0]['citation']==dict(trusted['package']['sources'][0]['citation'],byteStart=0)
     request=state['requests'][0]

@@ -93,7 +93,7 @@ def run(task:Task,trusted:dict|None)->Result:
         claims.append({'citation':citation,'quote':quote})
         evidence.append(Evidence(documentId=citation['documentId'],documentVersionId=citation['versionId'],passageId=citation['passageId'],contentSha256=citation['contentSha256'],pageNumber=citation.get('pageNumber')))
     profile=hashlib.sha256((cfg['base']+'|'+cfg['model']+'|'+cfg['revision']).encode()).hexdigest()
-    output={'kind':'legal_draft.v1','draft':draft.draft,'claims':claims,'limitations':draft.limitations,'grantId':trusted['grantId'],'modelProfile':profile}
+    output={'kind':'legal_draft.v1','draft':draft.draft,'claims':claims,'limitations':['Source coverage is limited to extracted text. Images, OCR, layout and annotations are not included; inspect originals before relying on the draft.']+draft.limitations,'grantId':trusted['grantId'],'modelProfile':profile}
     if template:output.update(templateId=template['id'],templateSha256=template['sha256'])
     meta=AGENTS[task.capabilityId]
     return Result(executionId=str(task.executionId),agentId=meta['agentId'],agentVersion=meta['agentVersion'],status='completed',output=output,evidence=evidence,proposedActions=[],requiresAttorneyReview=True)

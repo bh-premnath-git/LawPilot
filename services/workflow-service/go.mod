@@ -1,6 +1,6 @@
 module lawpilot/workflow-service
 
-go 1.23.0
+go 1.25.0
 
 require (
 	github.com/bh-premnath-git/LawPilot/contracts/gen/go v0.0.0
@@ -39,3 +39,7 @@ require (
 )
 
 replace github.com/bh-premnath-git/LawPilot/contracts/gen/go => ../../contracts/gen/go
+
+require github.com/bh-premnath-git/LawPilot/packages/workload v0.0.0
+
+replace github.com/bh-premnath-git/LawPilot/packages/workload => ../../packages/workload

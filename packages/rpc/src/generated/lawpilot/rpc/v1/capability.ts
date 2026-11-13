@@ -19,6 +19,7 @@ import {
   type UntypedServiceImplementation,
 } from "@grpc/grpc-js";
 import { Struct } from "../../../google/protobuf/struct";
+import { PreparedContext } from "../../context/v1/context";
 
 export const protobufPackage = "lawpilot.rpc.v1";
 
@@ -31,6 +32,7 @@ export interface ExecuteCapabilityRequest {
   capabilityId: string;
   input: { [key: string]: any } | undefined;
   traceId: string;
+  trustedContext: PreparedContext | undefined;
 }
 
 export interface EvidenceRef {
@@ -61,6 +63,7 @@ function createBaseExecuteCapabilityRequest(): ExecuteCapabilityRequest {
     capabilityId: "",
     input: undefined,
     traceId: "",
+    trustedContext: undefined,
   };
 }
 
@@ -86,6 +89,9 @@ export const ExecuteCapabilityRequest: MessageFns<ExecuteCapabilityRequest> = {
     }
     if (message.traceId !== "") {
       writer.uint32(58).string(message.traceId);
+    }
+    if (message.trustedContext !== undefined) {
+      PreparedContext.encode(message.trustedContext, writer.uint32(66).fork()).join();
     }
     return writer;
   },
@@ -153,6 +159,14 @@ export const ExecuteCapabilityRequest: MessageFns<ExecuteCapabilityRequest> = {
           message.traceId = reader.string();
           continue;
         }
+        case 8: {
+          if (tag !== 66) {
+            break;
+          }
+
+          message.trustedContext = PreparedContext.decode(reader, reader.uint32());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -195,6 +209,11 @@ export const ExecuteCapabilityRequest: MessageFns<ExecuteCapabilityRequest> = {
         : isSet(object.trace_id)
         ? globalThis.String(object.trace_id)
         : "",
+      trustedContext: isSet(object.trustedContext)
+        ? PreparedContext.fromJSON(object.trustedContext)
+        : isSet(object.trusted_context)
+        ? PreparedContext.fromJSON(object.trusted_context)
+        : undefined,
     };
   },
 
@@ -221,6 +240,9 @@ export const ExecuteCapabilityRequest: MessageFns<ExecuteCapabilityRequest> = {
     if (message.traceId !== undefined) {
       obj.traceId = message.traceId;
     }
+    if (message.trustedContext !== undefined) {
+      obj.trustedContext = PreparedContext.toJSON(message.trustedContext);
+    }
     return obj;
   },
 
@@ -236,6 +258,9 @@ export const ExecuteCapabilityRequest: MessageFns<ExecuteCapabilityRequest> = {
     message.capabilityId = object.capabilityId ?? "";
     message.input = object.input ?? undefined;
     message.traceId = object.traceId ?? "";
+    message.trustedContext = (object.trustedContext !== undefined && object.trustedContext !== null)
+      ? PreparedContext.fromPartial(object.trustedContext)
+      : undefined;
     return message;
   },
 };

@@ -33,8 +33,9 @@ const citation = z
     versionId: uuid,
     passageId: uuid,
     contentSha256: z.string().regex(/^[a-f0-9]{64}$/),
-    byteStart: z.number().int().min(0).max(24576),
-    byteEnd: z.number().int().positive().max(24576),
+    byteStart: z.number().int().min(0).max(262144),
+    byteEnd: z.number().int().positive().max(262144),
+    pageNumber: z.number().int().min(1).max(200).optional(),
   })
   .strict();
 function parse<T>(schema: z.ZodType<T>, value: unknown): T {
@@ -68,9 +69,8 @@ export class ContextClient implements OnModuleDestroy {
           },
         );
       }
-      const requestType = (RPC as any)[
-        method[0].toUpperCase() + method.slice(1) + "Request"
-      ];
+      const aliases:Record<string,string>={getTemplate:"TemplateDecisionRequest",createTemplate:"TemplateRequest",decideTemplate:"TemplateDecisionRequest",getLegalReview:"ReviewRequest",decideLegalReview:"ReviewRequest"};
+      const requestType=(RPC as any)[aliases[method] || method[0].toUpperCase()+method.slice(1)+"Request"];
       payload = requestType.fromPartial(payload);
       const metadata = traceMetadata();
       metadata.set("authorization", authorization || "");

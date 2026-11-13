@@ -23,9 +23,10 @@ _sym_db = _symbol_database.Default()
 
 
 from google.protobuf import struct_pb2 as google_dot_protobuf_dot_struct__pb2
+from lawpilot.context.v1 import context_pb2 as lawpilot_dot_context_dot_v1_dot_context__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n lawpilot/rpc/v1/capability.proto\x12\x0flawpilot.rpc.v1\x1a\x1cgoogle/protobuf/struct.proto\"\xbd\x01\n\x18\x45xecuteCapabilityRequest\x12\x14\n\x0c\x65xecution_id\x18\x01 \x01(\t\x12\x11\n\ttenant_id\x18\x02 \x01(\t\x12\x14\n\x0cprincipal_id\x18\x03 \x01(\t\x12\x11\n\tmatter_id\x18\x04 \x01(\t\x12\x15\n\rcapability_id\x18\x05 \x01(\t\x12&\n\x05input\x18\x06 \x01(\x0b\x32\x17.google.protobuf.Struct\x12\x10\n\x08trace_id\x18\x07 \x01(\t\"\x95\x01\n\x0b\x45videnceRef\x12\x13\n\x0b\x64ocument_id\x18\x01 \x01(\t\x12\x1b\n\x13\x64ocument_version_id\x18\x02 \x01(\t\x12\x12\n\npassage_id\x18\x03 \x01(\t\x12\x18\n\x0bpage_number\x18\x04 \x01(\x05H\x00\x88\x01\x01\x12\x16\n\x0e\x63ontent_sha256\x18\x05 \x01(\tB\x0e\n\x0c_page_number\"\x87\x02\n\x19\x45xecuteCapabilityResponse\x12\x14\n\x0c\x65xecution_id\x18\x01 \x01(\t\x12\x10\n\x08\x61gent_id\x18\x02 \x01(\t\x12\x15\n\ragent_version\x18\x03 \x01(\t\x12\x0e\n\x06status\x18\x04 \x01(\t\x12\'\n\x06output\x18\x05 \x01(\x0b\x32\x17.google.protobuf.Struct\x12.\n\x08\x65vidence\x18\x06 \x03(\x0b\x32\x1c.lawpilot.rpc.v1.EvidenceRef\x12%\n\x18requires_attorney_review\x18\x07 \x01(\x08H\x00\x88\x01\x01\x42\x1b\n\x19_requires_attorney_review2\x7f\n\x11SupervisorService\x12j\n\x11\x45xecuteCapability\x12).lawpilot.rpc.v1.ExecuteCapabilityRequest\x1a*.lawpilot.rpc.v1.ExecuteCapabilityResponse2\x7f\n\x11\x43\x61pabilityService\x12j\n\x11\x45xecuteCapability\x12).lawpilot.rpc.v1.ExecuteCapabilityRequest\x1a*.lawpilot.rpc.v1.ExecuteCapabilityResponseBLZJgithub.com/bh-premnath-git/LawPilot/contracts/gen/go/lawpilot/rpc/v1;rpcv1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n lawpilot/rpc/v1/capability.proto\x12\x0flawpilot.rpc.v1\x1a\x1cgoogle/protobuf/struct.proto\x1a!lawpilot/context/v1/context.proto\"\xfc\x01\n\x18\x45xecuteCapabilityRequest\x12\x14\n\x0c\x65xecution_id\x18\x01 \x01(\t\x12\x11\n\ttenant_id\x18\x02 \x01(\t\x12\x14\n\x0cprincipal_id\x18\x03 \x01(\t\x12\x11\n\tmatter_id\x18\x04 \x01(\t\x12\x15\n\rcapability_id\x18\x05 \x01(\t\x12&\n\x05input\x18\x06 \x01(\x0b\x32\x17.google.protobuf.Struct\x12\x10\n\x08trace_id\x18\x07 \x01(\t\x12=\n\x0ftrusted_context\x18\x08 \x01(\x0b\x32$.lawpilot.context.v1.PreparedContext\"\x95\x01\n\x0b\x45videnceRef\x12\x13\n\x0b\x64ocument_id\x18\x01 \x01(\t\x12\x1b\n\x13\x64ocument_version_id\x18\x02 \x01(\t\x12\x12\n\npassage_id\x18\x03 \x01(\t\x12\x18\n\x0bpage_number\x18\x04 \x01(\x05H\x00\x88\x01\x01\x12\x16\n\x0e\x63ontent_sha256\x18\x05 \x01(\tB\x0e\n\x0c_page_number\"\x87\x02\n\x19\x45xecuteCapabilityResponse\x12\x14\n\x0c\x65xecution_id\x18\x01 \x01(\t\x12\x10\n\x08\x61gent_id\x18\x02 \x01(\t\x12\x15\n\ragent_version\x18\x03 \x01(\t\x12\x0e\n\x06status\x18\x04 \x01(\t\x12\'\n\x06output\x18\x05 \x01(\x0b\x32\x17.google.protobuf.Struct\x12.\n\x08\x65vidence\x18\x06 \x03(\x0b\x32\x1c.lawpilot.rpc.v1.EvidenceRef\x12%\n\x18requires_attorney_review\x18\x07 \x01(\x08H\x00\x88\x01\x01\x42\x1b\n\x19_requires_attorney_review2\x7f\n\x11SupervisorService\x12j\n\x11\x45xecuteCapability\x12).lawpilot.rpc.v1.ExecuteCapabilityRequest\x1a*.lawpilot.rpc.v1.ExecuteCapabilityResponse2\x7f\n\x11\x43\x61pabilityService\x12j\n\x11\x45xecuteCapability\x12).lawpilot.rpc.v1.ExecuteCapabilityRequest\x1a*.lawpilot.rpc.v1.ExecuteCapabilityResponseBLZJgithub.com/bh-premnath-git/LawPilot/contracts/gen/go/lawpilot/rpc/v1;rpcv1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -33,14 +34,14 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'lawpilot.rpc.v1.capability_
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'ZJgithub.com/bh-premnath-git/LawPilot/contracts/gen/go/lawpilot/rpc/v1;rpcv1'
-  _globals['_EXECUTECAPABILITYREQUEST']._serialized_start=84
-  _globals['_EXECUTECAPABILITYREQUEST']._serialized_end=273
-  _globals['_EVIDENCEREF']._serialized_start=276
-  _globals['_EVIDENCEREF']._serialized_end=425
-  _globals['_EXECUTECAPABILITYRESPONSE']._serialized_start=428
-  _globals['_EXECUTECAPABILITYRESPONSE']._serialized_end=691
-  _globals['_SUPERVISORSERVICE']._serialized_start=693
-  _globals['_SUPERVISORSERVICE']._serialized_end=820
-  _globals['_CAPABILITYSERVICE']._serialized_start=822
-  _globals['_CAPABILITYSERVICE']._serialized_end=949
+  _globals['_EXECUTECAPABILITYREQUEST']._serialized_start=119
+  _globals['_EXECUTECAPABILITYREQUEST']._serialized_end=371
+  _globals['_EVIDENCEREF']._serialized_start=374
+  _globals['_EVIDENCEREF']._serialized_end=523
+  _globals['_EXECUTECAPABILITYRESPONSE']._serialized_start=526
+  _globals['_EXECUTECAPABILITYRESPONSE']._serialized_end=789
+  _globals['_SUPERVISORSERVICE']._serialized_start=791
+  _globals['_SUPERVISORSERVICE']._serialized_end=918
+  _globals['_CAPABILITYSERVICE']._serialized_start=920
+  _globals['_CAPABILITYSERVICE']._serialized_end=1047
 # @@protoc_insertion_point(module_scope)

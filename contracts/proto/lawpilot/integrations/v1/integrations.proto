@@ -1,0 +1,52 @@
+syntax = "proto3";
+package lawpilot.integrations.v1;
+option go_package = "github.com/bh-premnath-git/LawPilot/contracts/gen/go/lawpilot/integrations/v1;integrationsv1";
+message Scope { string tenant_id = 1; string request_id = 2; }
+message Ref { string tenant_id = 1; string id = 2; }
+message StatusRequest { Scope scope = 1; }
+message StatusResponse { bool storage_enabled = 1; bool clio_enabled = 2; bool generic_provider_enabled = 3; repeated string providers = 4; }
+message CreateUploadRequest { Scope scope = 1; string matter_id = 2; string filename = 3; string media_type = 4; int64 size_bytes = 5; string sha256 = 6; string idempotency_key = 7; }
+message File { string id = 1; string matter_id = 2; string state = 3; string error_code = 4; string document_id = 5; string version_id = 6; }
+message Header { string name = 1; string value = 2; }
+message CreateUploadResponse { File file = 1; string upload_url = 2; repeated Header required_headers = 3; int32 expires_seconds = 4; }
+message FileRequest { Scope scope = 1; string matter_id = 2; string file_id = 3; }
+message FileResponse { File file = 1; }
+message DownloadResponse { string download_url = 1; int32 expires_seconds = 2; }
+message JobResponse { string id = 1; string state = 2; string error_code = 3; }
+message CreateConnectionRequest { Scope scope = 1; string provider_id = 2; string idempotency_key = 3; }
+message Connection { string id = 1; string provider_id = 2; string state = 3; int64 revision = 4; repeated string capabilities = 5; }
+message ConnectionResponse { Connection connection = 1; }
+message ConnectionRequest { Scope scope = 1; string connection_id = 2; }
+message AuthorizeResponse { string authorize_url = 1; int32 expires_seconds = 2; }
+message OAuthCompleteRequest { Scope scope = 1; string connection_id = 2; string state = 3; string code = 4; }
+message SyncRequest { Scope scope = 1; string connection_id = 2; string idempotency_key = 3; }
+message JobRequest { Scope scope = 1; string job_id = 2; }
+// Writes are updates to existing owned records only, never blind create retries.
+message ProposeProviderUpdateRequest { Scope scope = 1; string connection_id = 2; string matter_id = 3; string title = 4; string idempotency_key = 5; }
+message ProviderProposalResponse { string operation_id = 1; string artifact_sha256 = 2; string state = 3; string title = 4; string matter_id = 5; string connection_id = 6; string expected_etag = 7; int64 expected_revision = 8; string proposed_by = 9; }
+message ProviderProposalRequest { Scope scope = 1; string operation_id = 2; }
+message GrantConnectionRequest { Scope scope = 1; string connection_id = 2; string principal_id = 3; repeated string permissions = 4; int64 expected_revision = 5; string idempotency_key = 6; }
+message DecideProviderUpdateRequest { Scope scope = 1; string operation_id = 2; string artifact_sha256 = 3; string decision = 4; string idempotency_key = 5; }
+message ParseRequest { bytes data = 1; string media_type = 2; string expected_sha256 = 3; }
+message ParsedPage { int32 number = 1; string text = 2; }
+message ParseResponse { repeated ParsedPage pages = 1; string source_sha256 = 2; string parser_version = 3; }
+service IntegrationService {
+ rpc Status(StatusRequest) returns (StatusResponse);
+ rpc CreateUpload(CreateUploadRequest) returns (CreateUploadResponse);
+ rpc FinalizeUpload(FileRequest) returns (FileResponse);
+ rpc GetFile(FileRequest) returns (FileResponse);
+ rpc DownloadFile(FileRequest) returns (DownloadResponse);
+ rpc CreateConnection(CreateConnectionRequest) returns (ConnectionResponse);
+ rpc AuthorizeConnection(ConnectionRequest) returns (AuthorizeResponse);
+ rpc CompleteOAuth(OAuthCompleteRequest) returns (ConnectionResponse);
+ rpc Disconnect(ConnectionRequest) returns (ConnectionResponse);
+ rpc RequestSync(SyncRequest) returns (JobResponse);
+ rpc GetJob(JobRequest) returns (JobResponse);
+ rpc GrantConnection(GrantConnectionRequest) returns (ConnectionResponse);
+ rpc GetProviderProposal(ProviderProposalRequest) returns (ProviderProposalResponse);
+ rpc ProposeProviderUpdate(ProposeProviderUpdateRequest) returns (ProviderProposalResponse);
+ rpc DecideProviderUpdate(DecideProviderUpdateRequest) returns (ProviderProposalResponse);
+ rpc FailJob(Ref) returns (JobResponse);
+ rpc RunJob(Ref) returns (JobResponse);
+}
+service DocumentParser { rpc Parse(ParseRequest) returns (ParseResponse); }

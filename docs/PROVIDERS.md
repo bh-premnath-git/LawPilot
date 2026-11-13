@@ -1,5 +1,7 @@
 # Provider-neutral connector contract
 
+Current extension: see [configured integrations and operations](CONFIGURED_INTEGRATIONS.md) for implemented file processing, OAuth/polling adapters, configured legal generation, authoritative review, migrations 011–015 and current limitations. Earlier gap lists below describe the preceding baseline.
+
 ## Contract principles
 
 Provider router resolves `(tenantId, resource_owner, resource_type)` to a connection and adapter; it NEVER assumes Clio. Capability manifests say what a provider can do, using explicit contract versions. The router does not claim a Clio operation is working unless its adapter implements it.

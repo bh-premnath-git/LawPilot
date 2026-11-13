@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"github.com/bh-premnath-git/LawPilot/packages/workload"
+	"google.golang.org/grpc/keepalive"
 	"log"
 	"net"
 	"os"
@@ -27,11 +29,18 @@ func required(name string) string {
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	pool, err := pgxpool.New(ctx, required("CALENDAR_DATABASE_URL"))
+	database := workload.Secret("CALENDAR_DATABASE_URL")
+	if database == "" || workload.DatabaseURL(database) != nil {
+		log.Fatal("database TLS/configuration invalid")
+	}
+	pool, err := pgxpool.New(ctx, database)
 	if err != nil {
 		log.Fatal("invalid database configuration")
 	}
 	defer pool.Close()
+	if err = workload.CheckDatabaseRole(ctx, pool); err != nil {
+		log.Fatal("runtime database role is unsafe")
+	}
 	if err = pool.Ping(ctx); err != nil {
 		log.Fatal("database unavailable")
 	}
@@ -46,7 +55,7 @@ func main() {
 	if err != nil {
 		log.Fatal("identity configuration invalid")
 	}
-	server := grpc.NewServer(grpc.Creds(tls), grpc.UnaryInterceptor(auth), grpc.MaxRecvMsgSize(262144), grpc.MaxSendMsgSize(1048576))
+	server := grpc.NewServer(grpc.Creds(tls), grpc.ChainUnaryInterceptor(workload.Guard(32, 5*time.Minute), auth), grpc.KeepaliveParams(keepalive.ServerParameters{MaxConnectionAge: 5 * time.Minute, MaxConnectionAgeGrace: 30 * time.Second}), grpc.MaxRecvMsgSize(262144), grpc.MaxSendMsgSize(1048576))
 	pb.RegisterCalendarServiceServer(server, &calendar.Service{Pool: pool})
 	checker := health.NewServer()
 	checker.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
@@ -70,6 +79,9 @@ func main() {
 			server.Stop()
 		}
 	}()
+	if err = workload.StartOperations(ctx, os.Getenv("OPS_ADDRESS"), pool.Ping); err != nil {
+		log.Fatal("operations listener invalid")
+	}
 	log.Println("calendar gRPC service started (mTLS required)")
 	if err = server.Serve(listener); err != nil {
 		log.Fatal("calendar gRPC server stopped")

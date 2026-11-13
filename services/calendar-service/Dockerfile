@@ -1,6 +1,7 @@
 FROM golang:1.25-alpine AS build
 WORKDIR /src/services/calendar-service
 COPY contracts/gen/go /src/contracts/gen/go
+COPY packages/workload /src/packages/workload
 COPY services/calendar-service/go.mod services/calendar-service/go.sum ./
 RUN --mount=type=secret,id=proxy_ca \
     if [ -f /run/secrets/proxy_ca ]; then export SSL_CERT_FILE=/run/secrets/proxy_ca; fi; go mod download

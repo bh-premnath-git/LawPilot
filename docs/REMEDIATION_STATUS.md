@@ -1,5 +1,7 @@
 # Backend remediation tracking
 
+Current extension: see [configured integrations and operations](CONFIGURED_INTEGRATIONS.md) for implemented file processing, OAuth/polling adapters, configured legal generation, authoritative review, migrations 011–015 and current limitations. Earlier gap lists below describe the preceding baseline.
+
 Specification: user-provided `LawPilot_BACKEND_FIXES_README_v2_CALENDAR.md`. It reviewed `main` at `3bacf15`. This tracker separates implemented code from future contract proposals and integration acceptance gates.
 
 ## Current changes: durable execution, native calendar and gRPC foundations

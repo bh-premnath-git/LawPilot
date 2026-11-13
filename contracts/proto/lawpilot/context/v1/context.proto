@@ -2,8 +2,9 @@ syntax = "proto3";
 package lawpilot.context.v1;
 option go_package = "github.com/bh-premnath-git/LawPilot/contracts/gen/go/lawpilot/context/v1;contextv1";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
 message Scope { string tenant_id = 1; string request_id = 2; }
-message Citation { string document_id = 1; string version_id = 2; string passage_id = 3; string content_sha256 = 4; int32 byte_start = 5; int32 byte_end = 6; }
+message Citation { string document_id = 1; string version_id = 2; string passage_id = 3; string content_sha256 = 4; int32 byte_start = 5; int32 byte_end = 6; optional int32 page_number = 7; }
 message IngestTextRequest { Scope scope = 1; string matter_id = 2; string document_id = 3; int64 expected_revision = 4; string title = 5; string text = 6; string idempotency_key = 7; }
 message Document { string id = 1; string matter_id = 2; string version_id = 3; int64 revision = 4; string content_sha256 = 5; string state = 6; int32 passage_count = 7; string indexing_mode = 8; }
 message IngestTextResponse { Document document = 1; }
@@ -25,7 +26,28 @@ message VerifyExecutionEvidenceResponse { bool verified = 1; }
 message ListMatterEventsRequest { Scope scope = 1; string matter_id = 2; int64 after_position = 3; int32 limit = 4; }
 message EventNotification { string id = 1; int64 position = 2; string type = 3; string aggregate_id = 4; int64 aggregate_revision = 5; google.protobuf.Timestamp occurred_at = 6; }
 message ListMatterEventsResponse { repeated EventNotification events = 1; int64 next_position = 2; }
+message ProcessedPage { int32 number = 1; string text = 2; }
+message IngestProcessedRequest { string tenant_id = 1; string file_id = 2; repeated ProcessedPage pages = 3; string parser_version = 4; }
+message ExecutionRef { string tenant_id = 1; string execution_id = 2; }
+message ApprovedTemplate { string id = 1; string sha256 = 2; string body = 3; }
+message PreparedContext { string execution_id = 1; string grant_id = 2; ContextPackage package = 3; ApprovedTemplate approved_template = 4; }
+message TemplateRequest { Scope scope = 1; string name = 2; int32 version = 3; string body = 4; string idempotency_key = 5; }
+message TemplateDecisionRequest { Scope scope = 1; string template_id = 2; string expected_sha256 = 3; string decision = 4; }
+message TemplateResponse { ApprovedTemplate template = 1; string state = 2; }
+message ReviewRequest { Scope scope = 1; string execution_id = 2; string expected_sha256 = 3; string decision = 4; }
+message ReviewResponse { string execution_id = 1; string state = 2; string artifact_sha256 = 3; string draft = 4; google.protobuf.Struct artifact = 5; }
+message ReviewDeadline { string state = 1; google.protobuf.Timestamp deadline = 2; }
 service ContextService {
+ rpc PrepareExecutionContext(ExecutionRef) returns (PreparedContext);
+ rpc GetTemplate(TemplateDecisionRequest) returns (TemplateResponse);
+ rpc CreateTemplate(TemplateRequest) returns (TemplateResponse);
+ rpc DecideTemplate(TemplateDecisionRequest) returns (TemplateResponse);
+ rpc GetLegalReview(ReviewRequest) returns (ReviewResponse);
+ rpc DecideLegalReview(ReviewRequest) returns (ReviewResponse);
+ rpc GetReviewDeadline(ExecutionRef) returns (ReviewDeadline);
+ rpc ExpireReview(ExecutionRef) returns (ReviewDeadline);
+
+ rpc IngestProcessed(IngestProcessedRequest) returns (IngestTextResponse);
  rpc IngestText(IngestTextRequest) returns (IngestTextResponse);
  rpc DeleteDocument(DeleteDocumentRequest) returns (DeleteDocumentResponse);
  rpc BuildContext(BuildContextRequest) returns (BuildContextResponse);

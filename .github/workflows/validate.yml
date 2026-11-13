@@ -8,7 +8,7 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     services:
       postgres:
         image: pgvector/pgvector:0.8.7-pg18-trixie
@@ -86,6 +86,11 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f db/008_calendar_overlap_policy.sql
           psql -v ON_ERROR_STOP=1 -f db/009_events_context.sql
           psql -v ON_ERROR_STOP=1 -f db/010_authoritative_evidence.sql
+          psql -v ON_ERROR_STOP=1 -f db/011_file_provider_integrations.sql
+          psql -v ON_ERROR_STOP=1 -f db/012_legal_generation_review.sql
+          psql -v ON_ERROR_STOP=1 -f db/013_integration_command_governance.sql
+          psql -v ON_ERROR_STOP=1 -f db/014_page_provenance.sql
+          psql -v ON_ERROR_STOP=1 -f db/015_operational_controls.sql
           psql -v ON_ERROR_STOP=1 -f db/tests/pgvector.sql
           psql -v ON_ERROR_STOP=1 -f db/tests/tenant_isolation.sql
 
@@ -111,6 +116,38 @@ jobs:
           TEST_EVENT_DATABASE_URL: postgresql://lawpilot_events:local-dev-events-only@localhost:5432/lawpilot
         working-directory: services/context-engine
         run: go test -count=1 ./...
+      - name: Workload controls and configured provider database integration
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:local-ci-postgres-only@localhost:5432/lawpilot
+          TEST_INTEGRATION_DATABASE_URL: postgresql://lawpilot_integration:local-dev-integration-only@localhost:5432/lawpilot
+        run: |
+          (cd packages/workload && go test ./...)
+          (cd services/integration-service && go test -count=1 ./...)
+      - name: Configured file and legal generation process integration
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:local-ci-postgres-only@localhost:5432/lawpilot
+          TEST_APP_DATABASE_URL: postgresql://lawpilot_app:local-dev-app-only@localhost:5432/lawpilot
+          TEST_CONTEXT_DATABASE_URL: postgresql://lawpilot_context:local-dev-context-only@localhost:5432/lawpilot
+          TEST_INTEGRATION_DATABASE_URL: postgresql://lawpilot_integration:local-dev-integration-only@localhost:5432/lawpilot
+          TEST_WORKFLOW_DATABASE_URL: postgresql://lawpilot_workflow:local-dev-workflow-only@localhost:5432/lawpilot
+          TEST_DISPATCHER_DATABASE_URL: postgresql://lawpilot_dispatcher:local-dev-dispatcher-only@localhost:5432/lawpilot
+          TEMPORAL_BIN: work/temporal
+          DOCUMENT_PROCESSOR_BIN: services/document-worker/target/debug/lawpilot-document-worker
+        run: |
+          sudo apt-get update && sudo apt-get install -y poppler-utils
+          mkdir -p work
+          curl -fsSL https://github.com/temporalio/cli/releases/download/v1.10.0/temporal_cli_1.10.0_linux_amd64.tar.gz -o work/temporal.tar.gz
+          tar -xzf work/temporal.tar.gz -C work temporal
+          (cd services/document-worker && cargo +1.90.0 build --locked)
+          (cd services/integration-service && go build -o ../../work/integration-service ./cmd/server && go build -o ../../work/document-parser ./cmd/parser)
+          (cd services/context-engine && go build -o ../../work/context-engine ./cmd/server)
+          (cd services/workflow-service && go build -o ../../work/execution-worker ./cmd/worker && go build -o ../../work/outbox-dispatcher ./cmd/dispatcher)
+          node scripts/test_configured_integrations.cjs
+          docker compose config -q
+          docker build -f services/integration-service/Dockerfile -t lawpilot-integration:ci .
+          docker run --rm --entrypoint sh lawpilot-integration:ci -c 'test "$(id -u)" = 10001'
+          docker build -f services/document-worker/Dockerfile -t lawpilot-parser:ci .
+          docker run --rm --entrypoint sh lawpilot-parser:ci -c 'test "$(id -u)" = 10001 && command -v pdftotext && test -x /usr/local/bin/lawpilot-document-worker'
       - name: Build non-root execution image
         run: |
           docker build -f services/workflow-service/Dockerfile -t lawpilot-execution-worker:ci .
@@ -152,6 +189,15 @@ jobs:
           node scripts/test_secure_context.cjs
           docker build -f services/context-engine/Dockerfile -t lawpilot-context:ci .
           docker run --rm --entrypoint sh lawpilot-context:ci -c 'test "$(id -u)" = 10001 && test -r contracts/events/registry.v1.json'
+      - name: Backup and isolated restore with PostgreSQL 18 tools
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          docker exec -e PGPASSWORD=local-ci-postgres-only "$PG_CONTAINER" pg_dump -h 127.0.0.1 -U postgres -d lawpilot -Fc -f /tmp/lawpilot-ci.dump
+          docker exec -e PGPASSWORD=local-ci-postgres-only "$PG_CONTAINER" createdb -h 127.0.0.1 -U postgres lawpilot_restore_check
+          docker exec -e PGPASSWORD=local-ci-postgres-only "$PG_CONTAINER" pg_restore -h 127.0.0.1 -U postgres -d lawpilot_restore_check --exit-on-error /tmp/lawpilot-ci.dump
+          docker exec -e PGPASSWORD=local-ci-postgres-only "$PG_CONTAINER" psql -h 127.0.0.1 -U postgres -d lawpilot_restore_check -v ON_ERROR_STOP=1 -c "DO \$\$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_extension WHERE extname='vector') OR NOT EXISTS(SELECT 1 FROM pg_class WHERE relname='file_ingestions' AND relforcerowsecurity) THEN RAISE EXCEPTION 'restore integrity failed'; END IF; END \$\$;"
+          docker exec "$PG_CONTAINER" rm /tmp/lawpilot-ci.dump
       - name: Upload recovery test diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
@@ -161,4 +207,5 @@ jobs:
             work/recovery-*/*.log
             work/calendar-grpc-*/*.log
             work/context-grpc-*/*.log
+            work/configured-grpc-*/*.log
           if-no-files-found: ignore

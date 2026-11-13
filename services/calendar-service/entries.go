@@ -184,6 +184,9 @@ func (s *Service) command(ctx context.Context, tx pgx.Tx, tenant, calendar, orig
 	if err != nil {
 		return nil, err
 	}
+	if calendarInfo.Authority != "lawpilot-native" {
+		return nil, status.Error(codes.FailedPrecondition, "PROVIDER_OWNED_CALENDAR")
+	}
 	exclusive := calendarInfo.OverlapPolicy == "exclusive"
 	result := &pb.MutationResult{Status: "applied"}
 	if create := command.GetCreate(); create != nil {

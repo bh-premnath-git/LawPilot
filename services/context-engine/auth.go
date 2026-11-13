@@ -2,10 +2,10 @@ package contextengine
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
+	"github.com/bh-premnath-git/LawPilot/packages/workload"
+
 	"errors"
-	"os"
+
 	"strings"
 	"time"
 
@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/peer"
+
 	"google.golang.org/grpc/status"
 )
 
@@ -22,19 +22,7 @@ type principalKey struct{}
 
 func actor(ctx context.Context) string { value, _ := ctx.Value(principalKey{}).(string); return value }
 func Credentials(ca, certificate, key string) (credentials.TransportCredentials, error) {
-	root, err := os.ReadFile(ca)
-	if err != nil {
-		return nil, err
-	}
-	pool := x509.NewCertPool()
-	if !pool.AppendCertsFromPEM(root) {
-		return nil, errors.New("invalid CA")
-	}
-	pair, err := tls.LoadX509KeyPair(certificate, key)
-	if err != nil {
-		return nil, err
-	}
-	return credentials.NewTLS(&tls.Config{MinVersion: tls.VersionTLS13, ClientAuth: tls.RequireAndVerifyClientCert, ClientCAs: pool, Certificates: []tls.Certificate{pair}}), nil
+	return workload.ServerCredentials(ca, certificate, key)
 }
 func Authenticator(ctx context.Context, issuer, jwks, audience, environment string) (grpc.UnaryServerInterceptor, error) {
 	if issuer == "" || jwks == "" || audience == "" {
@@ -45,22 +33,30 @@ func Authenticator(ctx context.Context, issuer, jwks, audience, environment stri
 	}
 	verifier := oidc.NewVerifier(issuer, oidc.NewRemoteKeySet(ctx, jwks), &oidc.Config{ClientID: audience, SupportedSigningAlgs: []string{"RS256"}})
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, next grpc.UnaryHandler) (any, error) {
-		p, ok := peer.FromContext(ctx)
-		if !ok {
-			return nil, status.Error(codes.Unauthenticated, "WORKLOAD_IDENTITY_REQUIRED")
+		identity := ""
+		for _, role := range []string{"api-gateway", "execution-worker", "integration-service"} {
+			if workload.Caller(ctx, role) {
+				identity = role
+				break
+			}
 		}
-		auth, ok := p.AuthInfo.(credentials.TLSInfo)
-		if !ok || len(auth.State.VerifiedChains) == 0 || len(auth.State.PeerCertificates) == 0 {
-			return nil, status.Error(codes.Unauthenticated, "WORKLOAD_IDENTITY_REQUIRED")
+		if identity == "" {
+			return nil, status.Error(codes.PermissionDenied, "WORKLOAD_SCOPE_DENIED")
 		}
-		identity := auth.State.PeerCertificates[0].Subject.CommonName
+
 		if info.FullMethod == "/grpc.health.v1.Health/Check" {
 			if identity != "api-gateway" && identity != "execution-worker" {
 				return nil, status.Error(codes.PermissionDenied, "WORKLOAD_SCOPE_DENIED")
 			}
 			return next(ctx, req)
 		}
-		if info.FullMethod == "/lawpilot.context.v1.ContextService/VerifyExecutionEvidence" {
+		if info.FullMethod == "/lawpilot.context.v1.ContextService/IngestProcessed" {
+			if identity != "integration-service" {
+				return nil, status.Error(codes.PermissionDenied, "WORKLOAD_SCOPE_DENIED")
+			}
+			return next(ctx, req)
+		}
+		if info.FullMethod == "/lawpilot.context.v1.ContextService/VerifyExecutionEvidence" || info.FullMethod == "/lawpilot.context.v1.ContextService/PrepareExecutionContext" || info.FullMethod == "/lawpilot.context.v1.ContextService/GetReviewDeadline" || info.FullMethod == "/lawpilot.context.v1.ContextService/ExpireReview" {
 			if identity != "execution-worker" {
 				return nil, status.Error(codes.PermissionDenied, "WORKLOAD_SCOPE_DENIED")
 			}

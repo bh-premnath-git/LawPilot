@@ -135,11 +135,11 @@ def safe_mock(task: Task) -> Result:
 
 @app.get('/healthz')
 def health():
-    return {'service':'ai-capabilities','status':'up','mode':'safe-mock','capabilities':len(AGENTS)}
+    return {'service':'ai-capabilities','status':'up','mode':'configured-legal-generation' if os.environ.get('LEGAL_AI_ENABLED')=='true' else 'safe-mock','capabilities':len(AGENTS)}
 
 @app.post('/internal/execute', response_model=Result, response_model_exclude_none=True)
 async def execute(request: Request):
-    if os.environ.get('ENABLE_LEGACY_INTERNAL_HTTP') != 'true' or os.environ.get('APP_ENV') != 'development':
+    if os.environ.get('LEGAL_AI_ENABLED')=='true' or os.environ.get('ENABLE_LEGACY_INTERNAL_HTTP') != 'true' or os.environ.get('APP_ENV') != 'development':
         raise HTTPException(410, 'use_authenticated_grpc')
     raw = bytearray()
     async for chunk in request.stream():

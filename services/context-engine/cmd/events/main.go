@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/bh-premnath-git/LawPilot/packages/workload"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	engine "lawpilot/context-engine"
@@ -24,6 +25,12 @@ func main() {
 		log.Fatal("invalid events database")
 	}
 	defer pool.Close()
+	if err = workload.CheckDatabaseRole(ctx, pool); err != nil {
+		log.Fatal("runtime role is unsafe")
+	}
+	if err = workload.StartOperations(ctx, os.Getenv("OPS_ADDRESS"), pool.Ping); err != nil {
+		log.Fatal("operations listener invalid")
+	}
 	if err = pool.Ping(ctx); err != nil {
 		log.Fatal("events database unavailable")
 	}

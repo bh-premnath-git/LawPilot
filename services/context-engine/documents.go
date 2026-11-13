@@ -14,6 +14,7 @@ import (
 type chunk struct {
 	Start, End int
 	Text       string
+	Page       *int32
 }
 
 func chunks(text string) []chunk {
@@ -28,7 +29,7 @@ func chunks(text string) []chunk {
 		if end >= len(positions) {
 			end = len(positions) - 1
 		}
-		out = append(out, chunk{positions[i], positions[end], text[positions[i]:positions[end]]})
+		out = append(out, chunk{positions[i], positions[end], text[positions[i]:positions[end]], nil})
 		if end == len(positions)-1 {
 			break
 		}
@@ -41,7 +42,12 @@ func (s *Service) IngestText(ctx context.Context, r *pb.IngestTextRequest) (*pb.
 		return nil, err
 	}
 	who := actor(ctx)
-	if !validID(r.MatterId) || r.DocumentId != "" && !validID(r.DocumentId) || r.DocumentId == "" && r.ExpectedRevision != 0 || len(strings.TrimSpace(r.Title)) < 1 || len(r.Title) > 256 || len(r.Text) < 1 || len(r.Text) > 24576 || strings.TrimSpace(r.Text) == "" || !utf8.ValidString(r.Text) || strings.ContainsRune(r.Text, 0) {
+	provenance, processed := ctx.Value(processedKey{}).(fileProvenance)
+	limit := 24576
+	if processed {
+		limit = 262144
+	}
+	if !validID(r.MatterId) || r.DocumentId != "" && !validID(r.DocumentId) || r.DocumentId == "" && r.ExpectedRevision != 0 || len(strings.TrimSpace(r.Title)) < 1 || len(r.Title) > 256 || len(r.Text) < 1 || len(r.Text) > limit || strings.TrimSpace(r.Text) == "" || !utf8.ValidString(r.Text) || strings.ContainsRune(r.Text, 0) {
 		return nil, bad("INVALID_NATIVE_TEXT")
 	}
 	reply := new(pb.IngestTextResponse)
@@ -60,15 +66,25 @@ func (s *Service) IngestText(ctx context.Context, r *pb.IngestTextRequest) (*pb.
 		return reply, err
 	}
 	parts := chunks(r.Text)
+	if processed {
+		parts = provenance.Parts
+	}
 	var vectors [][]float64
 	if s.Embedder != nil {
-		input := make([]string, len(parts))
-		for i, c := range parts {
-			input[i] = c.Text
-		}
-		vectors, err = s.Embedder.Embed(ctx, input)
-		if err != nil {
-			return nil, status.Error(codes.Unavailable, "EMBEDDING_UNAVAILABLE")
+		for start := 0; start < len(parts); start += 64 {
+			end := start + 64
+			if end > len(parts) {
+				end = len(parts)
+			}
+			input := make([]string, end-start)
+			for i, c := range parts[start:end] {
+				input[i] = c.Text
+			}
+			batch, e := s.Embedder.Embed(ctx, input)
+			if e != nil {
+				return nil, status.Error(codes.Unavailable, "EMBEDDING_UNAVAILABLE")
+			}
+			vectors = append(vectors, batch...)
 		}
 	}
 	err = s.tx(ctx, tenant, func(tx pgx.Tx) error {
@@ -81,6 +97,15 @@ func (s *Service) IngestText(ctx context.Context, r *pb.IngestTextRequest) (*pb.
 		hit, err := cached(ctx, tx, tenant, who, r.IdempotencyKey, hash, reply)
 		if err != nil || hit {
 			return err
+		}
+		if processed {
+			var ok bool
+			if err = tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM file_ingestions WHERE tenant_id=$1 AND id=$2 AND principal_id=$3 AND matter_id=$4 AND state='processing' AND scan_status='clean' AND source_sha256=$5 AND parsed_sha256=$6)", tenant, provenance.ID, who, r.MatterId, provenance.SHA, digest(r.Text)).Scan(&ok); err != nil {
+				return err
+			}
+			if !ok {
+				return status.Error(codes.FailedPrecondition, "FILE_STATE_CHANGED")
+			}
 		}
 		id := r.DocumentId
 		revision := int64(0)
@@ -98,13 +123,21 @@ func (s *Service) IngestText(ctx context.Context, r *pb.IngestTextRequest) (*pb.
 		}
 		revision++
 		version := uuid.NewString()
-		if _, err = tx.Exec(ctx, "INSERT INTO document_versions(id,tenant_id,document_id,revision,content_sha256,full_text,created_by)VALUES($1,$2,$3,$4,$5,$6,$7)", version, tenant, id, revision, digest(r.Text), r.Text, who); err != nil {
+		var sourceFile any
+		var sourceSHA any
+		parserVersion := "native-text.v1"
+		if processed {
+			sourceFile = provenance.ID
+			sourceSHA = provenance.SHA
+			parserVersion = provenance.Parser
+		}
+		if _, err = tx.Exec(ctx, "INSERT INTO document_versions(id,tenant_id,document_id,revision,content_sha256,full_text,created_by,source_file_id,source_file_sha256,parser_version)VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)", version, tenant, id, revision, digest(r.Text), r.Text, who, sourceFile, sourceSHA, parserVersion); err != nil {
 			return err
 		}
 		for i, c := range parts {
 			passage := uuid.NewString()
 			sha := digest(c.Text)
-			if _, err = tx.Exec(ctx, "INSERT INTO document_passages(id,tenant_id,document_id,source_sha256,text_ref,version_id,body,byte_start,byte_end,passage_sha256)VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)", passage, tenant, id, digest(r.Text), "native-text:"+passage, version, c.Text, c.Start, c.End, sha); err != nil {
+			if _, err = tx.Exec(ctx, "INSERT INTO document_passages(id,tenant_id,document_id,source_sha256,text_ref,version_id,body,byte_start,byte_end,passage_sha256,page_number)VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)", passage, tenant, id, digest(r.Text), "native-text:"+passage, version, c.Text, c.Start, c.End, sha, c.Page); err != nil {
 				return err
 			}
 			if s.Embedder != nil {
@@ -124,6 +157,14 @@ func (s *Service) IngestText(ctx context.Context, r *pb.IngestTextRequest) (*pb.
 			mode = "hybrid"
 		}
 		reply.Document = &pb.Document{Id: id, MatterId: r.MatterId, VersionId: version, Revision: revision, ContentSha256: digest(r.Text), State: "active", PassageCount: int32(len(parts)), IndexingMode: mode}
+		if processed {
+			if _, err = tx.Exec(ctx, "UPDATE file_ingestions SET state='completed',document_id=$3,version_id=$4 WHERE tenant_id=$1 AND id=$2", tenant, provenance.ID, id, version); err != nil {
+				return err
+			}
+			if _, err = tx.Exec(ctx, "UPDATE document_assets SET scan_status='clean' WHERE tenant_id=$1 AND id=$2", tenant, id); err != nil {
+				return err
+			}
+		}
 		if err = emit(ctx, tx, tenant, who, id, "document.version.created.v1", revision); err != nil {
 			return err
 		}

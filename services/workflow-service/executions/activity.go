@@ -16,6 +16,7 @@ import (
 	"strconv"
 	"time"
 
+	ctxpb "github.com/bh-premnath-git/LawPilot/contracts/gen/go/lawpilot/context/v1"
 	rpcpb "github.com/bh-premnath-git/LawPilot/contracts/gen/go/lawpilot/rpc/v1"
 	"go.temporal.io/sdk/temporal"
 )
@@ -101,6 +102,8 @@ func ValidateResult(raw []byte, e Execution, cap Capability) (Result, error) {
 }
 
 type Activities struct {
+	ContextRPC      ctxpb.ContextServiceClient
+	LegalAI         bool
 	RPC             rpcpb.SupervisorServiceClient
 	AllowLegacyHTTP bool
 	Store           *Store
@@ -193,7 +196,9 @@ func (a *Activities) Run(ctx context.Context, ref Ref) (string, error) {
 		return "", permanent("AI_FAILED")
 	}
 	state := "completed"
-	if result.Status == "completed" && cap.RequiresAttorneyReview {
+	kind := ""
+	_ = json.Unmarshal(result.Output["kind"], &kind)
+	if result.Status == "completed" && (cap.RequiresAttorneyReview || kind == "legal_draft.v1") {
 		state = "awaiting_review"
 	}
 	state, err = a.Store.Finish(ctx, ref, state, result.Status, raw, true, cap.RequiresMatter && result.Status == "completed")

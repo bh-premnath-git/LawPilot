@@ -67,6 +67,7 @@ jobs:
       - name: Document processing
         working-directory: services/document-worker
         run: |
+          sudo apt-get update && sudo apt-get install -y poppler-utils
           rustup toolchain install 1.90.0 --profile minimal
           cargo +1.90.0 test --locked
       - name: Persistence migrations and tenant isolation

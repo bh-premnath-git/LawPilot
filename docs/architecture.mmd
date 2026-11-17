@@ -1,36 +1,53 @@
 flowchart TB
- Client["Lawyer / Client UI - Next.js + optional WASM"]
- KC["Keycloak OIDC + Organizations"]
- Gateway["Platform API / BFF - NestJS"]
- Domain["Canonical Domain + Matter ACL"]
- Temporal["Durable Business Workflows - Go / Temporal"]
- Supervisor["ROOT SUPERVISOR - TypeScript"]
- Agent["Specialized AI Capabilities - Python"]
- RAG["Tenant/Matter Evidence Retrieval - Future"]
- Rust["Document Processing - Rust"]
- Registry["Versioned Capability/Provider Registry"]
- Router["Provider Router - Go"]
- Clio["Clio Manage v4 Adapter"]
- Other["MyCase / Custom / Native Adapters - Future"]
- PG[("Tenant-RLS PostgreSQL")]
- S3[("Encrypted Documents")]
- Observability["OpenTelemetry + Durable Audit"]
- Client --> Gateway
- Client -.-> KC
- Gateway --> Domain
- Domain --> PG
- Domain --> Temporal
- Temporal <--> Supervisor
- Supervisor --> Registry
- Supervisor <--> Agent
- Agent -.-> RAG
- Temporal --> Rust
- Rust --> S3
- Temporal --> Router
- Router --> Registry
- Router --> Clio
- Router --> Other
- Gateway -.-> Observability
- Temporal -.-> Observability
- Supervisor -.-> Observability
- Router -.-> Observability
+ Client["API consumer - no bundled frontend yet"]
+ KC["Keycloak 26.8.2 - OIDC + Organizations"]
+ Gateway["platform-api - NestJS"]
+ PG[("PostgreSQL 18 + pgvector - tenant RLS, per-service DB roles")]
+ Outbox["outbox-dispatcher - Go"]
+ Temporal["Temporal server"]
+ Worker["execution-worker - Go Temporal activities"]
+ Supervisor["root-supervisor - TypeScript, SupervisorService"]
+ Agent["ai-capabilities - Python, CapabilityService (safe-mock by default)"]
+ Calendar["calendar-service - Go, CalendarService"]
+ Context["context-engine - Go, ContextService"]
+ DomainEvents["domain-events - Go, event consumer/inbox"]
+ Integration["integration-service - Go, IntegrationService"]
+ DocParser["document-parser - Go shim + Rust lawpilot-document-worker, profile: documents"]
+ Clio["Clio Manage v4 / generic OAuth adapter"]
+ S3[("Encrypted document storage - FILE_STORAGE_ENABLED")]
+ Otel["OpenTelemetry collector"]
+
+ Client -->|REST + bearer JWT| Gateway
+ Client -.->|Authorization Code + PKCE| KC
+ Gateway -.->|verify JWT, JWKS| KC
+ Gateway -->|read/write, SQL grant checks| PG
+ Gateway -->|gRPC + mTLS| Calendar
+ Gateway -->|gRPC + mTLS| Context
+ Gateway -->|gRPC + mTLS| Integration
+ Gateway -->|accept + audit + outbox, same transaction| PG
+
+ Outbox -->|lease rows| PG
+ Outbox -->|start workflow by stable ID| Temporal
+ Temporal <-->|activities| Worker
+ Worker -->|reauthorize + load request| PG
+ Worker -->|PrepareExecutionContext| Context
+ Worker -->|ExecuteCapability over SupervisorService| Supervisor
+ Supervisor -->|ExecuteCapability over CapabilityService, same request/response shape| Agent
+ Worker -->|persist result + audit + outbox| PG
+
+ Calendar --> PG
+ Context --> PG
+ DomainEvents -->|claim_domain_events, own leased journal - NOT the execution outbox| PG
+ Integration --> PG
+ Integration -->|Parse, mTLS, caller-scoped| DocParser
+ Integration -->|encrypted OAuth tokens, AES-256-GCM| Clio
+ Integration -.->|private bucket, server-side KMS| S3
+ DocParser -->|IngestProcessed| Context
+
+ Gateway -.-> Otel
+ Worker -.-> Otel
+ Supervisor -.-> Otel
+ Agent -.-> Otel
+ Calendar -.-> Otel
+ Context -.-> Otel
+ Integration -.-> Otel

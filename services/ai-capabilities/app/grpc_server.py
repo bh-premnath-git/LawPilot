@@ -7,7 +7,7 @@ import grpc
 import uvicorn
 from google.protobuf import json_format
 
-sys.path.insert(0, os.environ.get('RPC_PYTHON_PATH', str(Path(__file__).resolve().parents[3] / 'contracts/gen/python')))
+sys.path.insert(0, os.environ.get('RPC_PYTHON_PATH') or str(Path(__file__).resolve().parents[3] / 'contracts/gen/python'))
 from lawpilot.rpc.v1 import capability_pb2 as messages, capability_pb2_grpc as bindings
 from app.main import app, Task
 from app.generation import run,config

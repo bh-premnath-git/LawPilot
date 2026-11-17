@@ -18,7 +18,7 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExport
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-REGISTRY_PATH = Path(os.environ.get('CAPABILITY_REGISTRY_PATH', str(Path(__file__).resolve().parents[3] / 'contracts/capabilities/registry.v1.json')))
+REGISTRY_PATH = Path(os.environ.get('CAPABILITY_REGISTRY_PATH') or str(Path(__file__).resolve().parents[3] / 'contracts/capabilities/registry.v1.json'))
 class Capability(BaseModel):
     model_config = ConfigDict(extra='forbid')
     id: str = Field(pattern=r'^[a-z][a-z0-9.]*\.v[1-9]\d*$')

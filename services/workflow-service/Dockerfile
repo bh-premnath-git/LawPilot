@@ -13,6 +13,7 @@ RUN --mount=type=secret,id=proxy_ca \
     if [ -f /run/secrets/proxy_ca ]; then export SSL_CERT_FILE=/run/secrets/proxy_ca; fi; apk add --no-cache ca-certificates tzdata && adduser -D -u 10001 lawpilot
 WORKDIR /workspace
 COPY --from=build /execution-worker /outbox-dispatcher /usr/local/bin/
-COPY --chmod=0444 contracts/capabilities/registry.v1.json /workspace/contracts/capabilities/registry.v1.json
+COPY contracts/capabilities/registry.v1.json /workspace/contracts/capabilities/registry.v1.json
+RUN chmod 0444 /workspace/contracts/capabilities/registry.v1.json
 USER lawpilot
 CMD ["execution-worker"]

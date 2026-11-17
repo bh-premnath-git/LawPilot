@@ -362,7 +362,7 @@ services:
     tmpfs:
     - /tmp:rw,noexec,nosuid,size=64m
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.134.0
+    image: otel/opentelemetry-collector-contrib:0.165.0
     command:
     - --config=/etc/otelcol/config.yaml
     volumes:

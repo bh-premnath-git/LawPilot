@@ -11,7 +11,8 @@ FROM alpine:3.23
 RUN --mount=type=secret,id=proxy_ca \
     if [ -f /run/secrets/proxy_ca ]; then export SSL_CERT_FILE=/run/secrets/proxy_ca; fi; apk add --no-cache ca-certificates tzdata && adduser -D -u 10001 lawpilot
 COPY --from=build /context-engine /domain-events /usr/local/bin/
-COPY --chmod=0444 contracts/events/registry.v1.json /workspace/contracts/events/registry.v1.json
+COPY contracts/events/registry.v1.json /workspace/contracts/events/registry.v1.json
+RUN chmod 0444 /workspace/contracts/events/registry.v1.json
 WORKDIR /workspace
 USER lawpilot
 CMD ["context-engine"]
